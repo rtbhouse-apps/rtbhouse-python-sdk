@@ -6,3 +6,4 @@ __pycache__/
 pip-log.txt
 virtualenv
 config.py
+/dist

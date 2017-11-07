@@ -47,3 +47,9 @@ Set up virtualenv and install requirements: ::
         columns = ['day', 'impsCount', 'clicksCount', 'attributedPostclicksCount', 'attributedPostclicksValue']
         data_frame = [[row[c] for c in columns] for row in reversed(sorted(stats, key=itemgetter('day')))]
         print(tabulate(data_frame, headers=columns))
+
+
+License
+-------
+
+`MIT <http://opensource.org/licenses/MIT/>`_

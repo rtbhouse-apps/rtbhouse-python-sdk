@@ -100,6 +100,8 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
+    # RTB
+
     def get_rtb_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
@@ -113,6 +115,28 @@ class ReportsApiSession:
         if conversion_type:
             params['conversionType'] = conversion_type
         return self._get('/advertisers/' + adv_hash + '/conversions', params)
+
+    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId'):
+        return self._get('/advertisers/' + adv_hash + '/category-stats', {
+            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
+        })
+
+    def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by='creativeId'):
+        return self._get('/advertisers/' + adv_hash + '/creative-stats', {
+            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
+        })
+
+    def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by='deviceType'):
+        return self._get('/advertisers/' + adv_hash + '/device-stats', {
+            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
+        })
+
+    def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by='country'):
+        return self._get('/advertisers/' + adv_hash + '/country-stats', {
+            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
+        })
+
+    # DPA
 
     def get_dpa_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/dpa/creatives')

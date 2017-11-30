@@ -82,6 +82,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
+    # RTB
+
     def test_get_rtb_creatives(self):
         rtb_creatives = self.api.get_rtb_creatives(self.adv_hash)
         self.assertGreater(len(rtb_creatives), 0)
@@ -105,6 +107,40 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('conversionType', first_row)
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
+
+    def test_get_rtb_category_stats(self):
+        rtb_category_stats = self.api.get_rtb_category_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(rtb_category_stats), 0)
+        first_row = rtb_category_stats[0]
+        self.assertIn('categoryId', first_row)
+        self.assertIn('impsCount', first_row)
+        self.assertIn('clicksCount', first_row)
+
+    def test_get_rtb_creative_stats(self):
+        rtb_creative_stats = self.api.get_rtb_creative_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(rtb_creative_stats), 0)
+        first_row = rtb_creative_stats[0]
+        self.assertIn('creativeId', first_row)
+        self.assertIn('impsCount', first_row)
+        self.assertIn('clicksCount', first_row)
+
+    def test_get_rtb_device_stats(self):
+        rtb_device_stats = self.api.get_rtb_device_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(rtb_device_stats), 0)
+        first_row = rtb_device_stats[0]
+        self.assertIn('deviceType', first_row)
+        self.assertIn('impsCount', first_row)
+        self.assertIn('clicksCount', first_row)
+
+    def test_get_rtb_country_stats(self):
+        rtb_country_stats = self.api.get_rtb_country_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(rtb_country_stats), 0)
+        first_row = rtb_country_stats[0]
+        self.assertIn('country', first_row)
+        self.assertIn('impsCount', first_row)
+        self.assertIn('clicksCount', first_row)
+
+    # DPA
 
     def test_get_dpa_creatives(self):
         dpa_creatives = self.api.get_dpa_creatives(self.adv_hash)

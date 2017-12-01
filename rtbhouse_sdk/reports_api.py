@@ -112,6 +112,9 @@ class ReportsApiSession:
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to):
         deduplicated = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {'dayFrom': day_from, 'dayTo': day_to})
+        for i in deduplicated:
+            i['conversionType'] = 'deduplicated'
+        
         post_click = self._get('/advertisers/' + adv_hash + '/conversions', {'dayFrom': day_from, 'dayTo': day_to, 'conversionType' : 'POST_CLICK'})
         post_view = self._get('/advertisers/' + adv_hash + '/conversions', {'dayFrom': day_from, 'dayTo': day_to, 'conversionType' : 'POST_VIEW'})
         all_post_click = post_click + deduplicated

@@ -114,8 +114,20 @@ class ReportsApiSession:
         params = {'dayFrom': day_from, 'dayTo': day_to}
         if conversion_type:
             params['conversionType'] = conversion_type
-        return self._get('/advertisers/' + adv_hash + '/conversions', params)
 
+        if conversion_type=='deduplicated':
+
+            deduplicated = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {'dayFrom': day_from, 'dayTo': day_to})
+
+            for i in deduplicated:
+                 i['conversionType'] = 'deduplicated'
+
+            return deduplicated
+        else:
+
+            return self._get('/advertisers/' + adv_hash + '/conversions', params)
+        
+        
     def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId'):
         return self._get('/advertisers/' + adv_hash + '/category-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by

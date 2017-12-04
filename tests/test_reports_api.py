@@ -108,6 +108,14 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
 
+    def test_get_rtb_deduplicated_conversions(self):
+        rtb_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, ConversionType.DEDUPLICATED)
+        self.assertGreater(len(rtb_conversions), 0)
+        first_row = rtb_conversions[0]
+        self.assertIn('conversionType', first_row)
+        self.assertIn('conversionValue', first_row)
+        self.assertIn('conversionIdentifier', first_row)
+
     def test_get_rtb_category_stats(self):
         rtb_category_stats = self.api.get_rtb_category_stats(self.adv_hash, DAY_FROM, DAY_TO)
         self.assertGreater(len(rtb_category_stats), 0)

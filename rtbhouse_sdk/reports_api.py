@@ -6,6 +6,7 @@ API_BASE_URL = "https://panel.rtbhouse.com/api"
 class ConversionType:
     POST_CLICK = 'POST_CLICK'
     POST_VIEW = 'POST_VIEW'
+    DEDUPLICATED = 'DEDUPLICATED'
 
 
 class ReportsApiException(Exception):
@@ -115,19 +116,18 @@ class ReportsApiSession:
         if conversion_type:
             params['conversionType'] = conversion_type
 
-        if conversion_type=='deduplicated':
+        if conversion_type == ConversionType.DEDUPLICATED:
 
             deduplicated = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {'dayFrom': day_from, 'dayTo': day_to})
 
-            for i in deduplicated:
-                 i['conversionType'] = 'deduplicated'
+            for conv in deduplicated:
+                 conv['conversionType'] = ConversionType.DEDUPLICATED
 
             return deduplicated
         else:
 
             return self._get('/advertisers/' + adv_hash + '/conversions', params)
-        
-        
+
     def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId'):
         return self._get('/advertisers/' + adv_hash + '/category-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by

@@ -7,9 +7,23 @@ API_BASE_URL = "https://panel.rtbhouse.com/api"
 rtb_costs_types = ['CLICKS', 'IMPS', 'POST_CLICKS', 'POST_VIEWS', 'POST_CLICKS_REJECTIONS', 'POST_VIEWS_REJECTIONS']
 dpa_costs_types = ['DPA_CLICKS', 'DPA_LAST_CLICKS']
 
+
+def combineBilling(bills):
+    result = []
+    for record in bills:
+        has_record = False
+        for saved_record in result:
+            if saved_record['day'] == record['day'] and saved_record['operation'] == record['operation']:
+                has_record = True
+                saved_record['debit'] += record['debit']
+                saved_record['credit'] += record['credit']
+
+        if not has_record:
+            result.append(record)
+    return result
+
 def groupByDays(billing, operation_name, position):
     result = []
-
     for day, items in groupby(billing, key=itemgetter('day')):
         credit = 0
         debit = 0
@@ -22,7 +36,6 @@ def groupByDays(billing, operation_name, position):
         result.append(dict(
             day=day, operation=operation_name, position=position, credit=credit, debit=debit
         ))
-
     return result
 
 def squashBilling(billing, initial_balance = 0):
@@ -43,7 +56,7 @@ def squashBilling(billing, initial_balance = 0):
 
     sorted_bills = list(
         sorted(
-            filter(lambda x: x['credit'] != 0 or x['debit'] != 0, rtb_costs + dpa_costs + other),
+            filter(lambda x: x['credit'] != 0 or x['debit'] != 0, combineBilling(rtb_costs + dpa_costs + other)),
             key=lambda k: (k['day'], k['position'], k['operation'])
         )
     )

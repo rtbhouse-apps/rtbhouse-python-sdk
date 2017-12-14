@@ -165,7 +165,7 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to
         })
 
-        return squashBilling(billing['data']['operations'], billing['data']['initialBalance'])
+        return squashBilling(billing['operations'], billing['initialBalance'])
 
     def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by):
         return self._get('/advertisers/' + adv_hash + '/campaign-stats-merged', {

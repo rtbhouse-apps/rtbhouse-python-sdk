@@ -66,13 +66,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('hash', first_camp)
         self.assertIn('name', first_camp)
 
-    def test_get_billing(self):
-        billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
-        self.assertIn('operations', billing)
-        self.assertGreater(len(billing['operations']), 0)
-        first_row = billing['operations'][0]
-        self.assertIn('day', first_row)
-        self.assertIn('value', first_row)
+    # def test_get_billing(self):
+    #     billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
 
     def test_get_campaign_stats_total(self):
         total_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day')

@@ -1,76 +1,7 @@
 import requests
-from operator import itemgetter
-from itertools import groupby
+from rtbhouse_sdk.helpers.billing import squash
 
 API_BASE_URL = "https://panel.rtbhouse.com/api"
-
-rtb_costs_types = ['CLICKS', 'IMPS', 'POST_CLICKS', 'POST_VIEWS', 'POST_CLICKS_REJECTIONS', 'POST_VIEWS_REJECTIONS']
-dpa_costs_types = ['DPA_CLICKS', 'DPA_LAST_CLICKS']
-
-
-def combineBilling(bills):
-    result = []
-    for record in bills:
-        has_record = False
-        for saved_record in result:
-            if saved_record['day'] == record['day'] and saved_record['operation'] == record['operation']:
-                has_record = True
-                saved_record['debit'] += record['debit']
-                saved_record['credit'] += record['credit']
-
-        if not has_record:
-            result.append(record)
-    return result
-
-def groupByDays(billing, operation_name, position):
-    result = []
-    for day, items in groupby(billing, key=itemgetter('day')):
-        credit = 0
-        debit = 0
-
-        for item in items:
-            v = item.get('value', 0)
-            credit = credit + v if v > 0 else credit
-            debit = debit + v if v < 0 else debit
-
-        result.append(dict(
-            day=day, operation=operation_name, position=position, credit=credit, debit=debit
-        ))
-    return result
-
-def squashBilling(billing, initial_balance = 0):
-    rtb_costs = groupByDays(list(filter(lambda x: x['type'] in rtb_costs_types, billing)), 'Cost of campaign', 2)
-    dpa_costs = groupByDays(list(filter(lambda x: x['type'] in dpa_costs_types, billing)), 'Cost of FB DPA campaign', 3)
-    other = list(
-        map(lambda y: dict(
-            day=y['day'],
-            operation=y['description'] or y['type'].lower().title(),
-            position=1,
-            credit=y['value'] if y['value'] > 0 else 0,
-            debit=y['value'] if y['value'] < 0 else 0
-        ),
-        filter(lambda x: x['type'] not in rtb_costs_types + dpa_costs_types, billing))
-    )
-
-    balance = initial_balance
-
-    sorted_bills = list(
-        sorted(
-            filter(lambda x: x['credit'] != 0 or x['debit'] != 0, combineBilling(rtb_costs + dpa_costs + other)),
-            key=lambda k: (k['day'], k['position'], k['operation'])
-        )
-    )
-
-    result = []
-    for i, bill in enumerate(sorted_bills):
-        balance += bill['credit']
-        balance += bill['debit']
-
-        bill['balance'] = balance
-        bill['recordNumber'] = i + 1
-        result.append(bill)
-
-    return result
 
 class ConversionType:
     POST_CLICK = 'POST_CLICK'
@@ -165,7 +96,7 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to
         })
 
-        return squashBilling(billing['operations'], billing['initialBalance'])
+        return squash(billing['operations'], billing['initialBalance'])
 
     def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by):
         return self._get('/advertisers/' + adv_hash + '/campaign-stats-merged', {

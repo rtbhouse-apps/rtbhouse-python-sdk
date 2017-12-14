@@ -2,6 +2,7 @@ import unittest
 
 from config import USERNAME, PASSWORD
 from rtbhouse_sdk.reports_api import ReportsApiSession, ConversionType
+from rtbhouse_sdk.helpers.billing import _combine, squash
 
 DAY_FROM = '2017-11-01'
 DAY_TO = '2017-11-02'
@@ -9,6 +10,25 @@ DAY_TO = '2017-11-02'
 shared_fixtures = {
     'advertiser': None
 }
+
+grouped_bills = [{'operation': 'Cost of campaign', 'debit': -100.0, 'credit': 150, 'day': '2017-11-01', 'position': 2},
+                 {'operation': 'Cost of campaign', 'debit': -200.0, 'credit': 50, 'day': '2017-11-01', 'position': 2}]
+rtb_bills_data = [{"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -100.0, "type": "CLICKS"},
+                  {"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -200.0, "type": "CLICKS"}]
+
+class TestBilling(unittest.TestCase):
+    def test_combine(self):
+        result = _combine(grouped_bills)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['debit'], -300)
+        self.assertEqual(result[0]['credit'], 200)
+        self.assertEqual(result[0]['day'], '2017-11-01')
+
+    def test_squash(self):
+        result = squash(rtb_bills_data, 5000)
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]['debit'], -300)
+        self.assertEqual(result[0]['balance'], 4700)
 
 
 class TestReportsApi(unittest.TestCase):
@@ -66,8 +86,17 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('hash', first_camp)
         self.assertIn('name', first_camp)
 
-    # def test_get_billing(self):
-    #     billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
+    def test_get_billing(self):
+        billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(billing), 0)
+        first_bill = billing[0]
+        self.assertIn('credit', first_bill)
+        self.assertIn('debit', first_bill)
+        self.assertIn('balance', first_bill)
+        self.assertIn('operation', first_bill)
+        self.assertIn('position', first_bill)
+        self.assertIn('recordNumber', first_bill)
+        self.assertIn('day', first_bill)
 
     def test_get_campaign_stats_total(self):
         total_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day')

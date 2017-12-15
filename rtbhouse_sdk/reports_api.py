@@ -1,5 +1,7 @@
 import requests
 from rtbhouse_sdk.helpers.billing import squash
+from rtbhouse_sdk.helpers.metrics import calculate_convention_metrics, stats_row_countable_defaults, CountConventionType
+from rtbhouse_sdk.helpers.date import fill_missing_days
 
 API_BASE_URL = "https://panel.rtbhouse.com/api"
 
@@ -108,10 +110,18 @@ class ReportsApiSession:
     def get_rtb_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
-    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by):
-        return self._get('/advertisers/' + adv_hash + '/campaign-stats', {
+    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by, convention_type=CountConventionType.ATTRIBUTED):
+        stats = self._get('/advertisers/' + adv_hash + '/campaign-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
+
+        data = fill_missing_days(stats, stats_row_countable_defaults)
+
+        for row in data:
+            metrics = calculate_convention_metrics(row, convention_type)
+            row.update(metrics)
+
+        return data
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, conversion_type=None):
         params = {'dayFrom': day_from, 'dayTo': day_to}
@@ -130,10 +140,18 @@ class ReportsApiSession:
 
             return self._get('/advertisers/' + adv_hash + '/conversions', params)
 
-    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId'):
-        return self._get('/advertisers/' + adv_hash + '/category-stats', {
+    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId', convention_type=CountConventionType.ATTRIBUTED):
+        stats = self._get('/advertisers/' + adv_hash + '/category-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
+
+        data = fill_missing_days(stats, stats_row_countable_defaults)
+
+        for row in data:
+            metrics = calculate_convention_metrics(row, convention_type)
+            row.update(metrics)
+
+        return data
 
     def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by='creativeId'):
         return self._get('/advertisers/' + adv_hash + '/creative-stats', {

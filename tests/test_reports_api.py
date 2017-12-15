@@ -3,6 +3,8 @@ import unittest
 from config import USERNAME, PASSWORD
 from rtbhouse_sdk.reports_api import ReportsApiSession, ConversionType
 from rtbhouse_sdk.helpers.billing import _combine, squash
+from rtbhouse_sdk.helpers.metrics import stats_row_countable_defaults
+from rtbhouse_sdk.helpers.date import fill_missing_days
 
 DAY_FROM = '2017-11-01'
 DAY_TO = '2017-11-02'
@@ -15,8 +17,26 @@ grouped_bills = [{'operation': 'Cost of campaign', 'debit': -100.0, 'credit': 15
                  {'operation': 'Cost of campaign', 'debit': -200.0, 'credit': 50, 'day': '2017-11-01', 'position': 2}]
 rtb_bills_data = [{"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -100.0, "type": "CLICKS"},
                   {"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -200.0, "type": "CLICKS"}]
+metrics_data = [{"clicksCount": 0.0, "clicksCost": 0.0, "attributedPostviewsCost": 0.0, "attributedPostviewsCount": 0.0,
+                 "attributedPostviewsValue": 0.0, "attributedPostclicksCount": 2.0, "allPostclicksValue": 537770.0,
+                 "day": "2017-12-01", "attributedPostclicksValue": 237870.0, "allPostclicksCount": 3.0,
+                 "attributedPostclicksCost": 0.0, "impsCount": 0.0, "impsCost": 0.0},
+                {"clicksCount": 879.0, "clicksCost": 4395.0, "attributedPostviewsCost": 0.0,
+                 "attributedPostviewsCount": 10.0, "attributedPostviewsValue": 1765250.0,
+                 "attributedPostclicksCount": 2.0, "allPostclicksValue": 1509760.0, "day": "2017-12-09",
+                 "attributedPostclicksValue": 1189860.0, "allPostclicksCount": 3.0, "attributedPostclicksCost": 95188.8,
+                 "impsCount": 103049.0, "impsCost": 0.0}]
 
-class TestBilling(unittest.TestCase):
+class TestHelpers(unittest.TestCase):
+
+    # metrics
+
+    def test_fill_missing_days(self):
+        data = fill_missing_days(metrics_data.copy(), stats_row_countable_defaults)
+        self.assertGreater(len(data), len(metrics_data))
+
+    # billing
+
     def test_combine(self):
         result = _combine(grouped_bills)
         self.assertEqual(len(result), 1)

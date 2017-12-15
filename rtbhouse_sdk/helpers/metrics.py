@@ -1,18 +1,30 @@
+stats_row_countable_defaults = {
+  'allPostclicksCount': 0, 'allPostclicksValue': 0,
+  'attributedPostclicksCount': 0, 'attributedPostclicksCost': 0, 'attributedPostclicksValue': 0,
+  'attributedPostviewsCount': 0, 'attributedPostviewsCost': 0, 'attributedPostviewsValue': 0,
+  'clicksCount': 0, 'clicksCost': 0, 'impsCount': 0, 'impsCost': 0
+}
+
+class CountConventionType:
+    POST_VIEW = 'POST_VIEW'
+    ATTRIBUTED = 'ATTRIBUTED'
+    ALL_POST_CLICK = 'ALL_POST_CLICK'
+
 def calculate_convention_metrics(row, count_convention, NA=0):
     total_cost = row['impsCost'] + row['clicksCost'] + row['attributedPostviewsCost'] + row['attributedPostclicksCost']
 
     conversions_count = NA
     conversions_value = NA
 
-    if count_convention == 'POST_VIEW':
-        conversions_count = row['attributedPostviewsCount'] or NA
-        conversions_value = row['attributedPostviewsValue'] or NA
-    elif count_convention == 'ATTRIBUTED':
-        conversions_count = row['attributedPostclicksCount'] or NA
-        conversions_value = row['attributedPostclicksValue'] or NA
-    elif count_convention == 'ALL_POST_CLICK':
-        conversions_count = row['allPostclicksCount'] or NA
-        conversions_value = row['allPostclicksValue'] or NA
+    if count_convention == CountConventionType.POST_VIEW:
+        conversions_count = row.get('attributedPostviewsCount', NA)
+        conversions_value = row.get('attributedPostviewsValue', NA)
+    elif count_convention == CountConventionType.ATTRIBUTED:
+        conversions_count = row.get('attributedPostclicksCount', NA)
+        conversions_value = row.get('attributedPostclicksValue', NA)
+    elif count_convention == CountConventionType.ALL_POST_CLICK:
+        conversions_count = row.get('allPostclicksCount', NA)
+        conversions_value = row.get('allPostclicksValue', NA)
 
     conversions_rate = conversions_count / row['clicksCount'] if row['clicksCount'] else NA
 

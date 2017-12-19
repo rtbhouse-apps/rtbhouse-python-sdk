@@ -56,14 +56,14 @@ def calculate_deduplication_metrics(row, NA=0):
         deduplicationValueRate=deduplication_value_rate
     )
 
-def stats_summary_reduce(omit_keys, multiplier=1000):
-    # not needed?
+# not needed?
+def stats_summary_reduce(stats, omit_keys, multiplier=1000):
     pass
 
 
 def calculate_summary_row(stats):
     omit_keys = ['clickthroughRate', 'conversionsRate', 'effectiveCostOfConversion', 'returnOnAdvertiserSpending']
-    summary_row = stats # stats.reduce(statsSummaryReduce(omitKeys, {})
+    summary_row = stats # stats_summary_reduce(stats, omit_keys)
 
     clicktrough_rate = _avg_clicktrough_rate(summary_row)
     conversions_rate = _avg_conversions_rate(summary_row)
@@ -81,7 +81,7 @@ def calculate_summary_row(stats):
 
 def calculate_deduplication_stats_summary_row(stats):
     omit_keys = ['deduplicationRate', 'deduplicationValueRate']
-    summary_row = stats # stats.reduce(statsSummaryReduce(omitKeys), {})
+    summary_row = stats # stats_summary_reduce(stats, omit_keys)
 
     deduplication_rate = _avg_deduplication_rate(summary_row)
     deduplication_value_rate = _avg_deduplication_value_rate(summary_row)

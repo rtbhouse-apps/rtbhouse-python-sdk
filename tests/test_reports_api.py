@@ -32,7 +32,7 @@ class TestHelpers(unittest.TestCase):
     # metrics
 
     def test_fill_missing_days(self):
-        data = fill_missing_days(metrics_data.copy(), stats_row_countable_defaults)
+        data = fill_missing_days(list(metrics_data), stats_row_countable_defaults)
         self.assertGreater(len(data), len(metrics_data))
 
     # billing
@@ -144,18 +144,18 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
-    def test_get_rtb_conversions(self):
-        rtb_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, ConversionType.POST_CLICK)
+    def test_get_rtb_conversions_stats(self):
+        rtb_conversions = self.api.get_rtb_conversions_stats(self.adv_hash, DAY_FROM, DAY_TO)
         self.assertGreater(len(rtb_conversions), 0)
         first_row = rtb_conversions[0]
         self.assertIn('conversionType', first_row)
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
 
-    def test_get_rtb_deduplicated_conversions(self):
-        rtb_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, ConversionType.DEDUPLICATED)
-        self.assertGreater(len(rtb_conversions), 0)
-        first_row = rtb_conversions[0]
+    def test_get_rtb_deduplicated_stats(self):
+        rtb_deduplicated = self.api.get_rtb_deduplicated_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        self.assertGreater(len(rtb_deduplicated), 0)
+        first_row = rtb_deduplicated[0]
         self.assertIn('conversionType', first_row)
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)

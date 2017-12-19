@@ -123,12 +123,12 @@ class ReportsApiSession:
         else:
             deduplicated_stats = []
 
-        if convention_type == CountConventionType.POST_VIEW or convention_type == CountConventionType.ALL_POST_CLICK:
+        if convention_type == CountConventionType.ATTRIBUTED or convention_type == CountConventionType.ALL_POST_CLICK:
             stats = self._get('/advertisers/' + adv_hash + '/conversions', {
                 'dayFrom': day_from, 'dayTo': day_to, 'conversionType': ConversionType.POST_CLICK
             })
         else:
-            # CountConventionType.ATTRIBUTED
+            # CountConventionType.POST_VIEW
             stats = self._get('/advertisers/' + adv_hash + '/conversions', {
                 'dayFrom': day_from, 'dayTo': day_to, 'conversionType': ConversionType.POST_VIEW
             })

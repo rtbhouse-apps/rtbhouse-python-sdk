@@ -15,7 +15,11 @@ class ConversionType:
     POST_VIEW = 'POST_VIEW'
 
 def calculate_convention_metrics(row, count_convention, NA=0):
-    total_cost = row['impsCost'] + row['clicksCost'] + row['attributedPostviewsCost'] + row['attributedPostclicksCost']
+    imps = row.get('impsCost', 0)
+    clicks = row.get('clicksCost', 0)
+    attributed_postviews_cost = row.get('attributedPostviewsCost', 0)
+    attributed_postclicks_cost = row.get('attributedPostclicksCost', 0)
+    total_cost = imps + clicks + attributed_postviews_cost + attributed_postclicks_cost
 
     conversions_count = NA
     conversions_value = NA

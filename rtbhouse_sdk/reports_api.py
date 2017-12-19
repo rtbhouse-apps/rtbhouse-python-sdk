@@ -99,7 +99,7 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        data = self._convert_rtb_stats(stats, convention_type, group_by)
+        data = self._convert_stats(stats, convention_type, group_by)
 
         return data
 
@@ -113,7 +113,7 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        return self._convert_rtb_stats(stats, convention_type, group_by)
+        return self._convert_stats(stats, convention_type, group_by)
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=CountConventionType.ATTRIBUTED):
         if convention_type == CountConventionType.ALL_POST_CLICK:
@@ -146,7 +146,11 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        data = self._convert_rtb_stats(stats, convention_type, group_by)
+        data = self._convert_stats(stats, convention_type, group_by)
+        categories = self.get_offer_categories(adv_hash)
+
+        for row in data:
+            row['category'] = next((x['name'] for x in categories if x['categoryId'] == row['categoryId']), None)
 
         return data
 
@@ -155,38 +159,40 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        return self._convert_rtb_stats(stats, convention_type, group_by)
+        return self._convert_stats(stats, convention_type, group_by)
 
     def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by='deviceType', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/device-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        return self._convert_rtb_stats(stats, convention_type, group_by)
+        return self._convert_stats(stats, convention_type, group_by)
 
     def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by='country', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/country-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        return self._convert_rtb_stats(stats, convention_type, group_by)
+        return self._convert_stats(stats, convention_type, group_by)
 
     # DPA
 
     def get_dpa_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/dpa/creatives')
 
-    def get_dpa_campaign_stats(self, adv_hash, day_from, day_to, group_by):
-        return self._get('/advertisers/' + adv_hash + '/dpa/campaign-stats', {
+    def get_dpa_campaign_stats(self, adv_hash, day_from, day_to, group_by='day', convention_type=CountConventionType.ATTRIBUTED):
+        stats = self._get('/advertisers/' + adv_hash + '/dpa/campaign-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
+
+        return self._convert_stats(stats, convention_type, group_by)
 
     def get_dpa_conversions(self, adv_hash, day_from, day_to):
         return self._get('/advertisers/' + adv_hash + '/dpa/conversions', {
             'dayFrom': day_from, 'dayTo': day_to
         })
 
-    def _convert_rtb_stats(self, stats, convention_type, group_by):
+    def _convert_stats(self, stats, convention_type, group_by):
         data = fill_missing_days(stats, stats_row_countable_defaults) if group_by == 'day' else stats
         new_stats = []
 
@@ -210,7 +216,8 @@ class ReportsApiSession:
                 metrics['country'] = row.get('country')
             elif group_by == 'categoryId':
                 metrics['categoryId'] = row['categoryId']
-                #TODO: fetch category name?
+            elif group_by == 'placement':
+                metrics['placement'] = row['placement']
 
             new_stats.append(metrics)
 

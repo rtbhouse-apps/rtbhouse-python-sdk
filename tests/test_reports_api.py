@@ -198,8 +198,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertGreater(len(dpa_stats), 0)
         first_row = dpa_stats[0]
         self.assertIn('day', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     def test_get_dpa_conversions(self):
         dpa_conversions = self.api.get_dpa_conversions(self.adv_hash, DAY_FROM, DAY_TO)

@@ -54,12 +54,3 @@ def calculate_convention_metrics(row, count_convention, NA=0):
         conversionsRate=conversions_rate, cpc=cost_per_click, ecc=effective_cost_of_conversion,
         roas=return_on_advertiser_spending, conversionsValue=conversions_value
     )
-
-def calculate_deduplication_metrics(row, NA=0):
-    deduplication_rate = 1 - row['attributedPostclicksCount'] / row['allPostclicksCount'] if row['allPostclicksCount'] > 0 else NA
-    deduplication_value_rate = 1 - row['attributedPostclicksValue'] / row['allPostclicksValue'] if row['allPostclicksValue'] > 0 else NA
-
-    return dict(
-        deduplicationRate=deduplication_rate,
-        deduplicationValueRate=deduplication_value_rate
-    )

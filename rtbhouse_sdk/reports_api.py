@@ -5,12 +5,6 @@ from rtbhouse_sdk.helpers.date import fill_missing_days
 
 API_BASE_URL = "https://panel.rtbhouse.com/api"
 
-class ConversionType:
-    POST_CLICK = 'POST_CLICK'
-    POST_VIEW = 'POST_VIEW'
-    DEDUPLICATED = 'DEDUPLICATED'
-
-
 class ReportsApiException(Exception):
     def __init__(self, message):
         self.message = message
@@ -100,98 +94,75 @@ class ReportsApiSession:
 
         return squash(billing['operations'], billing['initialBalance'])
 
-    def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by):
-        return self._get('/advertisers/' + adv_hash + '/campaign-stats-merged', {
+    def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by='day', convention_type=CountConventionType.ATTRIBUTED):
+        stats = self._get('/advertisers/' + adv_hash + '/campaign-stats-merged', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
+
+        data = self._convert_rtb_stats(stats, convention_type, group_by)
+
+        return data
 
     # RTB
 
     def get_rtb_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
-    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by, convention_type=CountConventionType.ATTRIBUTED):
+    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by='day', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/campaign-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        data = fill_missing_days(stats, stats_row_countable_defaults) if group_by == 'day' else stats
+        return self._convert_rtb_stats(stats, convention_type, group_by)
 
-        for row in data:
-            metrics = calculate_convention_metrics(row, convention_type)
-            row.update(metrics)
+    def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=CountConventionType.ATTRIBUTED):
 
-        return data
+        if convention_type == CountConventionType.ALL_POST_CLICK:
+            stats = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {
+                'dayFrom': day_from, 'dayTo': day_to
+            })
+        else:
+            stats = self._get('/advertisers/' + adv_hash + '/conversions', {
+                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': convention_type
+            })
 
-    # TODO: should return different data for different conversion types
-    def get_rtb_conversions_stats(self, adv_hash, day_from, day_to, convention_type=CountConventionType.ATTRIBUTED):
-        stats = self._get('/advertisers/' + adv_hash + '/conversions', {
-            'dayFrom': day_from, 'dayTo': day_to
-        })
+        new_stats = []
 
-        return stats
+        for row in stats:
+            row['conversionType'] = convention_type
+            new_stats.append(row)
 
-
-    def get_rtb_deduplicated_stats(self, adv_hash, day_from, day_to, group_by=None):
-        stats = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {
-            'dayFrom': day_from, 'dayTo': day_to
-        })
-
-        data = fill_missing_days(stats, stats_row_countable_defaults) if group_by == 'day' else stats
-
-        for row in data:
-            row['conversionType'] = ConversionType.DEDUPLICATED
-            metrics = calculate_deduplication_metrics(row)
-            row.update(metrics)
-
-        return data
+        return new_stats
 
     def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/category-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        for row in stats:
-            metrics = calculate_convention_metrics(row, convention_type)
-            row.update(metrics)
+        data = self._convert_rtb_stats(stats, convention_type, group_by)
 
-        return stats
+        return data
 
     def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by='creativeId', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/creative-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        for row in stats:
-            metrics = calculate_convention_metrics(row, convention_type)
-            row.update(metrics)
-
-        return stats
+        return self._convert_rtb_stats(stats, convention_type, group_by)
 
     def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by='deviceType', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/device-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        data = fill_missing_days(stats, stats_row_countable_defaults) if group_by == 'day' else stats
+        return self._convert_rtb_stats(stats, convention_type, group_by)
 
-        for row in data:
-            metrics = calculate_convention_metrics(row, convention_type)
-            row.update(metrics)
-
-        return data
-
-    # TODO: add country field
     def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by='country', convention_type=CountConventionType.ATTRIBUTED):
         stats = self._get('/advertisers/' + adv_hash + '/country-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by
         })
 
-        for row in stats:
-            metrics = calculate_convention_metrics(row, convention_type)
-            row.update(metrics)
-
-        return stats
+        return self._convert_rtb_stats(stats, convention_type, group_by)
 
     # DPA
 
@@ -207,3 +178,33 @@ class ReportsApiSession:
         return self._get('/advertisers/' + adv_hash + '/dpa/conversions', {
             'dayFrom': day_from, 'dayTo': day_to
         })
+
+    def _convert_rtb_stats(self, stats, convention_type, group_by):
+        data = fill_missing_days(stats, stats_row_countable_defaults) if group_by == 'day' else stats
+        new_stats = []
+
+        for row in data:
+            metrics = calculate_convention_metrics(row, convention_type)
+
+            if group_by == 'day':
+                metrics['day'] = row['day']
+            elif group_by == 'deviceType':
+                metrics['deviceType'] = row['deviceType']
+            elif group_by == 'creativeId':
+                metrics['creativeId'] = row['creativeId']
+                metrics['hash'] = row['hash']
+                metrics['offersNumber'] = row.get('offersNumber', 0)
+                metrics['height'] = row.get('height', 0)
+                metrics['width'] = row.get('width', 0)
+                metrics['name'] = row.get('name', '')
+                metrics['createdAt'] = row.get('createdAt')
+                metrics['updatedAt'] = row.get('updatedAt')
+            elif group_by == 'country':
+                metrics['country'] = row.get('country')
+            elif group_by == 'categoryId':
+                metrics['categoryId'] = row['categoryId']
+                #TODO: fetch category name?
+
+            new_stats.append(metrics)
+
+        return new_stats

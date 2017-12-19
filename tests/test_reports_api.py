@@ -1,7 +1,7 @@
 import unittest
 
 from config import USERNAME, PASSWORD
-from rtbhouse_sdk.reports_api import ReportsApiSession, ConversionType
+from rtbhouse_sdk.reports_api import ReportsApiSession
 from rtbhouse_sdk.helpers.billing import _combine, squash
 from rtbhouse_sdk.helpers.metrics import stats_row_countable_defaults
 from rtbhouse_sdk.helpers.date import fill_missing_days
@@ -123,8 +123,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertGreater(len(total_stats), 0)
         first_row = total_stats[0]
         self.assertIn('day', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     # RTB
 
@@ -141,21 +141,13 @@ class TestReportsApi(unittest.TestCase):
         self.assertGreater(len(rtb_stats), 0)
         first_row = rtb_stats[0]
         self.assertIn('day', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     def test_get_rtb_conversions_stats(self):
-        rtb_conversions = self.api.get_rtb_conversions_stats(self.adv_hash, DAY_FROM, DAY_TO)
+        rtb_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, 'ALL_POST_CLICK')
         self.assertGreater(len(rtb_conversions), 0)
         first_row = rtb_conversions[0]
-        self.assertIn('conversionType', first_row)
-        self.assertIn('conversionValue', first_row)
-        self.assertIn('conversionIdentifier', first_row)
-
-    def test_get_rtb_deduplicated_stats(self):
-        rtb_deduplicated = self.api.get_rtb_deduplicated_stats(self.adv_hash, DAY_FROM, DAY_TO)
-        self.assertGreater(len(rtb_deduplicated), 0)
-        first_row = rtb_deduplicated[0]
         self.assertIn('conversionType', first_row)
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
@@ -165,32 +157,32 @@ class TestReportsApi(unittest.TestCase):
         self.assertGreater(len(rtb_category_stats), 0)
         first_row = rtb_category_stats[0]
         self.assertIn('categoryId', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     def test_get_rtb_creative_stats(self):
         rtb_creative_stats = self.api.get_rtb_creative_stats(self.adv_hash, DAY_FROM, DAY_TO)
         self.assertGreater(len(rtb_creative_stats), 0)
         first_row = rtb_creative_stats[0]
         self.assertIn('creativeId', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     def test_get_rtb_device_stats(self):
         rtb_device_stats = self.api.get_rtb_device_stats(self.adv_hash, DAY_FROM, DAY_TO)
         self.assertGreater(len(rtb_device_stats), 0)
         first_row = rtb_device_stats[0]
         self.assertIn('deviceType', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     def test_get_rtb_country_stats(self):
         rtb_country_stats = self.api.get_rtb_country_stats(self.adv_hash, DAY_FROM, DAY_TO)
         self.assertGreater(len(rtb_country_stats), 0)
         first_row = rtb_country_stats[0]
         self.assertIn('country', first_row)
-        self.assertIn('impsCount', first_row)
-        self.assertIn('clicksCount', first_row)
+        self.assertIn('imps', first_row)
+        self.assertIn('clicks', first_row)
 
     # DPA
 

@@ -10,6 +10,10 @@ class CountConventionType:
     ATTRIBUTED = 'ATTRIBUTED'
     ALL_POST_CLICK = 'ALL_POST_CLICK'
 
+class ConversionType:
+    POST_CLICK = 'POST_CLICK'
+    POST_VIEW = 'POST_VIEW'
+
 def calculate_convention_metrics(row, count_convention, NA=0):
     total_cost = row['impsCost'] + row['clicksCost'] + row['attributedPostviewsCost'] + row['attributedPostclicksCost']
 

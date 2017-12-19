@@ -1,6 +1,6 @@
 import requests
 from rtbhouse_sdk.helpers.billing import squash
-from rtbhouse_sdk.helpers.metrics import calculate_convention_metrics, calculate_deduplication_metrics, stats_row_countable_defaults, CountConventionType
+from rtbhouse_sdk.helpers.metrics import calculate_convention_metrics, stats_row_countable_defaults, CountConventionType, ConversionType
 from rtbhouse_sdk.helpers.date import fill_missing_days
 
 API_BASE_URL = "https://panel.rtbhouse.com/api"
@@ -116,19 +116,26 @@ class ReportsApiSession:
         return self._convert_rtb_stats(stats, convention_type, group_by)
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=CountConventionType.ATTRIBUTED):
-
         if convention_type == CountConventionType.ALL_POST_CLICK:
-            stats = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {
+            deduplicated_stats = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {
                 'dayFrom': day_from, 'dayTo': day_to
             })
         else:
+            deduplicated_stats = []
+
+        if convention_type == CountConventionType.POST_VIEW or convention_type == CountConventionType.ALL_POST_CLICK:
             stats = self._get('/advertisers/' + adv_hash + '/conversions', {
-                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': convention_type
+                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': ConversionType.POST_CLICK
+            })
+        else:
+            # CountConventionType.ATTRIBUTED
+            stats = self._get('/advertisers/' + adv_hash + '/conversions', {
+                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': ConversionType.POST_VIEW
             })
 
         new_stats = []
 
-        for row in stats:
+        for row in deduplicated_stats + stats:
             row['conversionType'] = convention_type
             new_stats.append(row)
 

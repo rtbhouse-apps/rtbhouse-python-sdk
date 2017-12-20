@@ -183,7 +183,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
-        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK, UserSegment.Visitors)
+        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK, UserSegment.VISITORS)
         self.assertGreater(len(us_stats), 0)
         us_first_row = us_stats[0]
         self.assertIn('day', us_first_row)

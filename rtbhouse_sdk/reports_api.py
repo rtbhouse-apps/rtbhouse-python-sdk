@@ -7,9 +7,9 @@ from rtbhouse_sdk.helpers.date import fill_missing_days
 API_BASE_URL = "https://panel.rtbhouse.com/api"
 
 class UserSegment:
-    Visitors = 'VISITORS'
-    Shoppers = 'SHOPPERS'
-    Buyers = 'BUYERS'
+    VISITORS = 'VISITORS'
+    SHOPPERS = 'SHOPPERS'
+    BUYERS = 'BUYERS'
 
 class ReportsApiException(Exception):
     def __init__(self, message):
@@ -156,7 +156,7 @@ class ReportsApiSession:
         if user_segment is not None:
             params['userSegment'] = user_segment
 
-        pool = concurrent.futures.ThreadPoolExecutor(5)
+        pool = concurrent.futures.ThreadPoolExecutor(2)
 
         stats_futures = pool.submit(self._get, '/advertisers/' + adv_hash + '/category-stats', params)
         categories_futures = pool.submit(self.get_offer_categories, adv_hash)

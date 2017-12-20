@@ -5,14 +5,10 @@ stats_row_countable_defaults = {
   'clicksCount': 0, 'clicksCost': 0, 'impsCount': 0, 'impsCost': 0
 }
 
-class CountConventionType:
+class Conversions:
     POST_VIEW = 'POST_VIEW'
-    ATTRIBUTED = 'ATTRIBUTED'
+    ATTRIBUTED_POST_CLICK = 'ATTRIBUTED'
     ALL_POST_CLICK = 'ALL_POST_CLICK'
-
-class ConversionType:
-    POST_CLICK = 'POST_CLICK'
-    POST_VIEW = 'POST_VIEW'
 
 def calculate_convention_metrics(row, count_convention, NA=0):
     imps = row.get('impsCost', 0)
@@ -24,13 +20,13 @@ def calculate_convention_metrics(row, count_convention, NA=0):
     conversions_count = NA
     conversions_value = NA
 
-    if count_convention == CountConventionType.POST_VIEW:
+    if count_convention == Conversions.POST_VIEW:
         conversions_count = row.get('attributedPostviewsCount', NA)
         conversions_value = row.get('attributedPostviewsValue', NA)
-    elif count_convention == CountConventionType.ATTRIBUTED:
+    elif count_convention == Conversions.ATTRIBUTED_POST_CLICK:
         conversions_count = row.get('attributedPostclicksCount', NA)
         conversions_value = row.get('attributedPostclicksValue', NA)
-    elif count_convention == CountConventionType.ALL_POST_CLICK:
+    elif count_convention == Conversions.ALL_POST_CLICK:
         conversions_count = row.get('allPostclicksCount', NA)
         conversions_value = row.get('allPostclicksValue', NA)
 
@@ -49,7 +45,7 @@ def calculate_convention_metrics(row, count_convention, NA=0):
     return_on_advertiser_spending = conversions_value / total_cost if total_cost > 0 else NA
 
     return dict(
-        imps=row['impsCount'], clicks=row['clicksCount'],
+        impsCount=row['impsCount'], clicksCount=row['clicksCount'],
         ctr=clickthrough_rate, campaignCost=total_cost, conversionsCount=conversions_count,
         conversionsRate=conversions_rate, cpc=cost_per_click, ecc=effective_cost_of_conversion,
         roas=return_on_advertiser_spending, conversionsValue=conversions_value

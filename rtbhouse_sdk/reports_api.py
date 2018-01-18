@@ -123,30 +123,10 @@ class ReportsApiSession:
         return self._get('/advertisers/' + adv_hash + '/campaign-stats', params)
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
-        if convention_type == Conversions.ALL_POST_CLICK:
-            deduplicated_stats = self._get('/advertisers/' + adv_hash + '/deduplicated-conversions', {
-                'dayFrom': day_from, 'dayTo': day_to
-            })
-        else:
-            deduplicated_stats = []
 
-        if convention_type == Conversions.ATTRIBUTED_POST_CLICK or convention_type == Conversions.ALL_POST_CLICK:
-            stats = self._get('/advertisers/' + adv_hash + '/conversions', {
-                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': 'POST_CLICK'
-            })
-        else:
-            # Conversions.POST_VIEW
-            stats = self._get('/advertisers/' + adv_hash + '/conversions', {
-                'dayFrom': day_from, 'dayTo': day_to, 'conversionType': 'POST_VIEW'
-            })
-
-        new_stats = []
-
-        for row in deduplicated_stats + stats:
-            row['conversionType'] = convention_type
-            new_stats.append(row)
-
-        return new_stats
+        return self._get('/advertisers/' + adv_hash + '/conversions', {
+            'dayFrom': day_from, 'dayTo': day_to, 'conversionType': convention_type
+        })
 
     def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId',
                                convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):

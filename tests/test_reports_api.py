@@ -68,7 +68,6 @@ class TestReportsApi(unittest.TestCase):
 
     def test_get_billing(self):
         billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
-        print(billing)
         self.assertGreater(len(billing['bills']), 0)
         first_bill = billing['bills'][0]
         self.assertIn('credit', first_bill)

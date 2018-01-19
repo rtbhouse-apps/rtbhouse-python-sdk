@@ -1,10 +1,7 @@
 import unittest
 
 from config import USERNAME, PASSWORD
-from rtbhouse_sdk.reports_api import ReportsApiSession, UserSegment
-from rtbhouse_sdk.helpers.billing import _combine, squash
-from rtbhouse_sdk.helpers.metrics import stats_row_countable_defaults, Conversions
-from rtbhouse_sdk.helpers.date import fill_missing_days
+from rtbhouse_sdk.reports_api import ReportsApiSession, UserSegment, Conversions
 
 DAY_FROM = '2017-11-01'
 DAY_TO = '2017-11-02'
@@ -12,43 +9,6 @@ DAY_TO = '2017-11-02'
 shared_fixtures = {
     'advertiser': None
 }
-
-grouped_bills = [{'operation': 'Cost of campaign', 'debit': -100.0, 'credit': 150, 'day': '2017-11-01', 'position': 2},
-                 {'operation': 'Cost of campaign', 'debit': -200.0, 'credit': 50, 'day': '2017-11-01', 'position': 2}]
-rtb_bills_data = [{"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -100.0, "type": "CLICKS"},
-                  {"day": "2017-11-01", "description": None, "cnt": 50.0, "value": -200.0, "type": "CLICKS"}]
-metrics_data = [{"clicksCount": 0.0, "clicksCost": 0.0, "attributedPostviewsCost": 0.0, "attributedPostviewsCount": 0.0,
-                 "attributedPostviewsValue": 0.0, "attributedPostclicksCount": 2.0, "allPostclicksValue": 537770.0,
-                 "day": "2017-12-01", "attributedPostclicksValue": 237870.0, "allPostclicksCount": 3.0,
-                 "attributedPostclicksCost": 0.0, "impsCount": 0.0, "impsCost": 0.0},
-                {"clicksCount": 879.0, "clicksCost": 4395.0, "attributedPostviewsCost": 0.0,
-                 "attributedPostviewsCount": 10.0, "attributedPostviewsValue": 1765250.0,
-                 "attributedPostclicksCount": 2.0, "allPostclicksValue": 1509760.0, "day": "2017-12-09",
-                 "attributedPostclicksValue": 1189860.0, "allPostclicksCount": 3.0, "attributedPostclicksCost": 95188.8,
-                 "impsCount": 103049.0, "impsCost": 0.0}]
-
-class TestHelpers(unittest.TestCase):
-
-    # metrics
-
-    def test_fill_missing_days(self):
-        data = fill_missing_days(list(metrics_data), stats_row_countable_defaults)
-        self.assertGreater(len(data), len(metrics_data))
-
-    # billing
-
-    def test_combine(self):
-        result = _combine(grouped_bills)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]['debit'], -300)
-        self.assertEqual(result[0]['credit'], 200)
-        self.assertEqual(result[0]['day'], '2017-11-01')
-
-    def test_squash(self):
-        result = squash(rtb_bills_data, 5000)
-        self.assertEqual(len(result), 1)
-        self.assertEqual(result[0]['debit'], -300)
-        self.assertEqual(result[0]['balance'], 4700)
 
 
 class TestReportsApi(unittest.TestCase):
@@ -108,8 +68,9 @@ class TestReportsApi(unittest.TestCase):
 
     def test_get_billing(self):
         billing = self.api.get_billing(self.adv_hash, DAY_FROM, DAY_TO)
-        self.assertGreater(len(billing), 0)
-        first_bill = billing[0]
+        print(billing)
+        self.assertGreater(len(billing['bills']), 0)
+        first_bill = billing['bills'][0]
         self.assertIn('credit', first_bill)
         self.assertIn('debit', first_bill)
         self.assertIn('balance', first_bill)
@@ -119,7 +80,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('day', first_bill)
 
     def test_get_campaign_stats_total(self):
-        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK)
+        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day',
+                                                      Conversions.ALL_POST_CLICK)
         self.assertGreater(len(all_stats), 0)
         first_row = all_stats[0]
         self.assertIn('day', first_row)
@@ -127,7 +89,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('clicksCount', first_row)
 
         attr_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day',
-                                                      Conversions.ATTRIBUTED_POST_CLICK)
+                                                       Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_stats), 0)
         attr_first_row = attr_stats[0]
         self.assertIn('day', attr_first_row)
@@ -183,7 +145,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
-        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK, UserSegment.VISITORS)
+        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK,
+                                                   UserSegment.VISITORS)
         self.assertGreater(len(us_stats), 0)
         us_first_row = us_stats[0]
         self.assertIn('day', us_first_row)
@@ -196,7 +159,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', m_first_row)
         self.assertIn('clicksCount', m_first_row)
 
-        attr_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ATTRIBUTED_POST_CLICK)
+        attr_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day',
+                                                     Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_stats), 0)
         attr_first_row = attr_stats[0]
         self.assertIn('day', attr_first_row)
@@ -218,7 +182,8 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
 
-        attr_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, Conversions.ATTRIBUTED_POST_CLICK)
+        attr_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO,
+                                                        Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_conversions), 0)
         attr_first_row = attr_conversions[0]
         self.assertIn('conversionType', attr_first_row)

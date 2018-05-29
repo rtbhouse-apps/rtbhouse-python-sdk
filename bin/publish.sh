@@ -7,4 +7,4 @@ cd "`dirname $0`"
 cd ..
 
 
-./virtualenv/bin/python setup.py sdist upload
+./venv/bin/python setup.py sdist upload

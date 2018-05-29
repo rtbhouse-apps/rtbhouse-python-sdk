@@ -6,7 +6,9 @@ set -o pipefail
 cd "`dirname $0`"
 cd ..
 
-rm -rf ./virtualenv
-python3 -m venv ./virtualenv
-./virtualenv/bin/pip install -U pip setuptools wheel
-./virtualenv/bin/pip install -e .
+rm -rf ./venv
+python3 -m venv venv
+export PATH="./venv/bin:$PATH"
+
+pip install -U pip setuptools wheel
+pip install -e .

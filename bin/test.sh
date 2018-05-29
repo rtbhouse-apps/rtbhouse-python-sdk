@@ -4,7 +4,7 @@ set -e
 set -o pipefail
 
 cd "`dirname $0`"
-cd ../tests
+cd ..
 
 
-../virtualenv/bin/python -m unittest test_reports_api.py
+./venv/bin/python tests/test_reports_api.py

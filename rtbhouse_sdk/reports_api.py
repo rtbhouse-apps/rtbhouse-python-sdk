@@ -163,8 +163,11 @@ class ReportsApiSession:
 
     # DPA
 
-    def get_dpa_creatives(self, adv_hash):
-        return self._get('/advertisers/' + adv_hash + '/dpa/creatives')
+    def get_dpa_accounts(self, adv_hash):
+        return self._get('/advertisers/' + adv_hash + '/dpa/accounts')
+
+    def get_dpa_creatives(self, account_hash):
+        return self._get('/preview/dpa/' + account_hash)
 
     def get_dpa_campaign_stats(self, adv_hash, day_from, day_to, group_by='day',
                                convention_type=Conversions.ATTRIBUTED_POST_CLICK):

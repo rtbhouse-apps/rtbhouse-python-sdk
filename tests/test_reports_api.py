@@ -7,7 +7,8 @@ DAY_FROM = '2017-11-01'
 DAY_TO = '2017-11-02'
 
 shared_fixtures = {
-    'advertiser': None
+    'advertiser': None,
+    'dpa_account': None
 }
 
 
@@ -29,6 +30,20 @@ class TestReportsApi(unittest.TestCase):
 
         shared_fixtures['advertiser'] = first_adv
         return shared_fixtures['advertiser']['hash']
+
+    @property
+    def account_hash(self):
+        if shared_fixtures['dpa_account']:
+            return shared_fixtures['dpa_account']['hash']
+
+        dpa_accounts = self.api.get_dpa_accounts(self.adv_hash)
+        self.assertGreater(len(dpa_accounts), 0)
+        first_account = dpa_accounts[0]
+        self.assertIn('hash', first_account)
+        self.assertIn('name', first_account)
+
+        shared_fixtures['dpa_account'] = first_account
+        return shared_fixtures['dpa_account']['hash']
 
     def test_get_user_info(self):
         data = self.api.get_user_info()
@@ -230,8 +245,15 @@ class TestReportsApi(unittest.TestCase):
 
     # DPA
 
+    def test_get_dpa_accounts(self):
+        dpa_accounts = self.api.get_dpa_accounts(self.adv_hash)
+        self.assertGreater(len(dpa_accounts), 0)
+        first_row = dpa_accounts[0]
+        self.assertIn('hash', first_row)
+        self.assertIn('name', first_row)
+
     def test_get_dpa_creatives(self):
-        dpa_creatives = self.api.get_dpa_creatives(self.adv_hash)
+        dpa_creatives = self.api.get_dpa_creatives(self.account_hash)
         self.assertGreater(len(dpa_creatives), 0)
         first_row = dpa_creatives[0]
         self.assertIn('adFormat', first_row)

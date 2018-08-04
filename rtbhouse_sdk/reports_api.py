@@ -15,6 +15,17 @@ class UserSegment:
     BUYERS = 'BUYERS'
 
 
+class DeviceType:
+    PC = 'PC'
+    MOBILE = 'MOBILE'
+    PHONE = 'PHONE'
+    TABLET = 'TABLET'
+    TV = 'TV'
+    GAME_CONSOLE = 'GAME_CONSOLE'
+    OTHER = 'OTHER'
+    UNKNOWN = 'UNKNOWN'
+
+
 class ReportsApiException(Exception):
     def __init__(self, message):
         self.message = message
@@ -114,11 +125,15 @@ class ReportsApiSession:
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
     def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by='day',
-                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
+                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None,
+                               campaign_hash=None):
         params = {'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type}
 
         if user_segment is not None:
             params['userSegment'] = user_segment
+
+        if campaign_hash is not None:
+            params['campaigns'] = campaign_hash
 
         return self._get('/advertisers/' + adv_hash + '/campaign-stats', params)
 
@@ -147,10 +162,20 @@ class ReportsApiSession:
         return self._get('/advertisers/' + adv_hash + '/creative-stats', params)
 
     def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by='deviceType',
-                             convention_type=Conversions.ATTRIBUTED_POST_CLICK):
-        return self._get('/advertisers/' + adv_hash + '/device-stats', {
-            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type
-        })
+                             convention_type=Conversions.ATTRIBUTED_POST_CLICK,
+                             device_type=None, campaign_hash=None):
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type
+        }
+        if device_type is not None:
+            params['deviceType'] = device_type
+        if campaign_hash is not None:
+            params['campaigns'] = campaign_hash
+
+        return self._get('/advertisers/' + adv_hash + '/device-stats', params)
 
     def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by='country',
                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):

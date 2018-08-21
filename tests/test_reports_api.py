@@ -1,49 +1,72 @@
 import unittest
+from unittest.mock import patch
+from requests import Response
 
 from config import USERNAME, PASSWORD
-from rtbhouse_sdk.reports_api import ReportsApiSession, UserSegment, Conversions
+from rtbhouse_sdk.reports_api import ReportsApiSession, UserSegment, Conversions, ReportsApiException, API_VERSION
 
 DAY_FROM = '2017-11-01'
 DAY_TO = '2017-11-02'
 
-shared_fixtures = {
-    'advertiser': None,
-    'dpa_account': None
-}
-
 
 class TestReportsApi(unittest.TestCase):
+
+    _adv_hash = None
+    _account_hash = None
+
     def setUp(self):
         self.api = ReportsApiSession(USERNAME, PASSWORD)
 
     @property
     def adv_hash(self):
-        if shared_fixtures['advertiser']:
-            return shared_fixtures['advertiser']['hash']
+        if not self._adv_hash:
+            advertisers = self.api.get_advertisers()
+            self.assertGreater(len(advertisers), 0)
+            first_adv = advertisers[0]
+            self.assertIn('hash', first_adv)
+            self.assertIn('name', first_adv)
+            self.assertIn('status', first_adv)
+            self._adv_hash = first_adv['hash']
 
-        advertisers = self.api.get_advertisers()
-        self.assertGreater(len(advertisers), 0)
-        first_adv = advertisers[0]
-        self.assertIn('hash', first_adv)
-        self.assertIn('name', first_adv)
-        self.assertIn('status', first_adv)
-
-        shared_fixtures['advertiser'] = first_adv
-        return shared_fixtures['advertiser']['hash']
+        return self._adv_hash
 
     @property
     def account_hash(self):
-        if shared_fixtures['dpa_account']:
-            return shared_fixtures['dpa_account']['hash']
+        if not self._account_hash:
+            dpa_accounts = self.api.get_dpa_accounts(self.adv_hash)
+            self.assertGreater(len(dpa_accounts), 0)
+            first_account = dpa_accounts[0]
+            self.assertIn('hash', first_account)
+            self.assertIn('name', first_account)
+            self._account_hash = first_account['hash']
 
-        dpa_accounts = self.api.get_dpa_accounts(self.adv_hash)
-        self.assertGreater(len(dpa_accounts), 0)
-        first_account = dpa_accounts[0]
-        self.assertIn('hash', first_account)
-        self.assertIn('name', first_account)
+        return self._account_hash
 
-        shared_fixtures['dpa_account'] = first_account
-        return shared_fixtures['dpa_account']['hash']
+    def test_raise_error_on_too_old_api_version(self):
+        response = Response()
+        newest_version = 'v{}'.format(int(API_VERSION.strip('v')) + 2)
+        response.status_code = 410
+        response.headers['X-Current-Api-Version'] = newest_version
+
+        with self.assertRaises(ReportsApiException) as cm:
+            self.api._validate_response(response)
+
+        msg = 'Unsupported api version ({}), use newest version ({}) by updating rtbhouse_sdk package.' \
+            .format(API_VERSION, newest_version)
+        self.assertEqual(cm.exception.message, msg)
+
+    def test_raises_warning_on_not_the_newest_api_version(self):
+        response = Response()
+        newest_version = 'v{}'.format(int(API_VERSION.strip('v')) + 1)
+        response.status_code = 200
+        response.headers['X-Current-Api-Version'] = newest_version
+
+        with self.assertWarns(Warning) as cm:
+            self.api._validate_response(response)
+
+        msg = 'Used api version ({}) is outdated, use newest version ({}) by updating ' \
+            'rtbhouse_sdk package.'.format(API_VERSION, newest_version)
+        self.assertEqual(str(cm.warning), msg)
 
     def test_get_user_info(self):
         data = self.api.get_user_info()

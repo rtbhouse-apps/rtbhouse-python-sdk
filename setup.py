@@ -19,6 +19,11 @@ setup(
     install_requires=[
         'requests>=2.18.4'
     ],
+    extras_require={
+        'dev': [
+            'pytest==3.4.1',
+        ],
+    },
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

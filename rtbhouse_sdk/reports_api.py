@@ -50,7 +50,7 @@ class ReportsApiRequestException(ReportsApiException):
             self.message = self._res_data.get('message')
             self.app_code = self._res_data.get('appCode')
             self.errors = self._res_data.get('errors')
-        except:
+        except Exception:
             self.message = '{} ({})'.format(res.reason, str(res.status_code))
 
 

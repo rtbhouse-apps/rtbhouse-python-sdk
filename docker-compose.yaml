@@ -1,0 +1,14 @@
+---
+
+version: "3.2"
+
+services:
+  tests:
+    build:
+      context: .
+      args:
+        UID: "${UID}"
+        GID: "${UID}"
+    container_name: rtbhouse-python-sdk
+    volumes:
+      - ./:/home/apps/code

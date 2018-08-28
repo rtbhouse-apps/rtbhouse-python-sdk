@@ -1,6 +1,11 @@
-import requests
+import warnings
+from requests import request
+from . import __version__ as sdk_version
 
-API_BASE_URL = "https://panel.rtbhouse.com/api"
+
+API_BASE_URL = "https://api.panel.rtbhouse.com"
+API_VERSION = 'v1'
+DEFAULT_TIMEOUT = 60
 
 
 class Conversions:
@@ -45,15 +50,16 @@ class ReportsApiRequestException(ReportsApiException):
             self.message = self._res_data.get('message')
             self.app_code = self._res_data.get('appCode')
             self.errors = self._res_data.get('errors')
-        except:
+        except Exception:
             self.message = '{} ({})'.format(res.reason, str(res.status_code))
 
 
 class ReportsApiSession:
-    def __init__(self, username, password):
+    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT):
         self._username = username
         self._password = password
         self._session = None
+        self._timeout = timeout
 
     @property
     def session(self):
@@ -62,26 +68,41 @@ class ReportsApiSession:
 
         return self._session
 
-    def _create_session(self):
-        res = requests.post(API_BASE_URL + '/auth/login', json={'login': self._username, 'password': self._password})
-        if not res.ok:
-            raise ReportsApiRequestException(res)
+    def _validate_response(self, res):
+        newest_version = res.headers.get('X-Current-Api-Version')
+        if newest_version != API_VERSION:
+            warnings.warn(
+                'Used api version ({}) is outdated, use newest version ({}) by updating '
+                'rtbhouse_sdk package.'.format(API_VERSION, newest_version))
+        if res.ok:
+            return
 
+        if res.status_code == 410:
+            raise ReportsApiException(
+                'Unsupported api version ({}), use newest version ({}) by updating rtbhouse_sdk package.'
+                .format(API_VERSION, res.headers.get('X-Current-Api-Version')))
+        raise ReportsApiRequestException(res)
+
+    def _make_request(self, method, path, *args, **kwargs):
+        base_url = '{}/{}'.format(API_BASE_URL, API_VERSION)
+        kwargs['timeout'] = self._timeout
+        kwargs.setdefault('headers', {})['user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
+
+        res = request(method, base_url + path, *args, **kwargs)
+        self._validate_response(res)
+        return res
+
+    def _create_session(self):
+        res = self._make_request('post', '/auth/login', json={'login': self._username, 'password': self._password})
         return res.cookies.get('session')
 
-    def _get_data(self, res):
-        if not res.ok:
-            raise ReportsApiRequestException(res)
-
+    def _get(self, path, params=None):
+        res = self._make_request('get', path, cookies={'session': self.session}, params=params)
         try:
             res_json = res.json()
             return res_json.get('data') or {}
         except Exception:
             raise ReportsApiException('Invalid response format')
-
-    def _get(self, path, params=None):
-        res = requests.get(API_BASE_URL + path, cookies={'session': self.session}, params=params)
-        return self._get_data(res)
 
     def get_user_info(self):
         data = self._get('/user/info')

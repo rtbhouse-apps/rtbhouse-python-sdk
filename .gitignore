@@ -8,3 +8,4 @@ virtualenv
 venv
 config.py
 /dist
+results.xml

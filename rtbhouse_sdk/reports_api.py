@@ -4,8 +4,9 @@ from . import __version__ as sdk_version
 
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
-API_VERSION = 'v1'
+API_VERSION = 'v2'
 DEFAULT_TIMEOUT = 60
+MAX_CURSOR_ROWS_LIMIT = 10000
 
 
 class Conversions:
@@ -104,6 +105,19 @@ class ReportsApiSession:
         except Exception:
             raise ReportsApiException('Invalid response format')
 
+    def _get_from_cursor(self, path, params=None):
+        params = (params or {}).copy()
+        params['limit'] = MAX_CURSOR_ROWS_LIMIT
+        res = self._get(path, params=params)
+        rows = res['rows']
+
+        while res['nextCursor']:
+            params['nextCursor'] = res['nextCursor']
+            res = self._get(path, params=params)
+            rows.extend(res['rows'])
+
+        return rows
+
     def get_user_info(self):
         data = self._get('/user/info')
         return {
@@ -160,7 +174,7 @@ class ReportsApiSession:
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
 
-        return self._get('/advertisers/' + adv_hash + '/conversions', {
+        return self._get_from_cursor('/advertisers/' + adv_hash + '/conversions', {
             'dayFrom': day_from, 'dayTo': day_to, 'conversionType': convention_type
         })
 

@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch
 from requests import Response
 
 from config import USERNAME, PASSWORD

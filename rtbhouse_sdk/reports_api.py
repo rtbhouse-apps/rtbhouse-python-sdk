@@ -175,7 +175,7 @@ class ReportsApiSession:
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
 
         return self._get_from_cursor('/advertisers/' + adv_hash + '/conversions', {
-            'dayFrom': day_from, 'dayTo': day_to, 'conversionType': convention_type
+            'dayFrom': day_from, 'dayTo': day_to, 'countConvention': convention_type
         })
 
     def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId',

@@ -7,7 +7,7 @@ ReportsApiSession.get_user_info()
 Method with no arguments, returning the username and email of the current API user.
 
 ReportsApiSession.get_advertisers()
-Method with no arguments, returning a Python list of elements representing advertisers 
+Method with no arguments, returning a Python list of elements representing advertisers
 that the current API user has access to.
 
 ReportsApiSession.get_advertiser(adv_hash)
@@ -25,7 +25,7 @@ of active offers within each of the categories.
 
 ReportsApiSession.get_offers(adv_hash)
 Method with one argument adv_hash representing advertiser hash.
-Returns a Python list containing first 1000 offers with their details as specified 
+Returns a Python list containing first 1000 offers with their details as specified
 by the feed.
 
 ReportsApiSession.get_advertiser_campaigns(adv_hash)
@@ -43,7 +43,7 @@ ReportsApiSession.get_campaign_stats_total(adv_hash, day_from, day_to, group_by)
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the 
+and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the
 following: 'day', 'month', 'year', 'campaign'
 
 # RTB
@@ -56,16 +56,16 @@ ReportsApiSession.get_rtb_campaign_stats(adv_hash, day_from, day_to, group_by)
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the 
+and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the
 following: 'day', 'month', 'year', 'userSegment', 'campaign'
 
 
 
-ReportsApiSession.get_rtb_conversions(adv_hash, day_from, day_to, conversion_type=None)
-Method with four arguments: adv_hash, day_from, day_to and conversion_type
+ReportsApiSession.get_rtb_conversions(adv_hash, day_from, day_to, convention_type=None)
+Method with four arguments: adv_hash, day_from, day_to and convention_type
 representing advertiser hash and date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The conversion_type argument must be of string or None type and be one of the 
-following: 
+and format 'dd-mm-yyyy'. The convention_type argument must be of string or None type and be one of the
+following:
 None (which is default, equals to leaving this argument empty) – will return a list of all attributed post click conversions and all post view conversions. Is roughly equivalent to merging results of calling this method with POST_CLICK and POST_VIEW arguments.
 POST_CLICK – returns a list of all attributed post click conversions.
 POST_VIEW – returns a list of all post view conversions
@@ -110,8 +110,8 @@ is enough. Returns campaign statistics grouped by country.
 
 ReportsApiSession.get_dpa_creatives(adv_hash)
 
-Method with one argument: adv_hash representing advertiser hash 
-(string type, can be obtained from list returned by the get_advertisers() 
+Method with one argument: adv_hash representing advertiser hash
+(string type, can be obtained from list returned by the get_advertisers()
 method or directly from panel URL). Returns a list containing details of
 Facebook DPA banners.
 
@@ -119,7 +119,7 @@ ReportsApiSession.get_dpa_campaign_stats(adv_hash, day_from, day_to, group_by)
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the 
+and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the
 following: 'day', 'month', 'year', 'placement'. Returns a list of Python dictionaries
 containing data on DPA campaigns.
 

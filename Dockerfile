@@ -15,4 +15,4 @@ WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
 RUN pip install --user .[dev]
-CMD ["py.test", "tests/", "--junitxml=./results.xml", "--color=no"]
+CMD ["py.test", "tests/", "--junitxml=./results/results.xml", "--color=no"]

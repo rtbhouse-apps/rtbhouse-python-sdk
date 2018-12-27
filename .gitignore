@@ -9,3 +9,4 @@ venv
 config.py
 /dist
 /results
+/.pytest_cache

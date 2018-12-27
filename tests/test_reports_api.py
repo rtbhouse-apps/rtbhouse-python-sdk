@@ -116,7 +116,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('day', first_bill)
 
     def test_get_campaign_stats_total(self):
-        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day',
+        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['day'],
                                                       Conversions.ALL_POST_CLICK)
         self.assertGreater(len(all_stats), 0)
         first_row = all_stats[0]
@@ -124,7 +124,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
-        attr_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day',
+        attr_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['day'],
                                                        Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_stats), 0)
         attr_first_row = attr_stats[0]
@@ -132,14 +132,14 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', attr_first_row)
         self.assertIn('clicksCount', attr_first_row)
 
-        pv_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.POST_VIEW)
+        pv_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['day'], Conversions.POST_VIEW)
         self.assertGreater(len(pv_stats), 0)
         pv_first_row = pv_stats[0]
         self.assertIn('day', pv_first_row)
         self.assertIn('impsCount', pv_first_row)
         self.assertIn('clicksCount', pv_first_row)
 
-        y_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'year',
+        y_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['year'],
                                                     Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(y_stats), 0)
         y_first_row = y_stats[0]
@@ -147,7 +147,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('clicksCount', y_first_row)
         self.assertIn('year', y_first_row)
 
-        m_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'month',
+        m_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['month'],
                                                     Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(m_stats), 0)
         m_first_row = m_stats[0]
@@ -155,7 +155,15 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('clicksCount', m_first_row)
         self.assertIn('month', m_first_row)
 
-        camp_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'campaign',
+        camp_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['campaign'],
+                                                       Conversions.ATTRIBUTED_POST_CLICK)
+        self.assertGreater(len(camp_stats), 0)
+        camp_first_row = camp_stats[0]
+        self.assertIn('impsCount', camp_first_row)
+        self.assertIn('clicksCount', camp_first_row)
+        self.assertIn('subcampaign', camp_first_row)
+
+        camp_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['day', 'campaign'],
                                                        Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(camp_stats), 0)
         camp_first_row = camp_stats[0]
@@ -174,14 +182,14 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('previewUrl', first_row)
 
     def test_get_rtb_campaign_stats(self):
-        all_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK)
+        all_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['day'], Conversions.ALL_POST_CLICK)
         self.assertGreater(len(all_stats), 0)
         first_row = all_stats[0]
         self.assertIn('day', first_row)
         self.assertIn('impsCount', first_row)
         self.assertIn('clicksCount', first_row)
 
-        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.ALL_POST_CLICK,
+        us_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['day'], Conversions.ALL_POST_CLICK,
                                                    UserSegment.VISITORS)
         self.assertGreater(len(us_stats), 0)
         us_first_row = us_stats[0]
@@ -189,13 +197,13 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', us_first_row)
         self.assertIn('clicksCount', us_first_row)
 
-        m_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'month', Conversions.ALL_POST_CLICK)
+        m_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['month'], Conversions.ALL_POST_CLICK)
         self.assertGreater(len(m_stats), 0)
         m_first_row = m_stats[0]
         self.assertIn('impsCount', m_first_row)
         self.assertIn('clicksCount', m_first_row)
 
-        attr_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day',
+        attr_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['day'],
                                                      Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_stats), 0)
         attr_first_row = attr_stats[0]
@@ -203,12 +211,21 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('impsCount', attr_first_row)
         self.assertIn('clicksCount', attr_first_row)
 
-        pv_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, 'day', Conversions.POST_VIEW)
+        pv_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['day'], Conversions.POST_VIEW)
         self.assertGreater(len(pv_stats), 0)
         pv_first_row = pv_stats[0]
         self.assertIn('day', pv_first_row)
         self.assertIn('impsCount', pv_first_row)
         self.assertIn('clicksCount', pv_first_row)
+
+        pv_stats = self.api.get_rtb_campaign_stats(self.adv_hash, DAY_FROM, DAY_TO, ['day', 'campaign'], Conversions.POST_VIEW)
+        self.assertGreater(len(pv_stats), 0)
+        pv_first_row = pv_stats[0]
+        self.assertIn('day', pv_first_row)
+        self.assertIn('impsCount', pv_first_row)
+        self.assertIn('clicksCount', pv_first_row)
+        self.assertIn('subcampaign', pv_first_row)
+        self.assertIn('subcampaignHash', pv_first_row)
 
     def test_get_rtb_conversions_stats(self):
         all_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, Conversions.ALL_POST_CLICK)

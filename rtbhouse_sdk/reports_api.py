@@ -118,6 +118,11 @@ class ReportsApiSession:
 
         return rows
 
+    def _map_stats_params(self, params):
+        if 'groupBy' in params:
+            params['groupBy'] = '-'.join(params['groupBy'])
+        return params
+
     def get_user_info(self):
         data = self._get('/user/info')
         return {
@@ -148,29 +153,46 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to
         })
 
-    def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by='day',
+    def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by=None,
                                  convention_type=Conversions.ATTRIBUTED_POST_CLICK):
-        return self._get('/advertisers/' + adv_hash + '/campaign-stats-merged', {
-            'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type
+        if group_by is None:
+            group_by = ['day']
+
+        params = self._map_stats_params({
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
         })
+        url = '/advertisers/{}/campaign-stats-merged'.format(adv_hash)
+
+        return self._get(url, params)
 
     # RTB
 
     def get_rtb_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
-    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by='day',
+    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by=None,
                                convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None,
                                campaign_hash=None):
-        params = {'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type}
+        if group_by is None:
+            group_by = ['day']
 
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
+        }
         if user_segment is not None:
             params['userSegment'] = user_segment
-
         if campaign_hash is not None:
             params['campaigns'] = campaign_hash
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/campaign-stats'.format(adv_hash)
 
-        return self._get('/advertisers/' + adv_hash + '/campaign-stats', params)
+        return self._get(url, params)
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
 
@@ -178,27 +200,48 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to, 'countConvention': convention_type
         })
 
-    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by='categoryId',
+    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by=None,
                                convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        params = {'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type}
+        if group_by is None:
+            group_by = ['categoryId']
 
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
+        }
         if user_segment is not None:
             params['userSegment'] = user_segment
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/category-stats'.format(adv_hash)
 
-        return self._get('/advertisers/' + adv_hash + '/category-stats', params)
+        return self._get(url, params)
 
-    def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by='creativeId',
+    def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by=None,
                                convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        params = {'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type}
+        if group_by is None:
+            group_by = ['creativeId']
 
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
+        }
         if user_segment is not None:
             params['userSegment'] = user_segment
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/creative-stats'.format(adv_hash)
 
-        return self._get('/advertisers/' + adv_hash + '/creative-stats', params)
+        return self._get(url, params)
 
-    def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by='deviceType',
+    def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by=None,
                              convention_type=Conversions.ATTRIBUTED_POST_CLICK,
                              device_type=None, campaign_hash=None):
+        if group_by is None:
+            group_by = ['deviceType']
+
         params = {
             'dayFrom': day_from,
             'dayTo': day_to,
@@ -209,17 +252,28 @@ class ReportsApiSession:
             params['deviceType'] = device_type
         if campaign_hash is not None:
             params['campaigns'] = campaign_hash
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/device-stats'.format(adv_hash)
 
-        return self._get('/advertisers/' + adv_hash + '/device-stats', params)
+        return self._get(url, params)
 
-    def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by='country',
+    def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by=None,
                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        params = {'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type}
+        if group_by is None:
+            group_by = ['country']
 
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
+        }
         if user_segment is not None:
             params['userSegment'] = user_segment
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/country-stats'.format(adv_hash)
 
-        return self._get('/advertisers/' + adv_hash + '/country-stats', params)
+        return self._get(url, params)
 
     # DPA
 

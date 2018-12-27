@@ -43,7 +43,7 @@ ReportsApiSession.get_campaign_stats_total(adv_hash, day_from, day_to, group_by)
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the
+and format 'dd-mm-yyyy'. The group_by argument must be a list of strings and be one of the
 following: 'day', 'month', 'year', 'campaign'
 
 # RTB
@@ -56,7 +56,7 @@ ReportsApiSession.get_rtb_campaign_stats(adv_hash, day_from, day_to, group_by)
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
-and format 'dd-mm-yyyy'. The group_by argument must be of string type and be one of the
+and format 'dd-mm-yyyy'. The group_by argument must be a list of strings and be one of the
 following: 'day', 'month', 'year', 'userSegment', 'campaign'
 
 
@@ -72,7 +72,7 @@ POST_VIEW – returns a list of all post view conversions
 deduplicated – returns a list of all conversions, that were deduplicated.
 
 
-ReportsApiSession.get_rtb_category_stats(adv_hash, day_from, day_to, group_by='categoryId')
+ReportsApiSession.get_rtb_category_stats(adv_hash, day_from, day_to, group_by=['categoryId'])
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
@@ -81,7 +81,7 @@ there is no need to specify this argument. get_rtb_category_stats(adv_hash, day_
 is enough. Returns campaign statistics grouped by categories specified in the feed.
 
 
-ReportsApiSession.get_rtb_creative_stats(adv_hash, day_from, day_to, group_by='creativeId')
+ReportsApiSession.get_rtb_creative_stats(adv_hash, day_from, day_to, group_by=['creativeId'])
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
@@ -90,7 +90,7 @@ there is no need to specify this argument. get_rtb_creative_stats(adv_hash, day_
 is enough. Returns campaign statistics grouped by creatives/banners.
 
 
-ReportsApiSession.get_rtb_device_stats(adv_hash, day_from, day_to, group_by='deviceType')
+ReportsApiSession.get_rtb_device_stats(adv_hash, day_from, day_to, group_by=['deviceType'])
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type
@@ -98,7 +98,7 @@ and format 'dd-mm-yyyy'. The group_by argument defaults to 'deviceType' and as s
 there is no need to specify this argument. get_rtb_device_stats(adv_hash, day_from, day_to)
 is enough. Returns campaign statistics grouped by device type.
 
-ReportsApiSession.get_rtb_country_stats(adv_hash, day_from, day_to, group_by='country')
+ReportsApiSession.get_rtb_country_stats(adv_hash, day_from, day_to, group_by=['country'])
 Method with four arguments: adv_hash, day_from, day_to and group_by
 representing advertiser hash and
 date ranges limiting data being returned. day_from and day_to must be of string type

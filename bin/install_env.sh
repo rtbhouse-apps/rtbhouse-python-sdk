@@ -11,4 +11,5 @@ python3 -m venv venv
 export PATH="./venv/bin:$PATH"
 
 pip install -U pip setuptools wheel
-pip install -e .
+pip install -e .[dev]
+pip list --outdated

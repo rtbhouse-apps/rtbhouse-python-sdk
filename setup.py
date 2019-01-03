@@ -21,7 +21,7 @@ setup(
     ],
     extras_require={
         'dev': [
-            'pytest==3.4.1',
+            'pytest==4.0.2',
         ],
     },
     classifiers=[

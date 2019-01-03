@@ -5,7 +5,7 @@ from config import USERNAME, PASSWORD
 from rtbhouse_sdk.reports_api import ReportsApiSession, UserSegment, Conversions, ReportsApiException, API_VERSION
 
 DAY_FROM = '2017-11-01'
-DAY_TO = '2017-11-02'
+DAY_TO = '2017-11-01'
 
 
 class TestReportsApi(unittest.TestCase):

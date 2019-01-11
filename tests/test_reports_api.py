@@ -116,7 +116,7 @@ class TestReportsApi(unittest.TestCase):
         self.assertIn('day', first_bill)
 
     def test_get_campaign_stats_total(self):
-        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, ['day'],
+        all_stats = self.api.get_campaign_stats_total(self.adv_hash, DAY_FROM, DAY_TO, 'day',
                                                       Conversions.ALL_POST_CLICK)
         self.assertGreater(len(all_stats), 0)
         first_row = all_stats[0]

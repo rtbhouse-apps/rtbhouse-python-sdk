@@ -119,7 +119,7 @@ class ReportsApiSession:
         return rows
 
     def _map_stats_params(self, params):
-        if 'groupBy' in params:
+        if 'groupBy' in params and isinstance(params['groupBy'], list):
             params['groupBy'] = '-'.join(params['groupBy'])
         return params
 

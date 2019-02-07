@@ -106,14 +106,11 @@ class ReportsApiSession:
             raise ReportsApiException('Invalid response format')
 
     def _get_from_cursor(self, path, params=None):
-        params = (params or {}).copy()
-        params['limit'] = MAX_CURSOR_ROWS_LIMIT
-        res = self._get(path, params=params)
+        res = self._get(path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT })
         rows = res['rows']
 
         while res['nextCursor']:
-            params['nextCursor'] = res['nextCursor']
-            res = self._get(path, params=params)
+            res = self._get(path, params={ 'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT })
             rows.extend(res['rows'])
 
         return rows

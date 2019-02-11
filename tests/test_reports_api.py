@@ -231,7 +231,6 @@ class TestReportsApi(unittest.TestCase):
         all_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, Conversions.ALL_POST_CLICK)
         self.assertGreater(len(all_conversions), 0)
         first_row = all_conversions[0]
-        self.assertIn('conversionType', first_row)
         self.assertIn('conversionValue', first_row)
         self.assertIn('conversionIdentifier', first_row)
 
@@ -239,14 +238,12 @@ class TestReportsApi(unittest.TestCase):
                                                         Conversions.ATTRIBUTED_POST_CLICK)
         self.assertGreater(len(attr_conversions), 0)
         attr_first_row = attr_conversions[0]
-        self.assertIn('conversionType', attr_first_row)
         self.assertIn('conversionValue', attr_first_row)
         self.assertIn('conversionIdentifier', attr_first_row)
 
         pv_conversions = self.api.get_rtb_conversions(self.adv_hash, DAY_FROM, DAY_TO, Conversions.POST_VIEW)
         self.assertGreater(len(pv_conversions), 0)
         pv_first_row = pv_conversions[0]
-        self.assertIn('conversionType', pv_first_row)
         self.assertIn('conversionValue', pv_first_row)
         self.assertIn('conversionIdentifier', pv_first_row)
 

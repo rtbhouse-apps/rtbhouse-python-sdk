@@ -34,6 +34,7 @@ class DeviceType:
 
 class ReportsApiException(Exception):
     def __init__(self, message):
+        super().__init__(message)
         self.message = message
 
     def __str__(self):
@@ -46,28 +47,49 @@ class ReportsApiRequestException(ReportsApiException):
     errors = {}
 
     def __init__(self, res):
+        self.raw_response = res
         try:
             self._res_data = res.json()
-            self.message = self._res_data.get('message')
+        except Exception:
+            message = '{} ({})'.format(res.reason, str(res.status_code))
+        else:
             self.app_code = self._res_data.get('appCode')
             self.errors = self._res_data.get('errors')
-        except Exception:
-            self.message = '{} ({})'.format(res.reason, str(res.status_code))
+            message = self._res_data.get('message')
+
+        super().__init__(message)
+
+
+class ReportsApiRateLimitException(ReportsApiRequestException):
+    message = 'Resource usage limits reached'
+
+    def __init__(self, res):
+        super().__init__(res)
+        self.limits = ReportsApiSession.parse_resource_usage_header(res.headers.get('X-Resource-Usage'))
 
 
 class ReportsApiSession:
     def __init__(self, username, password, timeout=DEFAULT_TIMEOUT):
         self._username = username
         self._password = password
-        self._session = None
         self._timeout = timeout
 
-    @property
-    def session(self):
-        if not self._session:
-            self._session = self._create_session()
-
-        return self._session
+    @staticmethod
+    def parse_resource_usage_header(header):
+        '''parse string like WORKER_TIME-3600=11.7/10000000;DB_QUERY_TIME-21600=4.62/2000 into dict
+        '''
+        if not header:
+            return {}
+        result = {}
+        try:
+            for line in header.split(';'):
+                right, left = line.split('=')
+                metric, time_span = right.split('-')
+                used, limit = left.split('/')
+                result.setdefault(metric, {}).setdefault(time_span, {})[limit] = float(used)
+        except ValueError:
+            return {}
+        return result
 
     def _validate_response(self, res):
         newest_version = res.headers.get('X-Current-Api-Version')
@@ -82,6 +104,10 @@ class ReportsApiSession:
             raise ReportsApiException(
                 'Unsupported api version ({}), use newest version ({}) by updating rtbhouse_sdk package.'
                 .format(API_VERSION, res.headers.get('X-Current-Api-Version')))
+
+        if res.status_code == 429:
+            raise ReportsApiRateLimitException(res)
+
         raise ReportsApiRequestException(res)
 
     def _make_request(self, method, path, *args, **kwargs):
@@ -93,12 +119,8 @@ class ReportsApiSession:
         self._validate_response(res)
         return res
 
-    def _create_session(self):
-        res = self._make_request('post', '/auth/login', json={'login': self._username, 'password': self._password})
-        return res.cookies.get('session')
-
     def _get(self, path, params=None):
-        res = self._make_request('get', path, cookies={'session': self.session}, params=params)
+        res = self._make_request('get', path, auth=(self._username, self._password), params=params)
         try:
             res_json = res.json()
             return res_json.get('data') or {}
@@ -106,11 +128,11 @@ class ReportsApiSession:
             raise ReportsApiException('Invalid response format')
 
     def _get_from_cursor(self, path, params=None):
-        res = self._get(path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT })
+        res = self._get(path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT})
         rows = res['rows']
 
         while res['nextCursor']:
-            res = self._get(path, params={ 'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT })
+            res = self._get(path, params={'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT})
             rows.extend(res['rows'])
 
         return rows

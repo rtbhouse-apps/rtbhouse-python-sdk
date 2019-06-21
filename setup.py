@@ -22,6 +22,7 @@ setup(
     extras_require={
         'dev': [
             'pytest==4.0.2',
+            'twine==1.13.0',
         ],
     },
     classifiers=[
@@ -35,5 +36,6 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
     ]
 )

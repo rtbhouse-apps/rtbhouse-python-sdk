@@ -65,7 +65,8 @@ class ReportsApiRateLimitException(ReportsApiRequestException):
 
     def __init__(self, res):
         super().__init__(res)
-        self.limits = ReportsApiSession.parse_resource_usage_header(res.headers.get('X-Resource-Usage'))
+        self.limits = ReportsApiSession.parse_resource_usage_header(
+            res.headers.get('X-Resource-Usage'))
 
 
 class ReportsApiSession:
@@ -86,7 +87,8 @@ class ReportsApiSession:
                 right, left = line.split('=')
                 metric, time_span = right.split('-')
                 used, limit = left.split('/')
-                result.setdefault(metric, {}).setdefault(time_span, {})[limit] = float(used)
+                result.setdefault(metric, {}).setdefault(
+                    time_span, {})[limit] = float(used)
         except ValueError:
             return {}
         return result
@@ -113,14 +115,16 @@ class ReportsApiSession:
     def _make_request(self, method, path, *args, **kwargs):
         base_url = '{}/{}'.format(API_BASE_URL, API_VERSION)
         kwargs['timeout'] = self._timeout
-        kwargs.setdefault('headers', {})['user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
+        kwargs.setdefault('headers', {})[
+            'user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
 
         res = request(method, base_url + path, *args, **kwargs)
         self._validate_response(res)
         return res
 
     def _get(self, path, params=None):
-        res = self._make_request('get', path, auth=(self._username, self._password), params=params)
+        res = self._make_request('get', path, auth=(
+            self._username, self._password), params=params)
         try:
             res_json = res.json()
             return res_json.get('data') or {}
@@ -128,11 +132,13 @@ class ReportsApiSession:
             raise ReportsApiException('Invalid response format')
 
     def _get_from_cursor(self, path, params=None):
-        res = self._get(path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT})
+        res = self._get(
+            path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT})
         rows = res['rows']
 
         while res['nextCursor']:
-            res = self._get(path, params={'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT})
+            res = self._get(
+                path, params={'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT})
             rows.extend(res['rows'])
 
         return rows
@@ -291,6 +297,24 @@ class ReportsApiSession:
             params['userSegment'] = user_segment
         params = self._map_stats_params(params)
         url = '/advertisers/{}/country-stats'.format(adv_hash)
+
+        return self._get(url, params)
+
+    def get_rtb_creative_country_stats(self, adv_hash, day_from, day_to, group_by=None,
+                                       convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
+        if group_by is None:
+            group_by = ['creativeId', 'country']
+
+        params = {
+            'dayFrom': day_from,
+            'dayTo': day_to,
+            'groupBy': group_by,
+            'countConvention': convention_type,
+        }
+        if user_segment is not None:
+            params['userSegment'] = user_segment
+        params = self._map_stats_params(params)
+        url = '/advertisers/{}/creative-country-stats'.format(adv_hash)
 
         return self._get(url, params)
 

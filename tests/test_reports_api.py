@@ -7,10 +7,11 @@ from rtbhouse_sdk.reports_api import (
     ReportsApiException, ReportsApiRateLimitException,
 )
 
-DAY_FROM = '2017-11-01'
-DAY_TO = '2017-11-01'
+DAY_FROM = '2019-05-09'
+DAY_TO = '2019-05-09'
 
 # pylint: disable=redefined-outer-name
+
 
 @fixture(scope='module')
 def api():
@@ -88,9 +89,12 @@ def test_parse_resource_usage_header_invalid_structure():
     assert ReportsApiSession.parse_resource_usage_header(None) == {}
     assert ReportsApiSession.parse_resource_usage_header(';') == {}
     assert ReportsApiSession.parse_resource_usage_header('asd;qwe121=-/') == {}
-    assert ReportsApiSession.parse_resource_usage_header('WORKER_TIME-3600=asd/10000000') == {}
-    assert ReportsApiSession.parse_resource_usage_header('WORKER_TIME-3600=asd10000000') == {}
-    assert ReportsApiSession.parse_resource_usage_header('WORKER_TIME3600asd10000000') == {}
+    assert ReportsApiSession.parse_resource_usage_header(
+        'WORKER_TIME-3600=asd/10000000') == {}
+    assert ReportsApiSession.parse_resource_usage_header(
+        'WORKER_TIME-3600=asd10000000') == {}
+    assert ReportsApiSession.parse_resource_usage_header(
+        'WORKER_TIME3600asd10000000') == {}
 
 
 def test_raises_error_on_resource_usage_limit_reached(api):
@@ -247,6 +251,7 @@ def test_get_campaign_stats_total(api, adv_hash):
 
 # RTB
 
+
 def test_get_rtb_creatives(api, adv_hash):
     rtb_creatives = api.get_rtb_creatives(adv_hash)
 
@@ -387,6 +392,19 @@ def test_get_rtb_country_stats(api, adv_hash):
     assert 'country' in first_row
     assert 'impsCount' in first_row
     assert 'clicksCount' in first_row
+
+
+def test_get_rtb_creative_country_stats(api, adv_hash):
+    rtb_country_stats = api.get_rtb_creative_country_stats(
+        adv_hash, DAY_FROM, DAY_TO)
+
+    assert rtb_country_stats
+    first_row = rtb_country_stats[0]
+    assert 'creativeId' in first_row
+    assert 'country' in first_row
+    assert 'impsCount' in first_row
+    assert 'clicksCount' in first_row
+
 
 # DPA
 

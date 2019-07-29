@@ -178,79 +178,7 @@ def test_get_billing(api, adv_hash):
     assert 'day' in first_bill
 
 
-def test_get_campaign_stats_total(api, adv_hash):
-    all_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, 'day',
-        Conversions.ALL_POST_CLICK,
-    )
-    assert all_stats
-    first_row = all_stats[0]
-    assert 'day' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-    attr_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['day'],
-        Conversions.ATTRIBUTED_POST_CLICK,
-    )
-    assert attr_stats
-    attr_first_row = attr_stats[0]
-    assert 'day' in attr_first_row
-    assert 'impsCount' in attr_first_row
-    assert 'clicksCount' in attr_first_row
-
-    pv_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['day'],
-        Conversions.POST_VIEW,
-    )
-    assert pv_stats
-    pv_first_row = pv_stats[0]
-    assert 'day' in pv_first_row
-    assert 'impsCount' in pv_first_row
-    assert 'clicksCount' in pv_first_row
-
-    y_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['year'],
-        Conversions.ATTRIBUTED_POST_CLICK,
-    )
-    assert y_stats
-    y_first_row = y_stats[0]
-    assert 'impsCount' in y_first_row
-    assert 'clicksCount' in y_first_row
-    assert 'year' in y_first_row
-
-    m_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['month'],
-        Conversions.ATTRIBUTED_POST_CLICK,
-    )
-    assert m_stats
-    m_first_row = m_stats[0]
-    assert 'impsCount' in m_first_row
-    assert 'clicksCount' in m_first_row
-    assert 'month' in m_first_row
-
-    camp_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['campaign'],
-        Conversions.ATTRIBUTED_POST_CLICK,
-    )
-    assert camp_stats
-    camp_first_row = camp_stats[0]
-    assert 'impsCount' in camp_first_row
-    assert 'clicksCount' in camp_first_row
-    assert 'subcampaign' in camp_first_row
-
-    camp_stats = api.get_campaign_stats_total(
-        adv_hash, DAY_FROM, DAY_TO, ['day', 'campaign'],
-        Conversions.ATTRIBUTED_POST_CLICK,
-    )
-    assert camp_stats
-    camp_first_row = camp_stats[0]
-    assert 'impsCount' in camp_first_row
-    assert 'clicksCount' in camp_first_row
-    assert 'subcampaign' in camp_first_row
-
 # RTB
-
 
 def test_get_rtb_creatives(api, adv_hash):
     rtb_creatives = api.get_rtb_creatives(adv_hash)
@@ -262,70 +190,116 @@ def test_get_rtb_creatives(api, adv_hash):
     assert 'previewUrl' in first_row
 
 
-def test_get_rtb_campaign_stats(api, adv_hash):
-    all_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['day'],
-        Conversions.ALL_POST_CLICK,
+def _validate_get_rtb_stats_response(stats, required_fields):
+    assert len(stats) > 0
+    stat = stats[0]
+
+    assert 'impsCount' in stat
+    assert 'clicksCount' in stat
+
+    for required_field in required_fields:
+        assert required_field in stat
+
+
+def test_get_rtb_stats1(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+            user_segments={UserSegment.BUYERS}
+        ),
+        {'day', 'subcampaign', 'subcampaignHash'}
     )
-    assert all_stats
-    first_row = all_stats[0]
-    assert 'day' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
 
-    us_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['day'], Conversions.ALL_POST_CLICK,
-        UserSegment.VISITORS,
+
+def test_get_rtb_stats2(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+            include_dpa=True,
+        ),
+        {'day', 'subcampaign', 'subcampaignHash'}
     )
-    assert us_stats
-    us_first_row = us_stats[0]
-    assert 'day' in us_first_row
-    assert 'impsCount' in us_first_row
-    assert 'clicksCount' in us_first_row
 
-    m_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['month'],
-        Conversions.ALL_POST_CLICK,
+
+def test_get_rtb_stats3(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'userSegment'},
+            Conversions.POST_VIEW,
+        ),
+        {'day', 'userSegment'}
     )
-    assert m_stats
-    m_first_row = m_stats[0]
-    assert 'impsCount' in m_first_row
-    assert 'clicksCount' in m_first_row
 
-    attr_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['day'],
-        Conversions.ATTRIBUTED_POST_CLICK,
+
+def test_get_rtb_stats4(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'deviceType'},
+            Conversions.ALL_POST_CLICK,
+        ),
+        {'day', 'deviceType'}
     )
-    assert attr_stats
-    attr_first_row = attr_stats[0]
-    assert 'day' in attr_first_row
-    assert 'impsCount' in attr_first_row
-    assert 'clicksCount' in attr_first_row
 
-    pv_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['day'],
-        Conversions.POST_VIEW,
+
+def test_get_rtb_stats5(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'creative'},
+            Conversions.ALL_POST_CLICK,
+        ),
+        {'day', 'creative', 'creativeName', 'creativeType'}
     )
-    assert pv_stats
-    pv_first_row = pv_stats[0]
-    assert 'day' in pv_first_row
-    assert 'impsCount' in pv_first_row
-    assert 'clicksCount' in pv_first_row
 
-    pv_stats = api.get_rtb_campaign_stats(
-        adv_hash, DAY_FROM, DAY_TO, ['day', 'campaign'],
-        Conversions.POST_VIEW,
+
+def test_get_rtb_stats6(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'category'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+        ),
+        {'day', 'category', 'categoryName'}
     )
-    assert pv_stats
-    pv_first_row = pv_stats[0]
-    assert 'day' in pv_first_row
-    assert 'impsCount' in pv_first_row
-    assert 'clicksCount' in pv_first_row
-    assert 'subcampaign' in pv_first_row
-    assert 'subcampaignHash' in pv_first_row
 
 
-def test_get_rtb_conversions_stats(api, adv_hash):
+def test_get_rtb_stats7(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'country'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+        ),
+        {'day', 'country'}
+    )
+
+
+def test_get_rtb_stats8(api, adv_hash):
+    _validate_get_rtb_stats_response(
+        api.get_rtb_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'creative', 'country'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+        ),
+        {'day', 'creative', 'country'}
+    )
+
+
+def test_get_rtb_conversions(api, adv_hash):
     all_conversions = api.get_rtb_conversions(
         adv_hash, DAY_FROM, DAY_TO,
         Conversions.ALL_POST_CLICK,
@@ -354,59 +328,8 @@ def test_get_rtb_conversions_stats(api, adv_hash):
     assert 'conversionIdentifier' in pv_first_row
 
 
-def test_get_rtb_category_stats(api, adv_hash):
-    rtb_category_stats = api.get_rtb_category_stats(adv_hash, DAY_FROM, DAY_TO)
-
-    assert rtb_category_stats
-    first_row = rtb_category_stats[0]
-    assert 'categoryId' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-
-def test_get_rtb_creative_stats(api, adv_hash):
-    rtb_creative_stats = api.get_rtb_creative_stats(adv_hash, DAY_FROM, DAY_TO)
-
-    assert rtb_creative_stats
-    first_row = rtb_creative_stats[0]
-    assert 'creativeId' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-
-def test_get_rtb_device_stats(api, adv_hash):
-    rtb_device_stats = api.get_rtb_device_stats(adv_hash, DAY_FROM, DAY_TO)
-
-    assert rtb_device_stats
-    first_row = rtb_device_stats[0]
-    assert 'deviceType' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-
-def test_get_rtb_country_stats(api, adv_hash):
-    rtb_country_stats = api.get_rtb_country_stats(adv_hash, DAY_FROM, DAY_TO)
-
-    assert rtb_country_stats
-    first_row = rtb_country_stats[0]
-    assert 'country' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-
-def test_get_rtb_creative_country_stats(api, adv_hash):
-    rtb_country_stats = api.get_rtb_creative_country_stats(
-        adv_hash, DAY_FROM, DAY_TO)
-
-    assert rtb_country_stats
-    first_row = rtb_country_stats[0]
-    assert 'creativeId' in first_row
-    assert 'country' in first_row
-    assert 'impsCount' in first_row
-    assert 'clicksCount' in first_row
-
-
 # DPA
+
 
 def test_get_dpa_creatives(api, account_hash):
     dpa_creatives = api.get_dpa_creatives(account_hash)

@@ -4,7 +4,8 @@ from . import __version__ as sdk_version
 
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
-API_VERSION = 'v2'
+API_VERSION = 'v3'
+
 DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
 
@@ -19,6 +20,7 @@ class UserSegment:
     VISITORS = 'VISITORS'
     SHOPPERS = 'SHOPPERS'
     BUYERS = 'BUYERS'
+    NEW = 'NEW'
 
 
 class DeviceType:
@@ -95,7 +97,7 @@ class ReportsApiSession:
 
     def _validate_response(self, res):
         newest_version = res.headers.get('X-Current-Api-Version')
-        if newest_version != API_VERSION:
+        if newest_version is not None and newest_version != API_VERSION:
             warnings.warn(
                 'Used api version ({}) is outdated, use newest version ({}) by updating '
                 'rtbhouse_sdk package.'.format(API_VERSION, newest_version))
@@ -143,11 +145,6 @@ class ReportsApiSession:
 
         return rows
 
-    def _map_stats_params(self, params):
-        if 'groupBy' in params and isinstance(params['groupBy'], list):
-            params['groupBy'] = '-'.join(params['groupBy'])
-        return params
-
     def get_user_info(self):
         data = self._get('/user/info')
         return {
@@ -178,145 +175,32 @@ class ReportsApiSession:
             'dayFrom': day_from, 'dayTo': day_to
         })
 
-    def get_campaign_stats_total(self, adv_hash, day_from, day_to, group_by=None,
-                                 convention_type=Conversions.ATTRIBUTED_POST_CLICK):
-        if group_by is None:
-            group_by = ['day']
-
-        params = self._map_stats_params({
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
-        })
-        url = '/advertisers/{}/campaign-stats-merged'.format(adv_hash)
-
-        return self._get(url, params)
-
     # RTB
 
     def get_rtb_creatives(self, adv_hash):
         return self._get('/advertisers/' + adv_hash + '/creatives')
 
-    def get_rtb_campaign_stats(self, adv_hash, day_from, day_to, group_by=None,
-                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None,
-                               campaign_hash=None):
-        if group_by is None:
-            group_by = ['day']
-
+    def get_rtb_stats(self, adv_hash, day_from, day_to, group_by, count_convention=Conversions.ATTRIBUTED_POST_CLICK, user_segments=None, include_dpa=False):
         params = {
             'dayFrom': day_from,
             'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
+            'groupBy': '-'.join(group_by),
+            'countConvention': count_convention,
         }
-        if user_segment is not None:
-            params['userSegment'] = user_segment
-        if campaign_hash is not None:
-            params['campaigns'] = campaign_hash
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/campaign-stats'.format(adv_hash)
+        if user_segments is not None:
+            params['userSegments'] = '-'.join(user_segments)
+        if include_dpa:
+            params['includeDpa'] = 'true'
 
-        return self._get(url, params)
+        return self._get(
+            '/advertisers/' + adv_hash + '/rtb-stats',
+            params
+        )
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
-
         return self._get_from_cursor('/advertisers/' + adv_hash + '/conversions', {
             'dayFrom': day_from, 'dayTo': day_to, 'countConvention': convention_type
         })
-
-    def get_rtb_category_stats(self, adv_hash, day_from, day_to, group_by=None,
-                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        if group_by is None:
-            group_by = ['categoryId']
-
-        params = {
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
-        }
-        if user_segment is not None:
-            params['userSegment'] = user_segment
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/category-stats'.format(adv_hash)
-
-        return self._get(url, params)
-
-    def get_rtb_creative_stats(self, adv_hash, day_from, day_to, group_by=None,
-                               convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        if group_by is None:
-            group_by = ['creativeId']
-
-        params = {
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
-        }
-        if user_segment is not None:
-            params['userSegment'] = user_segment
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/creative-stats'.format(adv_hash)
-
-        return self._get(url, params)
-
-    def get_rtb_device_stats(self, adv_hash, day_from, day_to, group_by=None,
-                             convention_type=Conversions.ATTRIBUTED_POST_CLICK,
-                             device_type=None, campaign_hash=None):
-        if group_by is None:
-            group_by = ['deviceType']
-
-        params = {
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type
-        }
-        if device_type is not None:
-            params['deviceType'] = device_type
-        if campaign_hash is not None:
-            params['campaigns'] = campaign_hash
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/device-stats'.format(adv_hash)
-
-        return self._get(url, params)
-
-    def get_rtb_country_stats(self, adv_hash, day_from, day_to, group_by=None,
-                              convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        if group_by is None:
-            group_by = ['country']
-
-        params = {
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
-        }
-        if user_segment is not None:
-            params['userSegment'] = user_segment
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/country-stats'.format(adv_hash)
-
-        return self._get(url, params)
-
-    def get_rtb_creative_country_stats(self, adv_hash, day_from, day_to, group_by=None,
-                                       convention_type=Conversions.ATTRIBUTED_POST_CLICK, user_segment=None):
-        if group_by is None:
-            group_by = ['creativeId', 'country']
-
-        params = {
-            'dayFrom': day_from,
-            'dayTo': day_to,
-            'groupBy': group_by,
-            'countConvention': convention_type,
-        }
-        if user_segment is not None:
-            params['userSegment'] = user_segment
-        params = self._map_stats_params(params)
-        url = '/advertisers/{}/creative-country-stats'.format(adv_hash)
-
-        return self._get(url, params)
 
     # DPA
 
@@ -326,8 +210,7 @@ class ReportsApiSession:
     def get_dpa_creatives(self, account_hash):
         return self._get('/preview/dpa/' + account_hash)
 
-    def get_dpa_campaign_stats(self, adv_hash, day_from, day_to, group_by='day',
-                               convention_type=Conversions.ATTRIBUTED_POST_CLICK):
+    def get_dpa_campaign_stats(self, adv_hash, day_from, day_to, group_by='day', convention_type=Conversions.ATTRIBUTED_POST_CLICK):
         return self._get('/advertisers/' + adv_hash + '/dpa/campaign-stats', {
             'dayFrom': day_from, 'dayTo': day_to, 'groupBy': group_by, 'countConvention': convention_type
         })

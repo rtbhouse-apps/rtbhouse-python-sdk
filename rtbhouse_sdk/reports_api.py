@@ -117,8 +117,7 @@ class ReportsApiSession:
     def _make_request(self, method, path, *args, **kwargs):
         base_url = '{}/{}'.format(API_BASE_URL, API_VERSION)
         kwargs['timeout'] = self._timeout
-        kwargs.setdefault('headers', {})[
-            'user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
+        kwargs.setdefault('headers', {})['user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
 
         res = request(method, base_url + path, *args, **kwargs)
         self._validate_response(res)

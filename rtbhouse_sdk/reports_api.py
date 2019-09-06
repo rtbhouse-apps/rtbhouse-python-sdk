@@ -36,7 +36,7 @@ class DeviceType:
 
 class ReportsApiException(Exception):
     def __init__(self, message):
-        super().__init__(message)
+        super(Exception, self).__init__(message)
         self.message = message
 
     def __str__(self):
@@ -59,14 +59,14 @@ class ReportsApiRequestException(ReportsApiException):
             self.errors = self._res_data.get('errors')
             message = self._res_data.get('message')
 
-        super().__init__(message)
+        super(ReportsApiException, self).__init__(message)
 
 
 class ReportsApiRateLimitException(ReportsApiRequestException):
     message = 'Resource usage limits reached'
 
     def __init__(self, res):
-        super().__init__(res)
+        super(ReportsApiRequestException, self).__init__(res)
         self.limits = ReportsApiSession.parse_resource_usage_header(
             res.headers.get('X-Resource-Usage'))
 
@@ -134,8 +134,8 @@ class ReportsApiSession:
             raise ReportsApiException('Invalid response format')
 
     def _get_from_cursor(self, path, params=None):
-        res = self._get(
-            path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT})
+        params.update({'limit': MAX_CURSOR_ROWS_LIMIT})
+        res = self._get(path, params=params)
         rows = res['rows']
 
         while res['nextCursor']:

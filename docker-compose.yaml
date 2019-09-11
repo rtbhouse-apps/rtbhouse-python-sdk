@@ -12,3 +12,13 @@ services:
     container_name: rtbhouse-python-sdk
     volumes:
       - ./:/home/apps/code
+  tests_py2:
+    build:
+      context: .
+      dockerfile: py2.Dockerfile
+      args:
+        UID: "${UID}"
+        GID: "${UID}"
+    container_name: rtbhouse-python-sdk
+    volumes:
+      - ./:/home/apps/code

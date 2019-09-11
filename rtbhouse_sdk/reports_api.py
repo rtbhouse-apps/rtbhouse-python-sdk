@@ -10,20 +10,20 @@ DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
-class Conversions:
+class Conversions(object):
     POST_VIEW = 'POST_VIEW'
     ATTRIBUTED_POST_CLICK = 'ATTRIBUTED'
     ALL_POST_CLICK = 'ALL_POST_CLICK'
 
 
-class UserSegment:
+class UserSegment(object):
     VISITORS = 'VISITORS'
     SHOPPERS = 'SHOPPERS'
     BUYERS = 'BUYERS'
     NEW = 'NEW'
 
 
-class DeviceType:
+class DeviceType(object):
     PC = 'PC'
     MOBILE = 'MOBILE'
     PHONE = 'PHONE'
@@ -36,7 +36,7 @@ class DeviceType:
 
 class ReportsApiException(Exception):
     def __init__(self, message):
-        super().__init__(message)
+        super(ReportsApiException, self).__init__(message)
         self.message = message
 
     def __str__(self):
@@ -59,19 +59,19 @@ class ReportsApiRequestException(ReportsApiException):
             self.errors = self._res_data.get('errors')
             message = self._res_data.get('message')
 
-        super().__init__(message)
+        super(ReportsApiRequestException, self).__init__(message)
 
 
 class ReportsApiRateLimitException(ReportsApiRequestException):
     message = 'Resource usage limits reached'
 
     def __init__(self, res):
-        super().__init__(res)
+        super(ReportsApiRateLimitException, self).__init__(res)
         self.limits = ReportsApiSession.parse_resource_usage_header(
             res.headers.get('X-Resource-Usage'))
 
 
-class ReportsApiSession:
+class ReportsApiSession(object):
     def __init__(self, username, password, timeout=DEFAULT_TIMEOUT):
         self._username = username
         self._password = password
@@ -134,13 +134,18 @@ class ReportsApiSession:
             raise ReportsApiException('Invalid response format')
 
     def _get_from_cursor(self, path, params=None):
-        res = self._get(
-            path, params={**params, 'limit': MAX_CURSOR_ROWS_LIMIT})
+        req_params = {
+            'limit': MAX_CURSOR_ROWS_LIMIT,
+        }
+        if params:
+            req_params.update(params)
+
+        res = self._get(path, params=params)
         rows = res['rows']
 
         while res['nextCursor']:
-            res = self._get(
-                path, params={'nextCursor': res['nextCursor'], 'limit': MAX_CURSOR_ROWS_LIMIT})
+            req_params['nextCursor'] = res['nextCursor']
+            res = self._get(path, params=params)
             rows.extend(res['rows'])
 
         return rows

@@ -1,4 +1,4 @@
-FROM python:3.7.1-stretch
+FROM python:2.7.16-stretch
 
 ARG UNAME=apps
 ARG UID=1000
@@ -14,5 +14,5 @@ USER $UNAME
 WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
-RUN pip install --user .[dev]
+RUN pip install --user -e .[dev]
 CMD ["py.test", "--junitxml=./results/results.xml", "--color=no", "--cov-report", "term-missing", "--cov", "rtbhouse_sdk", "tests/"]

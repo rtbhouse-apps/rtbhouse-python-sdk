@@ -15,4 +15,4 @@ WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
 RUN pip install --user -e .[dev]
-CMD ["py.test", "--junitxml=./results/results.xml", "--color=no", "--cov-report", "term-missing", "--cov", "rtbhouse_sdk", "tests/"]
+CMD ["py.test", "--junitxml=./results/results.xml", "--color=no", "--cov-report=term-missing", "--cov=rtbhouse_sdk", "tests/"]

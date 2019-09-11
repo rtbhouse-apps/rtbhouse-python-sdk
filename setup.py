@@ -22,6 +22,7 @@ setup(
     extras_require={
         'dev': [
             'pytest==4.0.2',
+            'pytest-cov==2.7.1',
             'twine==1.13.0',
         ],
     },

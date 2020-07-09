@@ -134,7 +134,7 @@ def test_get_advertiser(api, adv_hash):
 def test_get_invoicing_data(api, adv_hash):
     inv_data = api.get_invoicing_data(adv_hash)
 
-    assert 'contact' in inv_data
+    assert 'invoicing' in inv_data
 
 
 def test_get_offer_categories(api, adv_hash):

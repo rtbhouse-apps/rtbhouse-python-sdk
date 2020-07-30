@@ -184,10 +184,17 @@ def test_get_rtb_creatives(api, adv_hash):
     rtb_creatives = api.get_rtb_creatives(adv_hash)
 
     assert rtb_creatives
-    first_row = rtb_creatives[0]
-    assert 'hash' in first_row
-    assert 'status' in first_row
-    assert 'previewUrl' in first_row
+    rtb_creative = rtb_creatives[0]
+    assert 'hash' in rtb_creative
+    assert 'status' in rtb_creative
+    assert 'previews' in rtb_creative
+    assert rtb_creative['previews']
+    preview = rtb_creative['previews'][0]
+    assert 'width' in preview
+    assert 'height' in preview
+    assert 'offersNumber' in preview
+    assert 'previewUrl' in preview
+    
 
 
 def _validate_get_rtb_stats_response(stats, required_fields):

@@ -19,3 +19,9 @@ For example:
 
 # v4.1.0
 Add python 2.7 support
+
+# v5.0.0
+This version adapts to latest api v4 changes.
+
+`get_rtb_creatives` now provides faster results with different output:
+Refer to `https://panel.rtbhouse.com/api/docs` - `GET /advertisers/{hash}/rtb-creatives` for details

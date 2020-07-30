@@ -1,3 +1,14 @@
+# v5.0.0
+This version adapts to latest api v4 changes.
+
+`get_rtb_creatives` now provides faster results with different output:
+Refer to `https://panel.rtbhouse.com/api/docs` - `GET /advertisers/{hash}/rtb-creatives` for details
+
+
+# v4.1.0
+Add python 2.7 support
+
+
 # v4.0.0
 This version adapts to latest api v3. changes.
 
@@ -16,12 +27,3 @@ For example:
 - `get_rtb_device_stats` equals to `get_rtb_stats` with `group_by` set to `{'deviceType'}`.
 - `get_rtb_country_stats` equals to `get_rtb_stats` with `group_by` set to `{'country'}`.
 - `get_rtb_creative_country_stats` equals to `get_rtb_stats` with `group_by` set to `{'creative', 'country'}`.
-
-# v4.1.0
-Add python 2.7 support
-
-# v5.0.0
-This version adapts to latest api v4 changes.
-
-`get_rtb_creatives` now provides faster results with different output:
-Refer to `https://panel.rtbhouse.com/api/docs` - `GET /advertisers/{hash}/rtb-creatives` for details

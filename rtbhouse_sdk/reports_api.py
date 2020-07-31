@@ -3,8 +3,8 @@ from requests import request
 from . import __version__ as sdk_version
 
 
-API_BASE_URL = "https://api.panel.rtbhouse.com"
-API_VERSION = 'v3'
+API_BASE_URL = 'https://api.panel.rtbhouse.com'
+API_VERSION = 'v4'
 
 DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
@@ -117,8 +117,7 @@ class ReportsApiSession(object):
     def _make_request(self, method, path, *args, **kwargs):
         base_url = '{}/{}'.format(API_BASE_URL, API_VERSION)
         kwargs['timeout'] = self._timeout
-        kwargs.setdefault('headers', {})[
-            'user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
+        kwargs.setdefault('headers', {})['user-agent'] = 'rtbhouse-python-sdk/{}'.format(sdk_version)
 
         res = request(method, base_url + path, *args, **kwargs)
         self._validate_response(res)
@@ -183,7 +182,7 @@ class ReportsApiSession(object):
     # RTB
 
     def get_rtb_creatives(self, adv_hash):
-        return self._get('/advertisers/' + adv_hash + '/creatives')
+        return self._get('/advertisers/' + adv_hash + '/rtb-creatives')
 
     def get_rtb_stats(self, adv_hash, day_from, day_to, group_by, count_convention=Conversions.ATTRIBUTED_POST_CLICK, user_segments=None, include_dpa=False):
         params = {

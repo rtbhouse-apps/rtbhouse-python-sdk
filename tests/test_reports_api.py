@@ -7,8 +7,11 @@ from rtbhouse_sdk.reports_api import (
     ReportsApiException, ReportsApiRateLimitException,
 )
 
-DAY_FROM = '2019-05-09'
-DAY_TO = '2019-05-09'
+DAY_FROM = '2020-09-01'
+DAY_TO = '2020-09-01'
+
+DPA_DAY_FROM = '2019-05-09'
+DPA_DAY_TO = '2019-05-09'
 
 # pylint: disable=redefined-outer-name
 
@@ -194,7 +197,6 @@ def test_get_rtb_creatives(api, adv_hash):
     assert 'height' in preview
     assert 'offersNumber' in preview
     assert 'previewUrl' in preview
-    
 
 
 def _validate_get_rtb_stats_response(stats, required_fields):
@@ -348,7 +350,7 @@ def test_get_dpa_creatives(api, account_hash):
 
 
 def test_get_dpa_campaign_stats(api, adv_hash):
-    dpa_stats = api.get_dpa_campaign_stats(adv_hash, DAY_FROM, DAY_TO, 'day')
+    dpa_stats = api.get_dpa_campaign_stats(adv_hash, DPA_DAY_FROM, DPA_DAY_TO, 'day')
 
     assert dpa_stats
     first_row = dpa_stats[0]
@@ -358,7 +360,7 @@ def test_get_dpa_campaign_stats(api, adv_hash):
 
 
 def test_get_dpa_conversions(api, adv_hash):
-    dpa_conversions = api.get_dpa_conversions(adv_hash, DAY_FROM, DAY_TO)
+    dpa_conversions = api.get_dpa_conversions(adv_hash, DPA_DAY_FROM, DPA_DAY_TO)
 
     assert dpa_conversions
     first_row = dpa_conversions[0]

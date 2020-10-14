@@ -1,3 +1,14 @@
+# v6.0.0
+This version adapts to latest api v5 changes.
+
+`get_dpa_campaign_stats` is changed to `get_dpa_stats` and now has similar interface to `get_rtb_stats`.
+Both `get_rtb_stats` and `get_dpa_stats` gets new parameter called `metrics` which accepts list of value fields to be returned. Please refer to `https://panel.rtbhouse.com/api/docs` (`RTB Stats` and `DPA Stats` sections) for list of possible values.
+A few new metrics were added, refer to docs (as above) for details.
+A few metrics changed their names. `ecc` was renamed to `ecpa`, `cpc` was renamed to `ecpc`.
+`count_convention` parameter is now not needed if no conversions related metrics are selected.
+`include_dpa` parameter is no longer available. The same result is available when summing rtb + dpa stats
+
+
 # v5.0.0
 This version adapts to latest api v4 changes.
 

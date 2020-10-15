@@ -256,7 +256,7 @@ def test_get_rtb_stats4(api, adv_hash):
             {'impsCount', 'clicksCount'},
             None,
         ),
-        {'day', 'deviceType'}
+        {'day', 'deviceType', 'impsCount', 'clicksCount'}
     )
 
 

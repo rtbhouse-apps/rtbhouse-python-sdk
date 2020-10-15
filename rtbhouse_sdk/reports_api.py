@@ -228,7 +228,7 @@ class ReportsApiSession(object):
 
     # RTB + DPA
     def get_summary_stats(self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None):
-        return self._get('/advertisers/' + adv_hash + '/rtb-stats', {
+        return self._get('/advertisers/' + adv_hash + '/summary-stats', {
             'dayFrom': day_from,
             'dayTo': day_to,
             'groupBy': '-'.join(group_by),

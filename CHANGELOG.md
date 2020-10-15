@@ -19,7 +19,7 @@ get_(rtb|dpa|summary)_stats(
     "grouping field 1 name": "groping field 1 value 1",  # No changes
     "grouping field N name": "groping field N value 1",  # No changes
     "grouping field X details": "grouping field X details values",  # No changes
-    "metric 1 name": "metric field 1 value",  # Changes: now only metrics selected by `metrics` parameter are returned
+    "metric 1 name": "metric field 1 value",  # Changes: now only metrics requested by `metrics` parameter are returned
 }]
 ```
 
@@ -31,7 +31,7 @@ A few new metrics were added, refer to docs (as above) for details.
 
 A few metrics changed their names. `ecc` was renamed to `ecpa`, `cpc` was renamed to `ecpc`.
 
-`count_convention` parameter is now not needed if no conversions related metrics are selected.
+`count_convention` parameter is now not needed if no conversions related metrics are requested.
 
 
 # v5.0.0

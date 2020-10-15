@@ -10,11 +10,11 @@ get_(rtb|dpa|summary)_stats(
     day_to,  # Date range end (inclusive). No changes for RTB. For DPA this parameter is now obligatory (was not in the past).
     group_by,  # Iterable (eg. list, set) of grouping columns. Refer to api docs for list of possible values. No changes for RTB. For DPA this now accepts list instead of single value.
     metrics,  # Iterable (eg. list, set) of value columns. Refer to api docs for list of possible values. This parameter was newly added.
-    count_convention=None,  # Conversions counting convention. Changes: Defaults to None; This parameter must only be set if at least one conversions related metric is selected, otherwise None.
-    subcampaigns=None,  # Subcampaigns filter. No changes.
-    user_segments=None,  # (RTB only) User segments filter. No changes.
-    device_types=None,  # (RTB only) Device types filter. No changes.
-    placement=None,  # (DPA only). Placement filter. No changes.
+    count_convention,  # (Optional) Conversions counting convention. Changes: Defaults to None; This parameter must only be set if at least one conversions related metric is selected.
+    subcampaigns,  # (Optional) Subcampaigns filter. No changes.
+    user_segments,  # (Optional, RTB only) User segments filter. No changes.
+    device_types,  # (Optional, RTB only) Device types filter. No changes.
+    placement,  # (Optional, DPA only). Placement filter. No changes.
 ) -> [{
     "grouping field 1 name": "groping field 1 value 1",  # No changes
     "grouping field N name": "groping field N value 1",  # No changes

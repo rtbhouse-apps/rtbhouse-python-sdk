@@ -199,7 +199,7 @@ def test_get_rtb_creatives(api, adv_hash):
     assert 'previewUrl' in preview
 
 
-def _validate_get_rtb_stats_response(stats, required_fields):
+def _validate_get_rtb_dpa_summary_stats_response(stats, required_fields):
     assert len(stats) > 0
     stat = stats[0]
 
@@ -208,7 +208,7 @@ def _validate_get_rtb_stats_response(stats, required_fields):
 
 
 def test_get_rtb_stats1(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -222,7 +222,7 @@ def test_get_rtb_stats1(api, adv_hash):
 
 
 def test_get_rtb_stats2(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -235,7 +235,7 @@ def test_get_rtb_stats2(api, adv_hash):
 
 
 def test_get_rtb_stats3(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -248,7 +248,7 @@ def test_get_rtb_stats3(api, adv_hash):
 
 
 def test_get_rtb_stats4(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -261,7 +261,7 @@ def test_get_rtb_stats4(api, adv_hash):
 
 
 def test_get_rtb_stats5(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -274,7 +274,7 @@ def test_get_rtb_stats5(api, adv_hash):
 
 
 def test_get_rtb_stats6(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -287,7 +287,7 @@ def test_get_rtb_stats6(api, adv_hash):
 
 
 def test_get_rtb_stats7(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -300,7 +300,7 @@ def test_get_rtb_stats7(api, adv_hash):
 
 
 def test_get_rtb_stats8(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
@@ -377,3 +377,29 @@ def test_get_dpa_conversions(api, adv_hash):
     first_row = dpa_conversions[0]
     assert 'conversionValue' in first_row
     assert 'conversionIdentifier' in first_row
+
+
+def test_get_summary_stats1(api, adv_hash):
+    _validate_get_rtb_dpa_summary_stats_response(
+        api.get_summary_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            {'impsCount', 'clicksCount'},
+            None,
+        ),
+        {'day', 'subcampaign', 'impsCount', 'clicksCount'}
+    )
+
+
+def test_get_summary_stats2(api, adv_hash):
+    _validate_get_rtb_dpa_summary_stats_response(
+        api.get_summary_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            {'impsCount', 'clicksCount', 'conversionsCount'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+        ),
+        {'day', 'subcampaign', 'impsCount', 'clicksCount', 'conversionsCount'}
+    )

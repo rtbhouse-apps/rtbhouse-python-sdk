@@ -1,12 +1,37 @@
 # v6.0.0
 This version adapts to latest api v5 changes.
+See API docs: https://panel.rtbhouse.com/api/docs for details.
 
-`get_dpa_campaign_stats` is changed to `get_dpa_stats` and now has similar interface to `get_rtb_stats`.
-Both `get_rtb_stats` and `get_dpa_stats` gets new parameter called `metrics` which accepts list of value fields to be returned. Please refer to `https://panel.rtbhouse.com/api/docs` (`RTB Stats` and `DPA Stats` sections) for list of possible values.
+For now, three methods - `get_rtb_stats` (for RTB only), `get_dpa_stats` (for DPA only) and `get_summary_stats` (for RTB + DPA) shares similar parameters and output:
+```
+get_(rtb|dpa|summary)_stats(
+    adv_hash,  # Advertiser hash. No changes.
+    day_from,  # Date range start (inclusive). No changes for RTB. For DPA this parameter is now obligatory (was not in the past).
+    day_to,  # Date range end (inclusive). No changes for RTB. For DPA this parameter is now obligatory (was not in the past).
+    group_by,  # Iterable (eg. list, set) of grouping columns. Refer to api docs for list of possible values. No changes for RTB. For DPA this now accepts list instead of single value.
+    metrics,  # Iterable (eg. list, set) of value columns. Refer to api docs for list of possible values. This parameter was newly added.
+    count_convention=None,  # Conversions counting convention. Changes: Defaults to None; This parameter must only be set if at least one conversions related metric is selected, otherwise None.
+    subcampaigns=None,  # Subcampaigns filter. No changes.
+    user_segments=None,  # (RTB only) User segments filter. No changes.
+    device_types=None,  # (RTB only) Device types filter. No changes.
+    placement=None,  # (DPA only). Placement filter. No changes.
+) -> [{
+    "grouping field 1 name": "groping field 1 value 1",  # No changes
+    "grouping field N name": "groping field N value 1",  # No changes
+    "grouping field X details": "grouping field X details values",  # No changes
+    "metric 1 name": "metric field 1 value",  # Changes: now only metrics selected by `metrics` parameter are returned
+}]
+```
+
+`get_dpa_campaign_stats` was removed, use `get_dpa_stats` instead.
+
+`include_dpa` in `get_rtb_stats` is no longer supported, use `get_summary_stats` instead.
+
 A few new metrics were added, refer to docs (as above) for details.
+
 A few metrics changed their names. `ecc` was renamed to `ecpa`, `cpc` was renamed to `ecpc`.
+
 `count_convention` parameter is now not needed if no conversions related metrics are selected.
-`include_dpa` parameter is no longer available. The same result is available when summing rtb + dpa stats
 
 
 # v5.0.0

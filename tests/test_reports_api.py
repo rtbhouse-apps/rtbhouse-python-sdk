@@ -199,112 +199,116 @@ def test_get_rtb_creatives(api, adv_hash):
     assert 'previewUrl' in preview
 
 
-def _validate_get_rtb_stats_response(stats, required_fields):
+def _validate_get_rtb_dpa_summary_stats_response(stats, required_fields):
     assert len(stats) > 0
     stat = stats[0]
-
-    assert 'impsCount' in stat
-    assert 'clicksCount' in stat
 
     for required_field in required_fields:
         assert required_field in stat
 
 
 def test_get_rtb_stats1(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'subcampaign'},
-            Conversions.ATTRIBUTED_POST_CLICK,
+            {'impsCount', 'clicksCount'},
+            None,
             user_segments={UserSegment.BUYERS}
         ),
-        {'day', 'subcampaign', 'subcampaignHash'}
+        {'day', 'subcampaign', 'subcampaignHash', 'impsCount', 'clicksCount'}
     )
 
 
 def test_get_rtb_stats2(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'subcampaign'},
+            {'impsCount', 'clicksCount', 'conversionsCount'},
             Conversions.ATTRIBUTED_POST_CLICK,
-            include_dpa=True,
         ),
-        {'day', 'subcampaign', 'subcampaignHash'}
+        {'day', 'subcampaign', 'subcampaignHash', 'impsCount', 'clicksCount', 'conversionsCount'}
     )
 
 
 def test_get_rtb_stats3(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'userSegment'},
+            {'cr'},
             Conversions.POST_VIEW,
         ),
-        {'day', 'userSegment'}
+        {'day', 'userSegment', 'cr'}
     )
 
 
 def test_get_rtb_stats4(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'deviceType'},
-            Conversions.ALL_POST_CLICK,
+            {'impsCount', 'clicksCount'},
+            None,
         ),
-        {'day', 'deviceType'}
+        {'day', 'deviceType', 'impsCount', 'clicksCount'}
     )
 
 
 def test_get_rtb_stats5(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'creative'},
-            Conversions.ALL_POST_CLICK,
+            {'impsCount', 'clicksCount'},
+            None,
         ),
-        {'day', 'creative', 'creativeName', 'creativeType'}
+        {'day', 'creative', 'creativeName', 'creativeType', 'impsCount', 'clicksCount'}
     )
 
 
 def test_get_rtb_stats6(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'category'},
+            {'impsCount', 'clicksCount', 'conversionsCount'},
             Conversions.ATTRIBUTED_POST_CLICK,
         ),
-        {'day', 'category', 'categoryName'}
+        {'day', 'category', 'categoryName', 'impsCount', 'clicksCount', 'conversionsCount'}
     )
 
 
 def test_get_rtb_stats7(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'country'},
-            Conversions.ATTRIBUTED_POST_CLICK,
+            {'impsCount', 'clicksCount'},
+            None,
         ),
-        {'day', 'country'}
+        {'day', 'country', 'impsCount', 'clicksCount'}
     )
 
 
 def test_get_rtb_stats8(api, adv_hash):
-    _validate_get_rtb_stats_response(
+    _validate_get_rtb_dpa_summary_stats_response(
         api.get_rtb_stats(
             adv_hash,
             DAY_FROM, DAY_TO,
             {'day', 'creative', 'country'},
-            Conversions.ATTRIBUTED_POST_CLICK,
+            {'impsCount', 'clicksCount'},
+            None,
         ),
-        {'day', 'creative', 'country'}
+        {'day', 'creative', 'country', 'impsCount', 'clicksCount'}
     )
 
 
@@ -349,8 +353,15 @@ def test_get_dpa_creatives(api, account_hash):
     assert 'iframe' in first_row
 
 
-def test_get_dpa_campaign_stats(api, adv_hash):
-    dpa_stats = api.get_dpa_campaign_stats(adv_hash, DPA_DAY_FROM, DPA_DAY_TO, 'day')
+def test_get_dpa_dpa_stats(api, adv_hash):
+    dpa_stats = api.get_dpa_stats(
+        adv_hash,
+        DPA_DAY_FROM,
+        DPA_DAY_TO,
+        ['day'],
+        ['impsCount', 'clicksCount'],
+        None,
+    )
 
     assert dpa_stats
     first_row = dpa_stats[0]
@@ -366,3 +377,29 @@ def test_get_dpa_conversions(api, adv_hash):
     first_row = dpa_conversions[0]
     assert 'conversionValue' in first_row
     assert 'conversionIdentifier' in first_row
+
+
+def test_get_summary_stats1(api, adv_hash):
+    _validate_get_rtb_dpa_summary_stats_response(
+        api.get_summary_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            {'impsCount', 'clicksCount'},
+            None,
+        ),
+        {'day', 'subcampaign', 'impsCount', 'clicksCount'}
+    )
+
+
+def test_get_summary_stats2(api, adv_hash):
+    _validate_get_rtb_dpa_summary_stats_response(
+        api.get_summary_stats(
+            adv_hash,
+            DAY_FROM, DAY_TO,
+            {'day', 'subcampaign'},
+            {'impsCount', 'clicksCount', 'conversionsCount'},
+            Conversions.ATTRIBUTED_POST_CLICK,
+        ),
+        {'day', 'subcampaign', 'impsCount', 'clicksCount', 'conversionsCount'}
+    )

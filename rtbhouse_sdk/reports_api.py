@@ -186,16 +186,22 @@ class ReportsApiSession(object):
         return self._get('/advertisers/' + adv_hash + '/rtb-creatives')
 
     def get_rtb_stats(self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None, user_segments=None, device_types=None):
-        return self._get('/advertisers/' + adv_hash + '/rtb-stats', {
+        params = {
             'dayFrom': day_from,
             'dayTo': day_to,
             'groupBy': '-'.join(group_by),
             'metrics': '-'.join(metrics),
-            **({'countConvention': count_convention} if count_convention is not None else {}),
-            **({'subcampaigns': subcampaigns} if subcampaigns is not None else {}),
-            **({'userSegments': '-'.join(user_segments)} if user_segments is not None else {}),
-            **({'deviceTypes': '-'.join(device_types)} if device_types is not None else {}),
-        })
+        }
+        if count_convention is not None:
+            params['countConvention'] = count_convention
+        if subcampaigns is not None:
+            params['subcampaigns'] = subcampaigns
+        if user_segments is not None:
+            params['userSegments'] = '-'.join(user_segments)
+        if device_types is not None:
+            params['deviceTypes'] = '-'.join(device_types)
+
+        return self._get('/advertisers/' + adv_hash + '/rtb-stats', params)
 
     def get_rtb_conversions(self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK):
         return self._get_from_cursor('/advertisers/' + adv_hash + '/conversions', {
@@ -211,15 +217,20 @@ class ReportsApiSession(object):
         return self._get('/preview/dpa/' + account_hash)
 
     def get_dpa_stats(self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None, placement=None):
-        return self._get('/advertisers/' + adv_hash + '/dpa-stats', {
+        params = {
             'dayFrom': day_from,
             'dayTo': day_to,
             'groupBy': '-'.join(group_by),
             'metrics': '-'.join(metrics),
-            **({'countConvention': count_convention} if count_convention is not None else {}),
-            **({'subcampaigns': subcampaigns} if subcampaigns is not None else {}),
-            **({'placement': placement} if placement is not None else {}),
-        })
+        }
+        if count_convention is not None:
+            params['countConvention'] = count_convention
+        if subcampaigns is not None:
+            params['subcampaigns'] = subcampaigns
+        if placement is not None:
+            params['placement'] = '-'.join(placement)
+        
+        return self._get('/advertisers/' + adv_hash + '/dpa-stats', params)
         
     def get_dpa_conversions(self, adv_hash, day_from, day_to):
         return self._get('/advertisers/' + adv_hash + '/dpa/conversions', {
@@ -228,11 +239,15 @@ class ReportsApiSession(object):
 
     # RTB + DPA
     def get_summary_stats(self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None):
-        return self._get('/advertisers/' + adv_hash + '/summary-stats', {
+        params = {
             'dayFrom': day_from,
             'dayTo': day_to,
             'groupBy': '-'.join(group_by),
             'metrics': '-'.join(metrics),
-            **({'countConvention': count_convention} if count_convention is not None else {}),
-            **({'subcampaigns': subcampaigns} if subcampaigns is not None else {}),
-        })
+        }
+        if count_convention is not None:
+            params['countConvention'] = count_convention
+        if subcampaigns is not None:
+            params['subcampaigns'] = subcampaigns
+        
+        return self._get('/advertisers/' + adv_hash + '/summary-stats', params)

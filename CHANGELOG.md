@@ -1,3 +1,7 @@
+# v6.0.1
+Restored support for python 2.7
+
+
 # v6.0.0
 This version adapts to latest api v5 changes.
 See API docs: https://panel.rtbhouse.com/api/docs for details.

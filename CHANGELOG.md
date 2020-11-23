@@ -20,8 +20,8 @@ get_(rtb|dpa|summary)_stats(
     device_types,  # (Optional, RTB only) Device types filter. No changes.
     placement,  # (Optional, DPA only). Placement filter. No changes.
 ) -> [{
-    "grouping field 1 name": "groping field 1 value 1",  # No changes
-    "grouping field N name": "groping field N value 1",  # No changes
+    "grouping field 1 name": "grouping field 1 value 1",  # No changes
+    "grouping field N name": "grouping field N value 1",  # No changes
     "grouping field X details": "grouping field X details values",  # No changes
     "metric 1 name": "metric field 1 value",  # Changes: now only metrics requested by `metrics` parameter are returned
 }]

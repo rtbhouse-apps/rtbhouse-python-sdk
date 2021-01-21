@@ -1,3 +1,7 @@
+# v6.0.2
+Update usage example in README.rst
+
+
 # v6.0.1
 Restored support for python 2.7
 

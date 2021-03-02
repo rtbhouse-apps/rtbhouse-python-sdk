@@ -1,3 +1,7 @@
+# v7.0.0
+Remove `get_dpa_creatives` function
+
+
 # v6.0.2
 Update usage example in README.rst
 

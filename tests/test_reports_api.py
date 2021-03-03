@@ -344,15 +344,6 @@ def test_get_rtb_conversions(api, adv_hash):
 # DPA
 
 
-def test_get_dpa_creatives(api, account_hash):
-    dpa_creatives = api.get_dpa_creatives(account_hash)
-
-    assert dpa_creatives
-    first_row = dpa_creatives[0]
-    assert 'adFormat' in first_row
-    assert 'iframe' in first_row
-
-
 def test_get_dpa_dpa_stats(api, adv_hash):
     dpa_stats = api.get_dpa_stats(
         adv_hash,

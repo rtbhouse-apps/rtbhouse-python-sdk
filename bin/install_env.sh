@@ -7,7 +7,7 @@ cd "`dirname $0`"
 cd ..
 
 rm -rf ./venv
-python3 -m venv venv
+python -m venv venv
 export PATH="./venv/bin:$PATH"
 
 pip install -U pip setuptools wheel

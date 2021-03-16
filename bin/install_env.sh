@@ -3,13 +3,8 @@
 set -e
 set -o pipefail
 
-cd "`dirname $0`"
-cd ..
+cd "`dirname $0`/.."
 
-rm -rf ./venv
-python -m venv venv
-export PATH="./venv/bin:$PATH"
+rm -rf ./.venv
 
-pip install -U pip setuptools wheel
-pip install -e .[dev]
-pip list --outdated
+poetry install

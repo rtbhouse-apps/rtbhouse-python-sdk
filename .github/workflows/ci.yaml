@@ -9,8 +9,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
+        os: [ubuntu-18.04]
+        python-version: [2.7, 3.4, 3.5, 3.6, 3.7, 3.8]
+        poetry-version: [1.1.5]
     env:
       PYTHONDONTWRITEBYTECODE: 1
 
@@ -23,21 +24,41 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Setup poetry ${{ matrix.poetry-version }}
+        run: |
+          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+          POETRY_VERSION=${{ matrix.poetry-version }} python get-poetry.py -y
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+          rm -rf get-poetry.py
+
+      - name: Configure poetry
+        run: |
+          poetry config virtualenvs.in-project true
+
       - name: Set up poetry cache
         uses: actions/cache@v2
         with:
-          path: venv
-          key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('setup.py') }}
+          path: .venv
+          key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
           restore-keys: venv-${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
-          ./bin/install_env.sh
+          poetry install --remove-untracked --no-root
 
-      - name: Copy config
+      - name: Lint
         run: |
-          cp tests/config.py.example tests/config.py
-
-      - name: Test
-        run: |
-          ./bin/test.sh
+          ./bin/lint.sh
+      # - name: Get secrets
+      #   id: secrets
+      #   uses: google-github-actions/get-secretmanager-secrets@main
+      #   with:
+      #     credentials: ${{ secrets.GCP_SA_KEY }}
+      #     secrets: |-
+      #       GEMFURY_API_TOKEN:projects/rtbhouse-apps/secrets/GEMFURY_API_TOKEN
+      # - name: Create config
+      #   run: |
+      #     cp tests/config.py.example tests/config.py
+      # - name: Test
+      #   run: |
+      #     ./bin/test.sh

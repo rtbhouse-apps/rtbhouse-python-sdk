@@ -6,4 +6,4 @@ set -o pipefail
 cd "`dirname $0`/.."
 
 
-poetry run pytest tests/
+poetry run python -m pytest --cov=rtbhouse_sdk/ tests/

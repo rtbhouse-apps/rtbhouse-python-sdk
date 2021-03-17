@@ -12,10 +12,6 @@ jobs:
         os: [ubuntu-18.04]
         python-version: [2.7, 3.5, 3.6, 3.7, 3.8]
         poetry-version: [1.1.5]
-        include:
-          - os: ubuntu-16.04
-            python-version: 3.4
-            poetry-version: 1.1.5
     env:
       PYTHONDONTWRITEBYTECODE: 1
 
@@ -53,16 +49,22 @@ jobs:
       - name: Lint
         run: |
           ./bin/lint.sh
-      # - name: Get secrets
-      #   id: secrets
-      #   uses: google-github-actions/get-secretmanager-secrets@main
-      #   with:
-      #     credentials: ${{ secrets.GCP_SA_KEY }}
-      #     secrets: |-
-      #       GEMFURY_API_TOKEN:projects/rtbhouse-apps/secrets/GEMFURY_API_TOKEN
-      # - name: Create config
-      #   run: |
-      #     cp tests/config.py.example tests/config.py
-      # - name: Test
-      #   run: |
-      #     ./bin/test.sh
+
+      - name: Get secrets
+        id: get-secrets
+        uses: google-github-actions/get-secretmanager-secrets@main
+        with:
+          credentials: ${{ secrets.GCP_SA_KEY }}
+          secrets: |-
+            SDK_TEST_CREDENTIALS:projects/rtbhouse-apps/secrets/SDK_TEST_CREDENTIALS
+
+      - name: Create config
+        env:
+          SDK_TEST_CREDENTIALS: ${{ steps.get-secrets.outputs.SDK_TEST_CREDENTIALS }}
+        run: |
+          echo "USERNAME = \"$(jq -r .username <<< $SDK_TEST_CREDENTIALS)\"" > tests/config.py
+          echo "PASSWORD = \"$(jq -r .password <<< $SDK_TEST_CREDENTIALS)\"" >> tests/config.py
+
+      - name: Test
+        run: |
+          ./bin/test.sh

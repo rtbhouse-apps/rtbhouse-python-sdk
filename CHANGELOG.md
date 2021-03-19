@@ -1,3 +1,9 @@
+# v7.1.0
+Update build tooling, added poetry
+Apply lint fixes
+Drop support for Python 3.3 and Python 3.4
+
+
 # v7.0.0
 Remove `get_dpa_creatives` function
 

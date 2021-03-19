@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "rtbhouse-sdk"
+version = "7.1.0"
+description = "RTB House SDK"
+authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
+license = "BSD License"
+classifiers = [
+    'Development Status :: 5 - Production/Stable',
+    'Intended Audience :: Developers',
+    'Natural Language :: English',
+    'License :: OSI Approved :: BSD License',
+    'Programming Language :: Python',
+    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.5',
+    'Programming Language :: Python :: 3.6',
+    'Programming Language :: Python :: 3.7',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+]
+repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
+
+[tool.poetry.dependencies]
+python = ">=2.7,<3.0 || >=3.5, <4.0"
+
+requests = ">=2.18.4"
+
+[tool.poetry.dev-dependencies]
+pytest = [
+    {version = "^4.6.11", python = ">=2.7,<3.0"},
+    {version = "^5.4.3", python = ">=3.5,<4.0"}
+]
+pytest-cov = {version = "^2.7.1", python = ">=2.7,<3.0 || >=3.5,<4.0"}
+flake8 = {version = "^3.9.0", python = ">=3.6, <4.0"}
+black = {version = "^20.8b1", python = ">=3.6, <4.0"}
+isort = {version = "^5.7.0", python = ">=3.6, <4.0"}
+
+[tool.black]
+line-length = 120
+target-version = ['py38']
+
+[tool.isort]
+line_length = 120
+use_parentheses = true
+include_trailing_comma = true
+multi_line_output = 3
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,62 @@
+name: CI
+
+on: push
+
+jobs:
+  ci:
+    name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-18.04]
+        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9]
+        poetry-version: [1.1.5]
+    env:
+      PYTHONDONTWRITEBYTECODE: 1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup poetry ${{ matrix.poetry-version }}
+        run: |
+          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+          POETRY_VERSION=${{ matrix.poetry-version }} python get-poetry.py -y
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+          rm -rf get-poetry.py
+
+      - name: Configure poetry
+        run: |
+          poetry config virtualenvs.in-project true
+
+      - name: Set up poetry cache
+        uses: actions/cache@v2
+        with:
+          path: .venv
+          key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: venv-${{ matrix.os }}-${{ matrix.python-version }}-
+
+      - name: Install dependencies
+        run: |
+          poetry install --remove-untracked --no-root
+
+      - name: Lint
+        run: |
+          ./bin/lint.sh
+
+      - name: Create config
+        env:
+          SDK_TEST_CREDENTIALS: ${{ secrets.SDK_TEST_CREDENTIALS }}
+        run: |
+          echo "USERNAME = \"$(jq -r .username <<< ${SDK_TEST_CREDENTIALS})\"" > tests/config.py
+          echo "PASSWORD = \"$(jq -r .password <<< ${SDK_TEST_CREDENTIALS})\"" >> tests/config.py
+
+      - name: Test
+        run: |
+          ./bin/test.sh

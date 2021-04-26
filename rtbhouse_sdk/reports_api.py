@@ -217,33 +217,8 @@ class ReportsApiSession(object):
             {"dayFrom": day_from, "dayTo": day_to, "countConvention": convention_type},
         )
 
-    # DPA
-
-    def get_dpa_accounts(self, adv_hash):
-        return self._get("/advertisers/" + adv_hash + "/dpa/accounts")
-
-    def get_dpa_stats(
-        self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None, placement=None
-    ):
-        params = {
-            "dayFrom": day_from,
-            "dayTo": day_to,
-            "groupBy": "-".join(group_by),
-            "metrics": "-".join(metrics),
-        }
-        if count_convention is not None:
-            params["countConvention"] = count_convention
-        if subcampaigns is not None:
-            params["subcampaigns"] = subcampaigns
-        if placement is not None:
-            params["placement"] = "-".join(placement)
-
-        return self._get("/advertisers/" + adv_hash + "/dpa-stats", params)
-
-    def get_dpa_conversions(self, adv_hash, day_from, day_to):
-        return self._get("/advertisers/" + adv_hash + "/dpa/conversions", {"dayFrom": day_from, "dayTo": day_to})
-
     # RTB + DPA
+
     def get_summary_stats(
         self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None
     ):

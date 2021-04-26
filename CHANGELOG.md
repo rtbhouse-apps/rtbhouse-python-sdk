@@ -1,4 +1,4 @@
-# v8.1.0
+# v8.0.0
 Remove `get_dpa_accounts`, `get_dpa_stats`, `get_dpa_conversions` functions
 
 # v7.1.0

@@ -363,35 +363,6 @@ def test_get_rtb_conversions(api, adv_hash):
     assert "conversionIdentifier" in pv_first_row
 
 
-# DPA
-
-
-def test_get_dpa_dpa_stats(api, adv_hash):
-    dpa_stats = api.get_dpa_stats(
-        adv_hash,
-        DPA_DAY_FROM,
-        DPA_DAY_TO,
-        ["day"],
-        ["impsCount", "clicksCount"],
-        None,
-    )
-
-    assert dpa_stats
-    first_row = dpa_stats[0]
-    assert "day" in first_row
-    assert "impsCount" in first_row
-    assert "clicksCount" in first_row
-
-
-def test_get_dpa_conversions(api, adv_hash):
-    dpa_conversions = api.get_dpa_conversions(adv_hash, DPA_DAY_FROM, DPA_DAY_TO)
-
-    assert dpa_conversions
-    first_row = dpa_conversions[0]
-    assert "conversionValue" in first_row
-    assert "conversionIdentifier" in first_row
-
-
 def test_get_summary_stats1(api, adv_hash):
     _validate_get_rtb_dpa_summary_stats_response(
         api.get_summary_stats(

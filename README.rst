@@ -6,7 +6,7 @@ Overview
 
 This library provides an easy-to-use Python interface to RTB House API. It allows you to read and manage you campaigns settings, browse offers, download statistics etc.
 
-API docs: https://panel.rtbhouse.com/api/docs
+API docs: https://api.panel.rtbhouse.com/api/docs
 
 Installation
 ------------

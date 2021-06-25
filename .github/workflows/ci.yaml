@@ -1,11 +1,13 @@
 name: CI
 
-on: [ push, pull_request_target ]
+on: pull_request_target:
+  type: [labeled]
 
 jobs:
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
+    if: contains(github.event.pull_request.labels.*.name, '[Approved]')
     strategy:
       fail-fast: false
       matrix:
@@ -14,7 +16,6 @@ jobs:
         poetry-version: [1.1.5]
     env:
       PYTHONDONTWRITEBYTECODE: 1
-    environment: production
 
     steps:
       - name: Checkout

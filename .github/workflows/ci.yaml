@@ -1,7 +1,9 @@
 name: CI
 
-on: pull_request_target:
-  type: [labeled]
+on: 
+  push:
+  pull_request_target:
+  types: [labeled]
 
 jobs:
   ci:

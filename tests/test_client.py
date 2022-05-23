@@ -165,13 +165,15 @@ def test_get_invoicing_data(api, adv_hash, mocked_response):
         json={
             "status": "ok",
             "data": {
-                "vatNumber": "123",
-                "companyName": "Ltd",
-                "street1": "St",
-                "postalCode": "321",
-                "city": "Rotterdam",
-                "country": "Netherlands",
-                "email": "em",
+                "invoicing": {
+                    "vat_number": "123",
+                    "company_name": "Ltd",
+                    "street1": "St",
+                    "postal_code": "321",
+                    "city": "Rotterdam",
+                    "country": "Netherlands",
+                    "email": "em",
+                },
             },
         },
     )

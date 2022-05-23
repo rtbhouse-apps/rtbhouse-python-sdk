@@ -38,10 +38,10 @@ class Campaign(BaseModel):
     name: str
     creative_ids: List[int]
     status: str
-    updated_at: str
+    updated_at: Optional[datetime]
     rateCardId: str
     is_editable: bool
-    advertiser_limits: Dict[str, str]
+    advertiser_limits: Optional[Dict[str, Optional[str]]]
 
     class Config:
         alias_generator = to_camel_case
@@ -56,9 +56,6 @@ class InvoiceData(BaseModel):
     city: str
     country: str
     email: str
-
-    class Config:
-        alias_generator = to_camel_case
 
 
 class Category(BaseModel):

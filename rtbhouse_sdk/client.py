@@ -130,7 +130,7 @@ class Client:
 
     def get_invoicing_data(self, adv_hash) -> schema.InvoiceData:
         data = self._get(f"/advertisers/{adv_hash}/client")
-        return schema.InvoiceData(**data)
+        return schema.InvoiceData(**data["invoicing"])
 
     def get_offer_categories(self, adv_hash) -> List[schema.Category]:
         data = self._get(f"/advertisers/{adv_hash}/offer-categories")

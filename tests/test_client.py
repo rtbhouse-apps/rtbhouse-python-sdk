@@ -1,18 +1,18 @@
 from datetime import date
 
 import pytest
-from requests import Response
 import responses
+from requests import Response
 
 from rtbhouse_sdk.client import (
+    API_BASE_URL,
     API_VERSION,
-    Conversions,
     ApiException,
     ApiRateLimitException,
     Client,
+    Conversions,
     DeviceType,
     UserSegment,
-    API_BASE_URL,
 )
 
 DAY_FROM = "2020-09-01"

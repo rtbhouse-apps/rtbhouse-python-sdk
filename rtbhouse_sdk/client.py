@@ -1,10 +1,11 @@
-from typing import List, Dict, Optional
 import warnings
+from typing import Dict, List, Optional
 
 from requests import request
 
-from .exceptions import ApiException, ApiRequestException, ApiRateLimitException
-from . import __version__ as sdk_version, schema
+from . import __version__ as sdk_version
+from . import schema
+from .exceptions import ApiException, ApiRateLimitException, ApiRequestException
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
 API_VERSION = "v5"

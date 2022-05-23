@@ -81,8 +81,10 @@ class Client:
 
     def _validate_response(self, response):
         if response.status_code == 410:
+            newest_version = response.headers.get("X-Current-Api-Version")
             raise ApiException(
-                f"Unsupported api version ({API_VERSION}), use newest version ({response.headers.get('X-Current-Api-Version')}) by updating rtbhouse_sdk package."
+                f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
+                f"by updating rtbhouse_sdk package."
             )
 
         if response.status_code == 429:
@@ -91,7 +93,8 @@ class Client:
         current_version = response.headers.get("X-Current-Api-Version")
         if current_version is not None and current_version != API_VERSION:
             warnings.warn(
-                f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) by updating rtbhouse_sdk package."
+                f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
+                f"by updating rtbhouse_sdk package."
             )
 
         if response.ok:

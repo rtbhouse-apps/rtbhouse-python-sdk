@@ -63,7 +63,10 @@ def test_warn_on_not_the_newest_api_version(api):
     with pytest.warns(Warning) as cm:
         api._validate_response(response)
 
-    msg = f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) by updating rtbhouse_sdk package."
+    msg = (
+        f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
+        f"by updating rtbhouse_sdk package."
+    )
     assert str(cm[0].message) == msg
 
 

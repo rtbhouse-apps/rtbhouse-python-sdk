@@ -20,7 +20,7 @@ class ApiRequestException(ApiException):
         try:
             self._res_data = response.json()
         except ValueError:
-            message = f"{response.reason} ({response.status_code})"
+            message = f"{response.reason_phrase} ({response.status_code})"
         else:
             self.app_code = self._res_data.get("appCode")
             self.errors = self._res_data.get("errors")

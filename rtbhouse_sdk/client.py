@@ -1,7 +1,7 @@
 import warnings
 from typing import Dict, List, Optional
 
-from requests import request
+import httpx
 
 from . import __version__ as sdk_version
 from . import schema
@@ -84,7 +84,7 @@ class Client:
             newest_version = response.headers.get("X-Current-Api-Version")
             raise ApiException(
                 f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
-                f"by updating rtbhouse_sdk package."
+                f"by updating rtbhouse_python_sdk package."
             )
 
         if response.status_code == 429:
@@ -94,10 +94,10 @@ class Client:
         if current_version is not None and current_version != API_VERSION:
             warnings.warn(
                 f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
-                f"by updating rtbhouse_sdk package."
+                f"by updating rtbhouse_python_sdk package."
             )
 
-        if response.ok:
+        if response.status_code < 400:
             return
 
         raise ApiRequestException(response)
@@ -107,7 +107,8 @@ class Client:
         kwargs["timeout"] = self._timeout
         kwargs.setdefault("headers", {})["user-agent"] = f"rtbhouse-python-sdk/{sdk_version}"
 
-        response = request(method, base_url + path, *args, **kwargs)
+        with httpx.Client() as cli:
+            response = cli.get(base_url + path, *args, **kwargs)
         self._validate_response(response)
         return response
 

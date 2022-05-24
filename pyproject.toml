@@ -21,19 +21,16 @@ repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 [tool.poetry.dependencies]
 python = ">=3.7, <4.0"
 
-requests = ">=2.18.4"
-responses = "^0.20.0"
 pydantic = "^1.9.0"
+httpx = "^0.22.0"
 
 [tool.poetry.dev-dependencies]
-pytest = [
-    {version = "^4.6.11", python = ">=2.7,<3.0"},
-    {version = "^5.4.3", python = ">=3.5,<4.0"}
-]
-pytest-cov = {version = "^2.7.1", python = ">=2.7,<3.0 || >=3.5,<4.0"}
-flake8 = {version = "^3.9.0", python = ">=3.6, <4.0"}
-black = {version = "^20.8b1", python = ">=3.6, <4.0"}
-isort = {version = "^5.7.0", python = ">=3.6, <4.0"}
+pytest = "^7.1.2"
+pytest-cov = "^3.0.0"
+flake8 = {version = "^3.9.0", python = ">=3.7, <4.0"}
+black = {version = "^20.8b1", python = ">=3.7, <4.0"}
+isort = {version = "^5.7.0", python = ">=3.7, <4.0"}
+respx = "^0.19.2"
 
 [tool.black]
 line-length = 120

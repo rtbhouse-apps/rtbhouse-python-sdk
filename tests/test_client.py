@@ -1,8 +1,8 @@
 from datetime import date
 
 import pytest
-import responses
-from requests import Response
+import respx
+from httpx import Response
 
 from rtbhouse_sdk.client import (
     API_BASE_URL,
@@ -33,8 +33,8 @@ def adv_hash(api):
 
 @pytest.fixture(autouse=True)
 def mock_outgoing_requests():
-    with responses.RequestsMock() as rsps:
-        yield rsps
+    with respx.mock() as mock:
+        yield mock
 
 
 @pytest.fixture()
@@ -43,9 +43,8 @@ def mocked_response(mock_outgoing_requests):
 
 
 def test_raise_error_on_too_old_api_version(api):
-    response = Response()
+    response = Response(410)
     newest_version = int(API_VERSION.strip("v")) + 2
-    response.status_code = 410
     response.headers["X-Current-Api-Version"] = f"v{newest_version}"
 
     with pytest.raises(ApiException) as cm:
@@ -55,9 +54,8 @@ def test_raise_error_on_too_old_api_version(api):
 
 
 def test_warn_on_not_the_newest_api_version(api):
-    response = Response()
+    response = Response(200)
     newest_version = f'v{int(API_VERSION.strip("v")) + 1}'
-    response.status_code = 200
     response.headers["X-Current-Api-Version"] = newest_version
 
     with pytest.warns(Warning) as cm:
@@ -65,7 +63,7 @@ def test_warn_on_not_the_newest_api_version(api):
 
     msg = (
         f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
-        f"by updating rtbhouse_sdk package."
+        f"by updating rtbhouse_python_sdk package."
     )
     assert str(cm[0].message) == msg
 
@@ -78,8 +76,7 @@ def test_raise_error_on_resource_usage_limit_reached(api):
             "DB_QUERY_TIME-86400=17.995/5000",
         ]
     )
-    response = Response()
-    response.status_code = 429
+    response = Response(429)
     response.headers["X-Resource-Usage"] = header
 
     with pytest.raises(ApiRateLimitException) as cm:
@@ -92,8 +89,8 @@ def test_raise_error_on_resource_usage_limit_reached(api):
 
 
 def test_get_user_info(api, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/user/info",
+    mocked_response.get(f"{BASE_URL}/user/info").respond(
+        200,
         json={
             "status": "ok",
             "data": {
@@ -114,8 +111,8 @@ def test_get_user_info(api, mocked_response):
 
 
 def test_get_advertisers(api, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers",
+    mocked_response.get(f"{BASE_URL}/advertisers").respond(
+        200,
         json={
             "status": "ok",
             "data": [
@@ -139,8 +136,8 @@ def test_get_advertisers(api, mocked_response):
 
 
 def test_get_advertiser(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}").respond(
+        200,
         json={
             "data": {
                 "hash": "hash",
@@ -163,8 +160,8 @@ def test_get_advertiser(api, adv_hash, mocked_response):
 
 
 def test_get_invoicing_data(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/client",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/client").respond(
+        200,
         json={
             "status": "ok",
             "data": {
@@ -187,8 +184,8 @@ def test_get_invoicing_data(api, adv_hash, mocked_response):
 
 
 def test_get_offer_categories(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/offer-categories",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offer-categories").respond(
+        200,
         json={
             "status": "ok",
             "data": [
@@ -208,8 +205,8 @@ def test_get_offer_categories(api, adv_hash, mocked_response):
 
 
 def test_get_offers(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/offers",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offers").respond(
+        200,
         json={
             "data": [
                 {
@@ -244,8 +241,8 @@ def test_get_offers(api, adv_hash, mocked_response):
 
 
 def test_get_advertiser_campaigns(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/campaigns",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/campaigns").respond(
+        200,
         json={
             "status": "ok",
             "data": [
@@ -269,8 +266,8 @@ def test_get_advertiser_campaigns(api, adv_hash, mocked_response):
 
 
 def test_get_billing(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/billing",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/billing").respond(
+        200,
         json={
             "status": "ok",
             "data": {
@@ -298,8 +295,8 @@ def test_get_billing(api, adv_hash, mocked_response):
 
 
 def test_get_rtb_creatives(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(
+        200,
         json={
             "status": "ok",
             "data": [
@@ -320,7 +317,7 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response):
     )
 
     (rtb_creative,) = api.get_rtb_creatives(adv_hash)
-    assert mocked_response.calls[0].request.params == {}
+    assert dict(mocked_response.calls[0].request.url.params) == {}
     assert rtb_creative.hash == "hash"
     assert len(rtb_creative.previews) == 1
 
@@ -333,7 +330,7 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response):
             True,
             {
                 "subcampaigns": "abc-def",
-                "activeOnly": "True",
+                "activeOnly": "true",
             },
         ),
         (
@@ -341,7 +338,7 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response):
             False,
             {
                 "subcampaigns": "ACTIVE",
-                "activeOnly": "False",
+                "activeOnly": "false",
             },
         ),
         (
@@ -354,11 +351,13 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response):
     ],
 )
 def test_get_rtb_creatives_with_extra_params(api, adv_hash, mocked_response, subcampaigns, active_only, params):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives", json={"status": "ok", "data": []})
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(
+        200, json={"status": "ok", "data": []}
+    )
 
     api.get_rtb_creatives(adv_hash, subcampaigns=subcampaigns, active_only=active_only)
 
-    assert mocked_response.calls[0].request.params == params
+    assert dict(mocked_response.calls[0].request.url.params) == params
 
 
 def test_get_rtb_conversions(api, adv_hash, mocked_response):
@@ -373,40 +372,44 @@ def test_get_rtb_conversions(api, adv_hash, mocked_response):
         "lastClickTime": "2020-01-02T21:35:06.279000+00:00",
         "lastImpressionTime": "2020-01-02T21:38:13.346000+00:00",
     }
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/conversions",
-        json={
-            "status": "ok",
-            "data": {
-                "rows": [conv_data],
-                "nextCursor": "123",
-                "total": 1,
-            },
-        },
-    )
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/conversions",
-        json={
-            "status": "ok",
-            "data": {
-                "rows": [conv_data],
-                "nextCursor": None,
-                "total": 1,
-            },
-        },
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/conversions").mock(
+        side_effect=[
+            Response(
+                200,
+                json={
+                    "status": "ok",
+                    "data": {
+                        "rows": [conv_data],
+                        "nextCursor": "123",
+                        "total": 1,
+                    },
+                },
+            ),
+            Response(
+                200,
+                json={
+                    "status": "ok",
+                    "data": {
+                        "rows": [conv_data],
+                        "nextCursor": None,
+                        "total": 1,
+                    },
+                },
+            ),
+        ]
     )
 
     conversions = api.get_rtb_conversions(adv_hash, DAY_FROM, DAY_TO)
     call1, call2 = mocked_response.calls
-    assert set(call1.request.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit"}
-    assert set(call2.request.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit", "nextCursor"}
+    assert set(call1.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit"}
+    assert set(call2.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit", "nextCursor"}
     assert len(conversions) == 2
     assert conversions[0].conversion_hash == "chash"
 
 
 def test_get_rtb_stats(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats").respond(
+        200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 51.0}]},
     )
 
@@ -418,7 +421,7 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
         ["campaignCost", "cr"],
     )
 
-    assert mocked_response.calls[0].request.params == {
+    assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
@@ -437,20 +440,20 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
     ],
 )
 def test_get_rtb_stats_extra_params(api, adv_hash, mocked_response, param, query_param, value, query_value):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats").respond(
+        200,
         json={"status": "ok", "data": []},
     )
 
     extra_params = {param: value}
     api.get_rtb_stats(adv_hash, DAY_FROM, DAY_TO, ["advertiser"], ["campaignCost"], **extra_params)
 
-    assert mocked_response.calls[0].request.params[query_param] == query_value
+    assert mocked_response.calls[0].request.url.params[query_param] == query_value
 
 
 def test_get_summary_stats(api, adv_hash, mocked_response):
-    mocked_response.get(
-        f"{BASE_URL}/advertisers/{adv_hash}/summary-stats",
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/summary-stats").respond(
+        200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 108.0}]},
     )
 
@@ -462,7 +465,7 @@ def test_get_summary_stats(api, adv_hash, mocked_response):
         ["campaignCost", "cr"],
     )
 
-    assert mocked_response.calls[0].request.params == {
+    assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",

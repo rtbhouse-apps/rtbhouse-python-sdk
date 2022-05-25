@@ -23,12 +23,8 @@ BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 @pytest.fixture()
 def api():
-    return Client("test", "test")
-
-
-@pytest.fixture()
-def adv_hash(api):
-    return "advhash"
+    with Client.get_client("test", "test") as client:
+        yield client
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +59,7 @@ def test_warn_on_not_the_newest_api_version(api):
 
     msg = (
         f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
-        f"by updating rtbhouse_python_sdk package."
+        f"by updating rtbhouse_sdk package."
     )
     assert str(cm[0].message) == msg
 
@@ -88,115 +84,41 @@ def test_raise_error_on_resource_usage_limit_reached(api):
     assert data["DB_QUERY_TIME"]["86400"]["5000"] == 17.995
 
 
-def test_get_user_info(api, mocked_response):
-    mocked_response.get(f"{BASE_URL}/user/info").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": {
-                "hashId": "hid",
-                "login": "john",
-                "email": "em",
-                "isClientUser": True,
-                "isDemoUser": False,
-                "isForceLoggedIn": False,
-                "permissions": ["abc"],
-                "countConvention": None,
-            },
-        },
-    )
+def test_get_user_info(api, mocked_response, user_info_response):
+    mocked_response.get(f"{BASE_URL}/user/info").respond(200, json=user_info_response)
+
     data = api.get_user_info()
 
     assert data.hash_id == "hid"
 
 
-def test_get_advertisers(api, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": [
-                {
-                    "hash": "hash",
-                    "status": "ACTIVE",
-                    "name": "Adv",
-                    "currency": "USD",
-                    "url": "url",
-                    "createdAt": "2020-10-15T12:58:19.509985+00:00",
-                    "features": {"enabled": ["abc"]},
-                    "properties": {"key": "val"},
-                }
-            ],
-        },
-    )
+def test_get_advertisers(api, mocked_response, advertisers_response):
+    mocked_response.get(f"{BASE_URL}/advertisers").respond(200, json=advertisers_response)
 
     (advertiser,) = api.get_advertisers()
 
     assert advertiser.name == "Adv"
 
 
-def test_get_advertiser(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}").respond(
-        200,
-        json={
-            "data": {
-                "hash": "hash",
-                "status": "ACTIVE",
-                "name": "Adv",
-                "currency": "USD",
-                "url": "url",
-                "createdAt": "2020-10-15T12:58:19.509985+00:00",
-                "properties": {"key": "val"},
-                "version": "2020-10-15T12:58:19.509985+00:00",
-                "feedIdentifier": "xyz",
-                "country": "US",
-            }
-        },
-    )
+def test_get_advertiser(api, adv_hash, mocked_response, advertiser_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
     advertiser = api.get_advertiser(adv_hash)
 
     assert advertiser.name == "Adv"
 
 
-def test_get_invoicing_data(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/client").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": {
-                "invoicing": {
-                    "vat_number": "123",
-                    "company_name": "Ltd",
-                    "street1": "St",
-                    "postal_code": "321",
-                    "city": "Rotterdam",
-                    "country": "Netherlands",
-                    "email": "em",
-                },
-            },
-        },
-    )
+def test_get_invoicing_data(api, adv_hash, mocked_response, invoice_data_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
     invoice_data = api.get_invoicing_data(adv_hash)
 
     assert invoice_data.company_name == "Ltd"
 
 
-def test_get_offer_categories(api, adv_hash, mocked_response):
+def test_get_offer_categories(api, adv_hash, mocked_response, offer_categories_response):
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offer-categories").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": [
-                {
-                    "categoryId": "123",
-                    "identifier": "id56",
-                    "name": "full cat",
-                    "activeOffersNumber": 0,
-                }
-            ],
-        },
+        200, json=offer_categories_response
     )
 
     (offer_cat,) = api.get_offer_categories(adv_hash)
@@ -204,35 +126,8 @@ def test_get_offer_categories(api, adv_hash, mocked_response):
     assert offer_cat.name == "full cat"
 
 
-def test_get_offers(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offers").respond(
-        200,
-        json={
-            "data": [
-                {
-                    "url": "url",
-                    "fullName": "FN",
-                    "identifier": "ident",
-                    "id": "id",
-                    "images": [
-                        {
-                            "added": "123",
-                            "width": "700",
-                            "height": "800",
-                            "url": "url",
-                            "hash": "hash",
-                        }
-                    ],
-                    "name": "name",
-                    "price": 99.99,
-                    "categoryName": "cat",
-                    "customProperties": {"prop": "val"},
-                    "updatedAt": "2020-10-15T22:26:49.511000+00:00",
-                    "status": "ACTIVE",
-                }
-            ]
-        },
-    )
+def test_get_offers(api, adv_hash, mocked_response, offers_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
     (offer,) = api.get_offers(adv_hash)
 
@@ -240,83 +135,29 @@ def test_get_offers(api, adv_hash, mocked_response):
     assert offer.images[0].width == "700"
 
 
-def test_get_advertiser_campaigns(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/campaigns").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": [
-                {
-                    "hash": "hash",
-                    "name": "Campaign",
-                    "creativeIds": [543],
-                    "status": "PAUSED",
-                    "updatedAt": "2020-10-15T08:53:15.940369+00:00",
-                    "rateCardId": "E76",
-                    "isEditable": True,
-                    "advertiserLimits": {"budgetDaily": 1, "budgetMonthly": 10},
-                }
-            ],
-        },
-    )
+def test_get_advertiser_campaigns(api, adv_hash, mocked_response, advertiser_campaigns_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
     (campaign,) = api.get_advertiser_campaigns(adv_hash)
 
     assert campaign.name == "Campaign"
 
 
-def test_get_billing(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/billing").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": {
-                "initialBalance": -100,
-                "bills": [
-                    {
-                        "day": "2020-11-25",
-                        "operation": "Cost of campaign",
-                        "position": 2,
-                        "credit": 0,
-                        "debit": -102,
-                        "balance": -200,
-                        "recordNumber": 1,
-                    }
-                ],
-            },
-        },
-    )
+def test_get_billing(api, adv_hash, mocked_response, billing_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
 
     billing = api.get_billing(adv_hash, DAY_FROM, DAY_TO)
-    (bill,) = billing.bills
 
+    (bill,) = billing.bills
     assert billing.initial_balance == -100
     assert bill.day == date(2020, 11, 25)
 
 
-def test_get_rtb_creatives(api, adv_hash, mocked_response):
-    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(
-        200,
-        json={
-            "status": "ok",
-            "data": [
-                {
-                    "hash": "hash",
-                    "status": "ACTIVE",
-                    "previews": [
-                        {
-                            "width": 300,
-                            "height": 200,
-                            "offersNumber": 4,
-                            "previewUrl": "url",
-                        }
-                    ],
-                }
-            ],
-        },
-    )
+def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_response):
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
     (rtb_creative,) = api.get_rtb_creatives(adv_hash)
+
     assert dict(mocked_response.calls[0].request.url.params) == {}
     assert rtb_creative.hash == "hash"
     assert len(rtb_creative.previews) == 1
@@ -360,46 +201,18 @@ def test_get_rtb_creatives_with_extra_params(api, adv_hash, mocked_response, sub
     assert dict(mocked_response.calls[0].request.url.params) == params
 
 
-def test_get_rtb_conversions(api, adv_hash, mocked_response):
-    conv_data = {
-        "conversionTime": "2020-01-02T21:51:57.686000+00:00",
-        "conversionIdentifier": "226",
-        "conversionHash": "chash",
-        "conversionClass": None,
-        "cookieHash": "hash",
-        "conversionValue": 13.3,
-        "commissionValue": 3.0,
-        "lastClickTime": "2020-01-02T21:35:06.279000+00:00",
-        "lastImpressionTime": "2020-01-02T21:38:13.346000+00:00",
-    }
+def test_get_rtb_conversions(
+    api, adv_hash, mocked_response, conversions_with_next_cursor_response, conversions_without_next_cursor_response
+):
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/conversions").mock(
         side_effect=[
-            Response(
-                200,
-                json={
-                    "status": "ok",
-                    "data": {
-                        "rows": [conv_data],
-                        "nextCursor": "123",
-                        "total": 1,
-                    },
-                },
-            ),
-            Response(
-                200,
-                json={
-                    "status": "ok",
-                    "data": {
-                        "rows": [conv_data],
-                        "nextCursor": None,
-                        "total": 1,
-                    },
-                },
-            ),
+            Response(200, json=conversions_with_next_cursor_response),
+            Response(200, json=conversions_without_next_cursor_response),
         ]
     )
 
     conversions = api.get_rtb_conversions(adv_hash, DAY_FROM, DAY_TO)
+
     call1, call2 = mocked_response.calls
     assert set(call1.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit"}
     assert set(call2.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit", "nextCursor"}

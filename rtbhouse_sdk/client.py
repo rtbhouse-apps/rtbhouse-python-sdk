@@ -1,6 +1,8 @@
 import contextlib
 import warnings
-from typing import Dict, List, Optional
+from datetime import date
+from enum import Enum
+from typing import Dict, List, Literal, Optional, Union
 
 import httpx
 
@@ -15,20 +17,21 @@ DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
-class Conversions:
-    POST_VIEW = "POST_VIEW"
+class CountConvention(str, Enum):
     ATTRIBUTED_POST_CLICK = "ATTRIBUTED"
+    ATTRIBUTED_POST_VIEW = "POST_VIEW"
     ALL_POST_CLICK = "ALL_POST_CLICK"
+    ALL_CONVERSIONS = "ALL_CONVERSIONS"
 
 
-class UserSegment:
+class UserSegment(str, Enum):
     VISITORS = "VISITORS"
     SHOPPERS = "SHOPPERS"
     BUYERS = "BUYERS"
     NEW = "NEW"
 
 
-class DeviceType:
+class DeviceType(str, Enum):
     PC = "PC"
     MOBILE = "MOBILE"
     PHONE = "PHONE"
@@ -39,39 +42,41 @@ class DeviceType:
     UNKNOWN = "UNKNOWN"
 
 
-class GroupBy:
-    day = "day"
-    week = "week"
-    month = "month"
-    year = "year"
-    advertiser = "advertiser"
-    subcampaign = "subcampaign"
-    user_segment = "userSegment"
-    device_type = "deviceType"
-    creative = "creative"
-    category = "category"
-    country = "country"
+class GroupBy(str, Enum):
+    DAY = "day"
+    WEEK = "week"
+    MONTH = "month"
+    YEAR = "year"
+
+    ADVERTISER = "advertiser"
+    CAMPAIGN = "subcampaign"
+    USER_SEGMENT = "user_segment"
+    DEVICE_TYPE = "device_type"
+    CREATIVE = "creative"
+    CATEGORY = "category"
+    COUNTRY = "country"
+    PLACEMENT = "placement"
 
 
-class Metrics:
-    campaign_cost = "campaignCost"
-    imps_count = "impsCount"
-    ecpm = "ecpm"
-    clicks_count = "clicksCount"
-    ecpc = "ecpc"
-    ctr = "ctr"
-    conversions_count = "conversionsCount"
-    ecpa = "ecpa"
-    cr = "cr"
-    conversions_value = "conversionsValue"
-    roas = "roas"
-    ecps = "ecps"
-    video_complete_views = "videoCompleteViews"
-    ecpv = "ecpv"
-    vcr = "vcr"
-    viewability = "viewability"
-    user_frequency = "userFrequency"
-    user_reach = "userReach"
+class Metric(str, Enum):
+    CAMPAIGN_COST = "campaign_cost"
+    IMPS_COUNT = "imps_count"
+    ECPM = "ecpm"
+    CLICKS_COUNT = "clicks_count"
+    ECPC = "ecpc"
+    CTR = "ctr"
+    CONVERSIONS_COUNT = "conversions_count"
+    ECPA = "ecpa"
+    CR = "cr"
+    CONVERSIONS_VALUE = "conversions_value"
+    ROAS = "roas"
+    ECPS = "ecps"
+    VIDEO_COMPLETE_VIEWS = "video_complete_views"
+    ECPV = "ecpv"
+    VCR = "vcr"
+    VIEWABILITY = "viewability"
+    USER_FREQUENCY = "user_frequency"
+    USER_REACH = "user_reach"
 
 
 class Client:
@@ -166,32 +171,40 @@ class Client:
         data = self._get("/advertisers")
         return [schema.Advertiser(**adv) for adv in data]
 
-    def get_advertiser(self, adv_hash) -> schema.Advertiser:
+    def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
         data = self._get(f"/advertisers/{adv_hash}")
         return schema.Advertiser(**data)
 
-    def get_invoicing_data(self, adv_hash) -> schema.InvoiceData:
+    def get_invoicing_data(self, adv_hash: str) -> schema.InvoiceData:
         data = self._get(f"/advertisers/{adv_hash}/client")
         return schema.InvoiceData(**data["invoicing"])
 
-    def get_offer_categories(self, adv_hash) -> List[schema.Category]:
+    def get_offer_categories(self, adv_hash: str) -> List[schema.Category]:
         data = self._get(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
-    def get_offers(self, adv_hash) -> List[schema.Offer]:
+    def get_offers(self, adv_hash: str) -> List[schema.Offer]:
         data = self._get(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
-    def get_advertiser_campaigns(self, adv_hash) -> List[schema.Campaign]:
+    def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
         data = self._get(f"/advertisers/{adv_hash}/campaigns")
         return [schema.Campaign(**camp) for camp in data]
 
-    def get_billing(self, adv_hash, day_from, day_to) -> schema.Billing:
+    def get_billing(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+    ) -> schema.Billing:
         data = self._get(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
         return schema.Billing(**data)
 
     def get_rtb_creatives(
-        self, adv_hash, subcampaigns=None, active_only: Optional[bool] = None
+        self,
+        adv_hash: str,
+        subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
+        active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = {}
         if subcampaigns:
@@ -205,14 +218,18 @@ class Client:
         return [schema.Creative(**cr) for cr in data]
 
     def get_rtb_conversions(
-        self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        convention_type=CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> List[schema.Conversion]:
         rows = self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
                 "dayFrom": day_from,
                 "dayTo": day_to,
-                "countConvention": convention_type,
+                "countConvention": convention_type.value,
             },
         )
         return [schema.Conversion(**conv) for conv in rows]
@@ -237,15 +254,15 @@ class Client:
 
     def get_rtb_stats(
         self,
-        adv_hash,
-        day_from,
-        day_to,
-        group_by,
-        metrics,
-        count_convention=None,
-        subcampaigns=None,
-        user_segments=None,
-        device_types=None,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[str]] = None,
+        user_segments: Optional[List[UserSegment]] = None,
+        device_types: Optional[List[DeviceType]] = None,
     ):
         params = {
             "dayFrom": day_from,
@@ -254,24 +271,31 @@ class Client:
             "metrics": "-".join(metrics),
         }
         if count_convention is not None:
-            params["countConvention"] = count_convention
+            params["countConvention"] = count_convention.value
         if subcampaigns is not None:
             params["subcampaigns"] = subcampaigns
         if user_segments is not None:
-            params["userSegments"] = "-".join(user_segments)
+            params["userSegments"] = "-".join(us.value for us in user_segments)
         if device_types is not None:
-            params["deviceTypes"] = "-".join(device_types)
+            params["deviceTypes"] = "-".join(dt.value for dt in device_types)
 
         return self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
     def get_summary_stats(
-        self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[int]] = None,
     ):
         params = {
             "dayFrom": day_from,
             "dayTo": day_to,
-            "groupBy": "-".join(group_by),
-            "metrics": "-".join(metrics),
+            "groupBy": "-".join(gb.value for gb in group_by),
+            "metrics": "-".join(m.value for m in metrics),
         }
         if count_convention is not None:
             params["countConvention"] = count_convention
@@ -291,6 +315,7 @@ class AsyncClient(Client):
     info = await cli.get_user_info()
     ```
     """
+
     @staticmethod
     @contextlib.asynccontextmanager
     async def get_client(username, password, timeout=DEFAULT_TIMEOUT):
@@ -333,32 +358,40 @@ class AsyncClient(Client):
         data = await self._get("/advertisers")
         return [schema.Advertiser(**adv) for adv in data]
 
-    async def get_advertiser(self, adv_hash) -> schema.Advertiser:
+    async def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
         data = await self._get(f"/advertisers/{adv_hash}")
         return schema.Advertiser(**data)
 
-    async def get_invoicing_data(self, adv_hash) -> schema.InvoiceData:
+    async def get_invoicing_data(self, adv_hash: str) -> schema.InvoiceData:
         data = await self._get(f"/advertisers/{adv_hash}/client")
         return schema.InvoiceData(**data["invoicing"])
 
-    async def get_offer_categories(self, adv_hash) -> List[schema.Category]:
+    async def get_offer_categories(self, adv_hash: str) -> List[schema.Category]:
         data = await self._get(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
-    async def get_offers(self, adv_hash) -> List[schema.Offer]:
+    async def get_offers(self, adv_hash: str) -> List[schema.Offer]:
         data = await self._get(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
-    async def get_advertiser_campaigns(self, adv_hash) -> List[schema.Campaign]:
+    async def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
         data = await self._get(f"/advertisers/{adv_hash}/campaigns")
         return [schema.Campaign(**camp) for camp in data]
 
-    async def get_billing(self, adv_hash, day_from, day_to) -> schema.Billing:
+    async def get_billing(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+    ) -> schema.Billing:
         data = await self._get(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
         return schema.Billing(**data)
 
     async def get_rtb_creatives(
-        self, adv_hash, subcampaigns=None, active_only: Optional[bool] = None
+        self,
+        adv_hash: str,
+        subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
+        active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = {}
         if subcampaigns:
@@ -372,14 +405,18 @@ class AsyncClient(Client):
         return [schema.Creative(**cr) for cr in data]
 
     async def get_rtb_conversions(
-        self, adv_hash, day_from, day_to, convention_type=Conversions.ATTRIBUTED_POST_CLICK
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        convention_type=CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> List[schema.Conversion]:
         rows = await self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
                 "dayFrom": day_from,
                 "dayTo": day_to,
-                "countConvention": convention_type,
+                "countConvention": convention_type.value,
             },
         )
         return [schema.Conversion(**conv) for conv in rows]
@@ -404,15 +441,15 @@ class AsyncClient(Client):
 
     async def get_rtb_stats(
         self,
-        adv_hash,
-        day_from,
-        day_to,
-        group_by,
-        metrics,
-        count_convention=None,
-        subcampaigns=None,
-        user_segments=None,
-        device_types=None,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[str]] = None,
+        user_segments: Optional[List[UserSegment]] = None,
+        device_types: Optional[List[DeviceType]] = None,
     ):
         params = {
             "dayFrom": day_from,
@@ -421,27 +458,34 @@ class AsyncClient(Client):
             "metrics": "-".join(metrics),
         }
         if count_convention is not None:
-            params["countConvention"] = count_convention
+            params["countConvention"] = count_convention.value
         if subcampaigns is not None:
             params["subcampaigns"] = subcampaigns
         if user_segments is not None:
-            params["userSegments"] = "-".join(user_segments)
+            params["userSegments"] = "-".join(us.value for us in user_segments)
         if device_types is not None:
-            params["deviceTypes"] = "-".join(device_types)
+            params["deviceTypes"] = "-".join(dt.value for dt in device_types)
 
         return await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
     async def get_summary_stats(
-        self, adv_hash, day_from, day_to, group_by, metrics, count_convention=None, subcampaigns=None
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[int]] = None,
     ):
         params = {
             "dayFrom": day_from,
             "dayTo": day_to,
-            "groupBy": "-".join(group_by),
-            "metrics": "-".join(metrics),
+            "groupBy": "-".join(gb.value for gb in group_by),
+            "metrics": "-".join(m.value for m in metrics),
         }
         if count_convention is not None:
-            params["countConvention"] = count_convention
+            params["countConvention"] = count_convention.value
         if subcampaigns is not None:
             params["subcampaigns"] = subcampaigns
 

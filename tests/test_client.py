@@ -10,8 +10,10 @@ from rtbhouse_sdk.client import (
     ApiException,
     ApiRateLimitException,
     Client,
-    Conversions,
+    CountConvention,
     DeviceType,
+    GroupBy,
+    Metric,
     UserSegment,
 )
 
@@ -230,15 +232,15 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
         adv_hash,
         DAY_FROM,
         DAY_TO,
-        ["advertiser", "day"],
-        ["campaignCost", "cr"],
+        [GroupBy.ADVERTISER, GroupBy.DAY],
+        [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
     assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaignCost-cr",
+        "metrics": "campaign_cost-cr",
     }
     assert stats["advertiser"] == "xyz"
 
@@ -246,7 +248,7 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
 @pytest.mark.parametrize(
     "param,query_param,value,query_value",
     [
-        ("count_convention", "countConvention", Conversions.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
+        ("count_convention", "countConvention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
         ("subcampaigns", "subcampaigns", "hash", "hash"),
         ("user_segments", "userSegments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
         ("device_types", "deviceTypes", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
@@ -274,14 +276,14 @@ def test_get_summary_stats(api, adv_hash, mocked_response):
         adv_hash,
         DAY_FROM,
         DAY_TO,
-        ["advertiser", "day"],
-        ["campaignCost", "cr"],
+        [GroupBy.ADVERTISER, GroupBy.DAY],
+        [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
     assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaignCost-cr",
+        "metrics": "campaign_cost-cr",
     }
     assert stats["advertiser"] == "xyz"

@@ -5,7 +5,7 @@ import pytest_asyncio
 import respx
 from httpx import Response
 
-from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient
+from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
 
 DAY_FROM = "2020-09-01"
 DAY_TO = "2020-09-01"
@@ -146,15 +146,15 @@ async def test_get_rtb_stats(api, adv_hash, mocked_response):
         adv_hash,
         DAY_FROM,
         DAY_TO,
-        ["advertiser", "day"],
-        ["campaignCost", "cr"],
+        [GroupBy.ADVERTISER, GroupBy.DAY],
+        [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
     assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaignCost-cr",
+        "metrics": "campaign_cost-cr",
     }
     assert stats["advertiser"] == "xyz"
 
@@ -170,14 +170,14 @@ async def test_get_summary_stats(api, adv_hash, mocked_response):
         adv_hash,
         DAY_FROM,
         DAY_TO,
-        ["advertiser", "day"],
-        ["campaignCost", "cr"],
+        [GroupBy.ADVERTISER, GroupBy.DAY],
+        [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
     assert dict(mocked_response.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaignCost-cr",
+        "metrics": "campaign_cost-cr",
     }
     assert stats["advertiser"] == "xyz"

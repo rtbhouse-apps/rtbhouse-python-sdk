@@ -1,7 +1,6 @@
 from datetime import date
 
 import pytest
-import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import (
@@ -24,21 +23,10 @@ DAY_TO = "2020-09-01"
 BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 
-@pytest.fixture()
-def api():
-    with Client.get_client("test", "test") as client:
-        yield client
-
-
-@pytest.fixture(autouse=True)
-def mock_outgoing_requests():
-    with respx.mock() as mock:
-        yield mock
-
-
-@pytest.fixture()
-def mocked_response(mock_outgoing_requests):
-    yield mock_outgoing_requests
+@pytest.fixture(name="api")
+def api_client():
+    with Client("test", "test") as api:
+        yield api
 
 
 def test_validate_response_raises_error_on_too_old_api_version(api):

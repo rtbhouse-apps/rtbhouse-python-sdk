@@ -3,7 +3,7 @@ from typing import Any, Dict
 
 class ApiException(Exception):
     def __init__(self, message):
-        super(ApiException, self).__init__(message)
+        super().__init__(message)
         self.message = message
 
     def __str__(self):
@@ -26,14 +26,14 @@ class ApiRequestException(ApiException):
             self.errors = self._response_data.get("errors")
             message = self._response_data.get("message")
 
-        super(ApiRequestException, self).__init__(message)
+        super().__init__(message)
 
 
 class ApiRateLimitException(ApiRequestException):
     message = "Resource usage limits reached"
 
     def __init__(self, response):
-        super(ApiRateLimitException, self).__init__(response)
+        super().__init__(response)
         self.limits = parse_resource_usage_header(response.headers.get("X-Resource-Usage"))
 
 

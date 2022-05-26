@@ -2,7 +2,8 @@ import contextlib
 import warnings
 from datetime import date
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from types import TracebackType
+from typing import Any, Dict, List, Optional, Type, Union
 
 import httpx
 
@@ -100,7 +101,7 @@ class Client:
 
     It's also possible to share underlying connection with consecutive queries using a context manager:
     ```
-    with Client.get_client(...) as cli:
+    with Client(...) as cli:
         info = cli.get_user_info()
         adv = cli.get_advertiser(hash)
     ```
@@ -112,13 +113,17 @@ class Client:
         self._timeout = timeout
         self._httpx_client = httpx_client
 
-    @staticmethod
-    @contextlib.contextmanager
-    def get_client(username, password, timeout=DEFAULT_TIMEOUT):
-        with httpx.Client() as httpx_cli:
-            client = Client(username, password, timeout, httpx_cli)
-            yield client
-        client._httpx_client = None
+    def __enter__(self):
+        self._httpx_client = httpx.Client().__enter__()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Type[BaseException] = None,
+        exc_value: BaseException = None,
+        traceback: TracebackType = None,
+    ):
+        self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
     @contextlib.contextmanager
     def _get_httpx_client(self):
@@ -167,8 +172,8 @@ class Client:
         try:
             resp_json = response.json()
             return resp_json.get("data") or {}
-        except (ValueError, KeyError):
-            raise ApiException("Invalid response format")
+        except (ValueError, KeyError) as exc:
+            raise ApiException("Invalid response format") from exc
 
     def get_user_info(self) -> schema.UserInfo:
         data = self._get("/user/info")
@@ -263,8 +268,7 @@ class Client:
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
-            else:
-                request_params["nextCursor"] = next_cursor
+            request_params["nextCursor"] = next_cursor
 
         return result
 
@@ -368,13 +372,17 @@ class AsyncClient:
         self._timeout = timeout
         self._httpx_client = httpx_client
 
-    @staticmethod
-    @contextlib.asynccontextmanager
-    async def get_client(username, password, timeout=DEFAULT_TIMEOUT):
-        async with httpx.AsyncClient() as httpx_cli:
-            client = AsyncClient(username, password, timeout, httpx_cli)
-            yield client
-        client._httpx_client = None
+    async def __aenter__(self):
+        self._httpx_client = await httpx.AsyncClient().__aenter__()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Type[BaseException] = None,
+        exc_value: BaseException = None,
+        traceback: TracebackType = None,
+    ):
+        await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
     @contextlib.asynccontextmanager
     async def _get_httpx_client(self):
@@ -399,8 +407,8 @@ class AsyncClient:
         try:
             resp_json = response.json()
             return resp_json.get("data") or {}
-        except (ValueError, KeyError):
-            raise ApiException("Invalid response format")
+        except (ValueError, KeyError) as exc:
+            raise ApiException("Invalid response format") from exc
 
     async def get_user_info(self) -> schema.UserInfo:
         data = await self._get("/user/info")
@@ -479,8 +487,7 @@ class AsyncClient:
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
-            else:
-                request_params["nextCursor"] = next_cursor
+            request_params["nextCursor"] = next_cursor
 
         return result
 

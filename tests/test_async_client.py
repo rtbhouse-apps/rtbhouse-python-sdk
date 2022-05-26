@@ -2,7 +2,6 @@ from datetime import date
 
 import pytest
 import pytest_asyncio
-import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
@@ -13,25 +12,14 @@ DAY_TO = "2020-09-01"
 BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 
-@pytest_asyncio.fixture()
-async def api():
-    async with AsyncClient.get_client("test", "test") as cli:
+@pytest_asyncio.fixture(name="api")
+async def api_client():
+    async with AsyncClient("test", "test") as cli:
         yield cli
 
 
-@pytest.fixture(autouse=True)
-def mock_outgoing_requests():
-    with respx.mock() as mock:
-        yield mock
-
-
-@pytest.fixture()
-def mocked_response(mock_outgoing_requests):
-    yield mock_outgoing_requests
-
-
 @pytest.mark.asyncio
-async def test_get_user_info(api, adv_hash, mocked_response, user_info_response):
+async def test_get_user_info(api, mocked_response, user_info_response):
     mocked_response.get(f"{BASE_URL}/user/info").respond(200, json=user_info_response)
 
     data = await api.get_user_info()
@@ -120,7 +108,11 @@ async def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_r
 
 @pytest.mark.asyncio
 async def test_get_rtb_conversions(
-    api, adv_hash, mocked_response, conversions_with_next_cursor_response, conversions_without_next_cursor_response
+    api,
+    adv_hash,
+    mocked_response,
+    conversions_with_next_cursor_response,
+    conversions_without_next_cursor_response,
 ):
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/conversions").mock(
         side_effect=[

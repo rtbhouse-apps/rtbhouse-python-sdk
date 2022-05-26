@@ -33,6 +33,7 @@ isort = {version = "^5.7.0", python = ">=3.7, <4.0"}
 respx = "^0.19.2"
 pytest-asyncio = "^0.18.3"
 mypy = "^0.960"
+pylint = "^2.13.9"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
@@ -42,14 +43,43 @@ line-length = 120
 target-version = ['py38']
 
 [tool.isort]
-line_length = 120
-use_parentheses = true
-include_trailing_comma = true
-multi_line_output = 3
+profile = "black"
 
 [tools.mypy]
 ignore_missing_imports = true
 strict = true
+
+[tool.pylint.format]
+max-line-length = "120"
+
+[tool.pylint.message_control]
+enable = "all"
+disable = """
+    bad-continuation,
+    bad-whitespace,
+    duplicate-code,
+    fixme,
+    global-statement,
+    invalid-name,
+    locally-disabled,
+    missing-class-docstring,
+    missing-function-docstring,
+    missing-module-docstring,
+    no-else-raise,
+    no-else-return,
+    no-member,
+    no-name-in-module,
+    no-self-use,
+    suppressed-message,
+    too-few-public-methods,
+    too-many-arguments,
+    too-many-instance-attributes,
+    too-many-locals,
+    unidiomatic-typecheck,
+    use-implicit-booleaness-not-comparison,
+    useless-return,
+    useless-suppression,
+"""
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

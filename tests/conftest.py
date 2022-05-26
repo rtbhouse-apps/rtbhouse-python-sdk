@@ -1,11 +1,18 @@
 import copy
 
 import pytest
+import respx
 
 
 @pytest.fixture()
 def adv_hash():
     return "advhash"
+
+
+@pytest.fixture(autouse=True)
+def mocked_response():
+    with respx.mock() as mock:  # pylint: disable=not-context-manager
+        yield mock
 
 
 @pytest.fixture
@@ -185,8 +192,8 @@ def rtb_creatives_response():
     }
 
 
-@pytest.fixture
-def conversions_with_next_cursor_response():
+@pytest.fixture(name="conversions_with_next_cursor_response")
+def conversions_with_next_cursor_response_fixture():
     return {
         "status": "ok",
         "data": {

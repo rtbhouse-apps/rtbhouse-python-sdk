@@ -15,6 +15,7 @@ from rtbhouse_sdk.client import (
     GroupBy,
     Metric,
     UserSegment,
+    SubcampaignsFilter,
 )
 
 DAY_FROM = "2020-09-01"
@@ -177,7 +178,7 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_respons
             },
         ),
         (
-            "ACTIVE",
+            SubcampaignsFilter.ACTIVE,
             False,
             {
                 "subcampaigns": "ACTIVE",
@@ -185,7 +186,7 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_respons
             },
         ),
         (
-            "ANY",
+            SubcampaignsFilter.ANY,
             None,
             {
                 "subcampaigns": "ANY",

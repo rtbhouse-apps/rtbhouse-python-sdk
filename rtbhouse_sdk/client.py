@@ -2,7 +2,7 @@ import contextlib
 import warnings
 from datetime import date
 from enum import Enum
-from typing import Any, Dict, List, Literal, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
@@ -77,6 +77,12 @@ class Metric(str, Enum):
     VIEWABILITY = "viewability"
     USER_FREQUENCY = "user_frequency"
     USER_REACH = "user_reach"
+
+
+class SubcampaignsFilter(str, Enum):
+    ALL = "ALL"
+    ANY = "ANY"
+    ACTIVE = "ACTIVE"
 
 
 class Client:
@@ -203,7 +209,7 @@ class Client:
     def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
+        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = self._create_rtb_creatives_params(subcampaigns, active_only)
@@ -211,12 +217,12 @@ class Client:
         return [schema.Creative(**cr) for cr in data]
 
     def _create_rtb_creatives_params(
-        self, subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None, active_only: Optional[bool] = None
+        self, subcampaigns: Union[None, List[int], SubcampaignsFilter] = None, active_only: Optional[bool] = None
     ) -> Dict[str, Any]:
         params = {}
         if subcampaigns:
-            if subcampaigns in ["ANY", "ACTIVE"]:
-                params["subcampaigns"] = subcampaigns
+            if isinstance(subcampaigns, SubcampaignsFilter):
+                params["subcampaigns"] = subcampaigns.value
             elif isinstance(subcampaigns, (list, tuple, set)):
                 params["subcampaigns"] = "-".join(subcampaigns)
         if active_only is not None:
@@ -427,7 +433,7 @@ class AsyncClient(Client):
     async def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
+        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = self._create_rtb_creatives_params(subcampaigns, active_only)

@@ -32,6 +32,7 @@ black = "^22.3.0"
 isort = {version = "^5.7.0", python = ">=3.7, <4.0"}
 respx = "^0.19.2"
 pytest-asyncio = "^0.18.3"
+mypy = "^0.960"
 
 [tool.pytest.ini_options]
 asyncio_mode = "strict"
@@ -45,6 +46,10 @@ line_length = 120
 use_parentheses = true
 include_trailing_comma = true
 multi_line_output = 3
+
+[tools.mypy]
+ignore_missing_imports = true
+strict = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

@@ -41,24 +41,24 @@ def mocked_response(mock_outgoing_requests):
     yield mock_outgoing_requests
 
 
-def test_raise_error_on_too_old_api_version(api):
+def test_validate_response_raises_error_on_too_old_api_version(api):
     response = Response(410)
     newest_version = int(API_VERSION.strip("v")) + 2
     response.headers["X-Current-Api-Version"] = f"v{newest_version}"
 
     with pytest.raises(ApiException) as cm:
-        api._validate_response(response)
+        api.validate_response(response)
 
     assert cm.value.message.startswith("Unsupported api version")
 
 
-def test_warn_on_not_the_newest_api_version(api):
+def test_validate_response_warns_on_not_the_newest_api_version(api):
     response = Response(200)
     newest_version = f'v{int(API_VERSION.strip("v")) + 1}'
     response.headers["X-Current-Api-Version"] = newest_version
 
     with pytest.warns(Warning) as cm:
-        api._validate_response(response)
+        api.validate_response(response)
 
     msg = (
         f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
@@ -67,7 +67,7 @@ def test_warn_on_not_the_newest_api_version(api):
     assert str(cm[0].message) == msg
 
 
-def test_raise_error_on_resource_usage_limit_reached(api):
+def test_validate_response_raises_error_on_resource_usage_limit_reached(api):
     header = ";".join(
         [
             "WORKER_TIME-3600=11.78/10000000",
@@ -79,7 +79,7 @@ def test_raise_error_on_resource_usage_limit_reached(api):
     response.headers["X-Resource-Usage"] = header
 
     with pytest.raises(ApiRateLimitException) as cm:
-        api._validate_response(response)
+        api.validate_response(response)
 
     data = cm.value.limits
     assert data["WORKER_TIME"]["3600"]["10000000"] == 11.78

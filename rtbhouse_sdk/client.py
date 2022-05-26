@@ -128,7 +128,8 @@ class Client:
             with httpx.Client() as httpx_cli:
                 yield httpx_cli
 
-    def _validate_response(self, response):
+    @staticmethod
+    def validate_response(response):
         if response.status_code == 410:
             newest_version = response.headers.get("X-Current-Api-Version")
             raise ApiException(
@@ -158,7 +159,7 @@ class Client:
 
         with self._get_httpx_client() as httpx_client:
             response = httpx_client.request(method, base_url + path, *args, **kwargs)
-        self._validate_response(response)
+        Client.validate_response(response)
         return response
 
     def _get(self, path, params=None) -> Dict:
@@ -212,19 +213,21 @@ class Client:
         subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = self._create_rtb_creatives_params(subcampaigns, active_only)
+        params = self.create_rtb_creatives_params(subcampaigns, active_only)
         data = self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
-    def _create_rtb_creatives_params(
-        self, subcampaigns: Union[None, List[int], SubcampaignsFilter] = None, active_only: Optional[bool] = None
+    @staticmethod
+    def create_rtb_creatives_params(
+        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
+        active_only: Optional[bool] = None,
     ) -> Dict[str, Any]:
-        params = {}
+        params: Dict[str, Any] = {}
         if subcampaigns:
             if isinstance(subcampaigns, SubcampaignsFilter):
                 params["subcampaigns"] = subcampaigns.value
             elif isinstance(subcampaigns, (list, tuple, set)):
-                params["subcampaigns"] = "-".join(subcampaigns)
+                params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
         if active_only is not None:
             params["activeOnly"] = active_only
 
@@ -277,14 +280,14 @@ class Client:
         user_segments: Optional[List[UserSegment]] = None,
         device_types: Optional[List[DeviceType]] = None,
     ):
-        params = self._create_rtb_stats_params(
+        params = self.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
         return self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
-    def _create_rtb_stats_params(
-        self,
+    @staticmethod
+    def create_rtb_stats_params(
         day_from: date,
         day_to: date,
         group_by: List[GroupBy],
@@ -321,12 +324,12 @@ class Client:
         count_convention: Optional[CountConvention] = None,
         subcampaigns: Optional[List[int]] = None,
     ):
-        params = self._create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         return self._get(f"/advertisers/{adv_hash}/summary-stats", params)
 
-    def _create_summary_stats_params(
-        self,
+    @staticmethod
+    def create_summary_stats_params(
         day_from: date,
         day_to: date,
         group_by: List[GroupBy],
@@ -348,7 +351,7 @@ class Client:
         return params
 
 
-class AsyncClient(Client):
+class AsyncClient:
     """
     An asynchronous API client.
 
@@ -358,6 +361,12 @@ class AsyncClient(Client):
     info = await cli.get_user_info()
     ```
     """
+
+    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT, httpx_client=None):
+        self._username = username
+        self._password = password
+        self._timeout = timeout
+        self._httpx_client = httpx_client
 
     @staticmethod
     @contextlib.asynccontextmanager
@@ -382,7 +391,7 @@ class AsyncClient(Client):
 
         async with self._get_httpx_client() as cli:
             response = await cli.request(method, base_url + path, *args, **kwargs)
-        self._validate_response(response)
+        Client.validate_response(response)
         return response
 
     async def _get(self, path, params=None) -> Dict:
@@ -436,7 +445,7 @@ class AsyncClient(Client):
         subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = self._create_rtb_creatives_params(subcampaigns, active_only)
+        params = Client.create_rtb_creatives_params(subcampaigns, active_only)
         data = await self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
@@ -487,7 +496,7 @@ class AsyncClient(Client):
         user_segments: Optional[List[UserSegment]] = None,
         device_types: Optional[List[DeviceType]] = None,
     ):
-        params = self._create_rtb_stats_params(
+        params = Client.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
@@ -503,6 +512,6 @@ class AsyncClient(Client):
         count_convention: Optional[CountConvention] = None,
         subcampaigns: Optional[List[int]] = None,
     ):
-        params = self._create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         return await self._get(f"/advertisers/{adv_hash}/summary-stats", params)

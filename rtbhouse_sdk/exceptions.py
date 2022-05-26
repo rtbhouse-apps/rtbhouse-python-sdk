@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Any, Dict
 
 
 class ApiException(Exception):
@@ -13,18 +13,18 @@ class ApiException(Exception):
 class ApiRequestException(ApiException):
     message = "Unexpected error"
     app_code = "UNKNOWN"
-    errors = {}
+    errors: Dict[str, Any] = {}
 
     def __init__(self, response):
         self.raw_response = response
         try:
-            self._res_data = response.json()
+            self._response_data = response.json()
         except ValueError:
             message = f"{response.reason_phrase} ({response.status_code})"
         else:
-            self.app_code = self._res_data.get("appCode")
-            self.errors = self._res_data.get("errors")
-            message = self._res_data.get("message")
+            self.app_code = self._response_data.get("appCode")
+            self.errors = self._response_data.get("errors")
+            message = self._response_data.get("message")
 
         super(ApiRequestException, self).__init__(message)
 
@@ -41,7 +41,7 @@ def parse_resource_usage_header(header) -> Dict:
     """parse string like WORKER_TIME-3600=11.7/10000000;DB_QUERY_TIME-21600=4.62/2000 into dict"""
     if not header:
         return {}
-    result = {}
+    result: Dict[str, Dict[str, Dict[str, float]]] = {}
     try:
         for line in header.split(";"):
             right, left = line.split("=")

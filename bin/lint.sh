@@ -24,7 +24,7 @@ fi
 
 if poetry show | cut -f 1 -d ' ' | grep \^mypy\$ > /dev/null; then
   echo -e "\nRunning mypy..."
-  poetry run mypy || exit_code=1
+  poetry run mypy . || exit_code=1
 fi
 
 exit $exit_code

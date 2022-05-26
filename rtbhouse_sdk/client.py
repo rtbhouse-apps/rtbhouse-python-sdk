@@ -2,7 +2,7 @@ import contextlib
 import warnings
 from datetime import date
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union, Any
+from typing import Any, Dict, List, Literal, Optional, Union
 
 import httpx
 

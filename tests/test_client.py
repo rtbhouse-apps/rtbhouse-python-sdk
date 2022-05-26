@@ -14,8 +14,8 @@ from rtbhouse_sdk.client import (
     DeviceType,
     GroupBy,
     Metric,
-    UserSegment,
     SubcampaignsFilter,
+    UserSegment,
 )
 
 DAY_FROM = "2020-09-01"

@@ -2,7 +2,7 @@ import contextlib
 import warnings
 from datetime import date
 from enum import Enum
-from typing import Dict, List, Literal, Optional, Union
+from typing import Dict, List, Literal, Optional, Union, Any
 
 import httpx
 
@@ -206,6 +206,13 @@ class Client:
         subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
+        params = self._create_rtb_creatives_params(subcampaigns, active_only)
+        data = self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
+        return [schema.Creative(**cr) for cr in data]
+
+    def _create_rtb_creatives_params(
+        self, subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None, active_only: Optional[bool] = None
+    ) -> Dict[str, Any]:
         params = {}
         if subcampaigns:
             if subcampaigns in ["ANY", "ACTIVE"]:
@@ -214,8 +221,8 @@ class Client:
                 params["subcampaigns"] = "-".join(subcampaigns)
         if active_only is not None:
             params["activeOnly"] = active_only
-        data = self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
-        return [schema.Creative(**cr) for cr in data]
+
+        return params
 
     def get_rtb_conversions(
         self,
@@ -264,6 +271,23 @@ class Client:
         user_segments: Optional[List[UserSegment]] = None,
         device_types: Optional[List[DeviceType]] = None,
     ):
+        params = self._create_rtb_stats_params(
+            day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
+        )
+
+        return self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
+
+    def _create_rtb_stats_params(
+        self,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[str]] = None,
+        user_segments: Optional[List[UserSegment]] = None,
+        device_types: Optional[List[DeviceType]] = None,
+    ) -> Dict[str, Any]:
         params = {
             "dayFrom": day_from,
             "dayTo": day_to,
@@ -279,7 +303,7 @@ class Client:
         if device_types is not None:
             params["deviceTypes"] = "-".join(dt.value for dt in device_types)
 
-        return self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
+        return params
 
     def get_summary_stats(
         self,
@@ -291,6 +315,19 @@ class Client:
         count_convention: Optional[CountConvention] = None,
         subcampaigns: Optional[List[int]] = None,
     ):
+        params = self._create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+
+        return self._get(f"/advertisers/{adv_hash}/summary-stats", params)
+
+    def _create_summary_stats_params(
+        self,
+        day_from: date,
+        day_to: date,
+        group_by: List[GroupBy],
+        metrics: List[Metric],
+        count_convention: Optional[CountConvention] = None,
+        subcampaigns: Optional[List[int]] = None,
+    ) -> Dict[str, Any]:
         params = {
             "dayFrom": day_from,
             "dayTo": day_to,
@@ -302,7 +339,7 @@ class Client:
         if subcampaigns is not None:
             params["subcampaigns"] = subcampaigns
 
-        return self._get(f"/advertisers/{adv_hash}/summary-stats", params)
+        return params
 
 
 class AsyncClient(Client):
@@ -393,14 +430,7 @@ class AsyncClient(Client):
         subcampaigns: Union[None, List[int], Literal["ALL", "ACTIVE"]] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = {}
-        if subcampaigns:
-            if subcampaigns in ["ANY", "ACTIVE"]:
-                params["subcampaigns"] = subcampaigns
-            elif isinstance(subcampaigns, (list, tuple, set)):
-                params["subcampaigns"] = "-".join(subcampaigns)
-        if active_only is not None:
-            params["activeOnly"] = active_only
+        params = self._create_rtb_creatives_params(subcampaigns, active_only)
         data = await self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
@@ -451,20 +481,9 @@ class AsyncClient(Client):
         user_segments: Optional[List[UserSegment]] = None,
         device_types: Optional[List[DeviceType]] = None,
     ):
-        params = {
-            "dayFrom": day_from,
-            "dayTo": day_to,
-            "groupBy": "-".join(group_by),
-            "metrics": "-".join(metrics),
-        }
-        if count_convention is not None:
-            params["countConvention"] = count_convention.value
-        if subcampaigns is not None:
-            params["subcampaigns"] = subcampaigns
-        if user_segments is not None:
-            params["userSegments"] = "-".join(us.value for us in user_segments)
-        if device_types is not None:
-            params["deviceTypes"] = "-".join(dt.value for dt in device_types)
+        params = self._create_rtb_stats_params(
+            day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
+        )
 
         return await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
@@ -478,15 +497,6 @@ class AsyncClient(Client):
         count_convention: Optional[CountConvention] = None,
         subcampaigns: Optional[List[int]] = None,
     ):
-        params = {
-            "dayFrom": day_from,
-            "dayTo": day_to,
-            "groupBy": "-".join(gb.value for gb in group_by),
-            "metrics": "-".join(m.value for m in metrics),
-        }
-        if count_convention is not None:
-            params["countConvention"] = count_convention.value
-        if subcampaigns is not None:
-            params["subcampaigns"] = subcampaigns
+        params = self._create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         return await self._get(f"/advertisers/{adv_hash}/summary-stats", params)

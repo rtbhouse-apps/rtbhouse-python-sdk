@@ -9,6 +9,7 @@ import httpx
 
 from . import __version__ as sdk_version
 from . import schema
+from .auth_backends import BasicAuth, BasicTokenAuth
 from .exceptions import ApiException, ApiRateLimitException, ApiRequestException
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
@@ -86,7 +87,24 @@ class SubcampaignsFilter(str, Enum):
     ACTIVE = "ACTIVE"
 
 
-class Client:
+SUPPORTED_AUTH_BACKENDS = (BasicAuth, BasicTokenAuth)
+
+
+class _Base:
+    def __init__(self, username: str = "", password: str = "", timeout=DEFAULT_TIMEOUT, auth=None, httpx_client=None):
+        if auth is None:
+            if not all([username, password]):
+                raise ValueError("You need to provide either auth or username and password.")
+            auth = httpx.BasicAuth(username, password)
+        elif not isinstance(auth, SUPPORTED_AUTH_BACKENDS):
+            backends = ", ".join(cls.__name__ for cls in SUPPORTED_AUTH_BACKENDS)
+            raise ValueError(f"The only supported auth backend are: {backends}")
+        self._auth = auth
+        self._timeout = timeout
+        self._httpx_client = httpx_client
+
+
+class Client(_Base):
     """
     A standard synchronous API client.
 
@@ -106,12 +124,6 @@ class Client:
         adv = cli.get_advertiser(hash)
     ```
     """
-
-    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT, httpx_client=None):
-        self._username = username
-        self._password = password
-        self._timeout = timeout
-        self._httpx_client = httpx_client
 
     def __enter__(self):
         self._httpx_client = httpx.Client().__enter__()
@@ -168,7 +180,7 @@ class Client:
         return response
 
     def _get(self, path, params=None) -> Dict:
-        response = self._make_request("get", path, auth=(self._username, self._password), params=params)
+        response = self._make_request("get", path, auth=self._auth, params=params)
         try:
             resp_json = response.json()
             return resp_json.get("data") or {}
@@ -355,7 +367,7 @@ class Client:
         return params
 
 
-class AsyncClient:
+class AsyncClient(_Base):
     """
     An asynchronous API client.
 
@@ -365,12 +377,6 @@ class AsyncClient:
     info = await cli.get_user_info()
     ```
     """
-
-    def __init__(self, username, password, timeout=DEFAULT_TIMEOUT, httpx_client=None):
-        self._username = username
-        self._password = password
-        self._timeout = timeout
-        self._httpx_client = httpx_client
 
     async def __aenter__(self):
         self._httpx_client = await httpx.AsyncClient().__aenter__()
@@ -403,7 +409,7 @@ class AsyncClient:
         return response
 
     async def _get(self, path, params=None) -> Dict:
-        response = await self._make_request("get", path, auth=(self._username, self._password), params=params)
+        response = await self._make_request("get", path, auth=self._auth, params=params)
         try:
             resp_json = response.json()
             return resp_json.get("data") or {}

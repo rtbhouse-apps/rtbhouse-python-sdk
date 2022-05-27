@@ -6,8 +6,8 @@ from httpx import Response
 
 from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
 
-DAY_FROM = "2020-09-01"
-DAY_TO = "2020-09-01"
+DAY_FROM = date(2020, 9, 1)
+DAY_TO = date(2020, 10, 1)
 
 BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
@@ -146,7 +146,7 @@ async def test_get_rtb_stats(api, adv_hash, mocked_response):
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaign_cost-cr",
+        "metrics": "campaignCost-cr",
     }
     assert stats["advertiser"] == "xyz"
 
@@ -170,6 +170,6 @@ async def test_get_summary_stats(api, adv_hash, mocked_response):
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
-        "metrics": "campaign_cost-cr",
+        "metrics": "campaignCost-cr",
     }
     assert stats["advertiser"] == "xyz"

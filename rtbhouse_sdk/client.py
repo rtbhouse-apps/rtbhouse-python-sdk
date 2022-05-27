@@ -51,8 +51,8 @@ class GroupBy(str, Enum):
 
     ADVERTISER = "advertiser"
     CAMPAIGN = "subcampaign"
-    USER_SEGMENT = "user_segment"
-    DEVICE_TYPE = "device_type"
+    USER_SEGMENT = "userSegment"
+    DEVICE_TYPE = "deviceType"
     CREATIVE = "creative"
     CATEGORY = "category"
     COUNTRY = "country"
@@ -60,24 +60,24 @@ class GroupBy(str, Enum):
 
 
 class Metric(str, Enum):
-    CAMPAIGN_COST = "campaign_cost"
-    IMPS_COUNT = "imps_count"
+    CAMPAIGN_COST = "campaignCost"
+    IMPS_COUNT = "impsCount"
     ECPM = "ecpm"
-    CLICKS_COUNT = "clicks_count"
+    CLICKS_COUNT = "clicksCount"
     ECPC = "ecpc"
     CTR = "ctr"
-    CONVERSIONS_COUNT = "conversions_count"
+    CONVERSIONS_COUNT = "conversionsCount"
     ECPA = "ecpa"
     CR = "cr"
-    CONVERSIONS_VALUE = "conversions_value"
+    CONVERSIONS_VALUE = "conversionsValue"
     ROAS = "roas"
     ECPS = "ecps"
-    VIDEO_COMPLETE_VIEWS = "video_complete_views"
+    VIDEO_COMPLETE_VIEWS = "videoCompleteViews"
     ECPV = "ecpv"
     VCR = "vcr"
     VIEWABILITY = "viewability"
-    USER_FREQUENCY = "user_frequency"
-    USER_REACH = "user_reach"
+    USER_FREQUENCY = "userFrequency"
+    USER_REACH = "userReach"
 
 
 class SubcampaignsFilter(str, Enum):
@@ -215,7 +215,7 @@ class Client:
     def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = self.create_rtb_creatives_params(subcampaigns, active_only)
@@ -224,7 +224,7 @@ class Client:
 
     @staticmethod
     def create_rtb_creatives_params(
-        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {}
@@ -326,7 +326,7 @@ class Client:
         group_by: List[GroupBy],
         metrics: List[Metric],
         count_convention: Optional[CountConvention] = None,
-        subcampaigns: Optional[List[int]] = None,
+        subcampaigns: Optional[List[str]] = None,
     ):
         params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
@@ -339,7 +339,7 @@ class Client:
         group_by: List[GroupBy],
         metrics: List[Metric],
         count_convention: Optional[CountConvention] = None,
-        subcampaigns: Optional[List[int]] = None,
+        subcampaigns: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         params = {
             "dayFrom": day_from,
@@ -450,7 +450,7 @@ class AsyncClient:
     async def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[int], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = Client.create_rtb_creatives_params(subcampaigns, active_only)
@@ -517,7 +517,7 @@ class AsyncClient:
         group_by: List[GroupBy],
         metrics: List[Metric],
         count_convention: Optional[CountConvention] = None,
-        subcampaigns: Optional[List[int]] = None,
+        subcampaigns: Optional[List[str]] = None,
     ):
         params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 

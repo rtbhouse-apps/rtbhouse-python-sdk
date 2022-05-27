@@ -7,7 +7,7 @@ from httpx import Response
 from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
 
 DAY_FROM = date(2020, 9, 1)
-DAY_TO = date(2020, 10, 1)
+DAY_TO = date(2020, 9, 1)
 
 BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 

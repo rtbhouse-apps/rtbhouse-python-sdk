@@ -11,8 +11,8 @@ from rtbhouse_sdk.reports_api import (
     UserSegment,
 )
 
-DAY_FROM = "2020-09-01"
-DAY_TO = "2020-09-01"
+DAY_FROM = "2022-05-01"
+DAY_TO = "2022-05-01"
 
 DPA_DAY_FROM = "2019-05-09"
 DPA_DAY_TO = "2019-05-09"
@@ -30,7 +30,7 @@ def adv_hash(api):
     advertisers = api.get_advertisers()
 
     assert advertisers
-    first_adv = advertisers[0]
+    first_adv = next(advertiser for advertiser in advertisers if advertiser["status"] == "ACTIVE")
     assert "hash" in first_adv
     assert "name" in first_adv
     assert "status" in first_adv

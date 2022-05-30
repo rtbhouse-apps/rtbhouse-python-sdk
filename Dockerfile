@@ -1,4 +1,4 @@
-FROM python:3.9.2-slim-buster
+FROM python:3.10.4-slim-buster
 
 ARG UNAME=apps
 ARG UID=1000
@@ -34,5 +34,5 @@ WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
 RUN poetry install --no-root
-CMD ["poetry", "run", "python", "-m", "pytest", "--junitxml=./results/results.xml", "--color=no", \
+CMD ["poetry", "run", "python", "-m", "pytest","--color=no", \
     "--cov-report=term-missing", "--cov=rtbhouse_sdk", "tests/"]

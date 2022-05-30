@@ -40,12 +40,13 @@ asyncio_mode = "strict"
 
 [tool.black]
 line-length = 120
-target-version = ['py38']
+target-version = ['py37', 'py38', 'py39', 'py310']
 
 [tool.isort]
 profile = "black"
 
 [tools.mypy]
+python_version = "3.7"
 ignore_missing_imports = true
 strict = true
 
@@ -58,27 +59,12 @@ disable = """
     bad-continuation,
     bad-whitespace,
     duplicate-code,
-    fixme,
-    global-statement,
     invalid-name,
     locally-disabled,
     missing-class-docstring,
     missing-function-docstring,
-    missing-module-docstring,
-    no-else-raise,
-    no-else-return,
-    no-member,
-    no-name-in-module,
-    no-self-use,
     suppressed-message,
-    too-few-public-methods,
-    too-many-arguments,
-    too-many-instance-attributes,
-    too-many-locals,
-    unidiomatic-typecheck,
-    use-implicit-booleaness-not-comparison,
-    useless-return,
-    useless-suppression,
+    use-implicit-booleaness-not-comparison
 """
 
 [build-system]

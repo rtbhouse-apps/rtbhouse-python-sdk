@@ -1,3 +1,4 @@
+"""Tests for auth backends."""
 import httpx
 import pytest
 

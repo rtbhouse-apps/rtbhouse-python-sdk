@@ -1,3 +1,4 @@
+"""Tests for client."""
 from datetime import date
 
 import pytest
@@ -182,7 +183,14 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_respons
         ),
     ],
 )
-def test_get_rtb_creatives_with_extra_params(api, adv_hash, mocked_response, subcampaigns, active_only, params):
+def test_get_rtb_creatives_with_extra_params(
+    api,
+    adv_hash,
+    mocked_response,
+    subcampaigns,
+    active_only,
+    params,
+):  # pylint: disable=too-many-arguments
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(
         200, json={"status": "ok", "data": []}
     )
@@ -243,7 +251,15 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
         ("device_types", "deviceTypes", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
     ],
 )
-def test_get_rtb_stats_extra_params(api, adv_hash, mocked_response, param, query_param, value, query_value):
+def test_get_rtb_stats_extra_params(
+    api,
+    adv_hash,
+    mocked_response,
+    param,
+    query_param,
+    value,
+    query_value,
+):  # pylint: disable=too-many-arguments
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats").respond(
         200,
         json={"status": "ok", "data": []},

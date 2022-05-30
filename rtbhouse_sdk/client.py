@@ -1,3 +1,4 @@
+"""Contains definitions of standard (sync) client as well as async client."""
 import contextlib
 import warnings
 from datetime import date
@@ -25,6 +26,8 @@ MAX_CURSOR_ROWS_LIMIT = 10000
 
 
 class CountConvention(str, Enum):
+    """Holds possible values of count convention parameter."""
+
     ATTRIBUTED_POST_CLICK = "ATTRIBUTED"
     ATTRIBUTED_POST_VIEW = "POST_VIEW"
     ALL_POST_CLICK = "ALL_POST_CLICK"
@@ -32,6 +35,8 @@ class CountConvention(str, Enum):
 
 
 class UserSegment(str, Enum):
+    """Holds possible values of user segment parameter."""
+
     VISITORS = "VISITORS"
     SHOPPERS = "SHOPPERS"
     BUYERS = "BUYERS"
@@ -39,6 +44,8 @@ class UserSegment(str, Enum):
 
 
 class DeviceType(str, Enum):
+    """Holds possible values of device type parameter."""
+
     PC = "PC"
     MOBILE = "MOBILE"
     PHONE = "PHONE"
@@ -50,6 +57,8 @@ class DeviceType(str, Enum):
 
 
 class GroupBy(str, Enum):
+    """Holds possible values of group by parameter."""
+
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
@@ -66,6 +75,8 @@ class GroupBy(str, Enum):
 
 
 class Metric(str, Enum):
+    """Holds possible values of metric parameter."""
+
     CAMPAIGN_COST = "campaignCost"
     IMPS_COUNT = "impsCount"
     ECPM = "ecpm"
@@ -87,6 +98,8 @@ class Metric(str, Enum):
 
 
 class SubcampaignsFilter(str, Enum):
+    """Holds possible values of subcampaigns parameter."""
+
     ALL = "ALL"
     ANY = "ANY"
     ACTIVE = "ACTIVE"
@@ -277,7 +290,7 @@ class Client:
 
         return result
 
-    def get_rtb_stats(
+    def get_rtb_stats(  # pylint: disable=too-many-arguments
         self,
         adv_hash: str,
         day_from: date,
@@ -296,7 +309,7 @@ class Client:
         return self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
     @staticmethod
-    def create_rtb_stats_params(
+    def create_rtb_stats_params(  # pylint: disable=too-many-arguments
         day_from: date,
         day_to: date,
         group_by: List[GroupBy],
@@ -323,7 +336,7 @@ class Client:
 
         return params
 
-    def get_summary_stats(
+    def get_summary_stats(  # pylint: disable=too-many-arguments
         self,
         adv_hash: str,
         day_from: date,
@@ -338,7 +351,7 @@ class Client:
         return self._get(f"/advertisers/{adv_hash}/summary-stats", params)
 
     @staticmethod
-    def create_summary_stats_params(
+    def create_summary_stats_params(  # pylint: disable=too-many-arguments
         day_from: date,
         day_to: date,
         group_by: List[GroupBy],
@@ -495,7 +508,7 @@ class AsyncClient:
 
         return result
 
-    async def get_rtb_stats(
+    async def get_rtb_stats(  # pylint: disable=too-many-arguments
         self,
         adv_hash: str,
         day_from: date,
@@ -513,7 +526,7 @@ class AsyncClient:
 
         return await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
 
-    async def get_summary_stats(
+    async def get_summary_stats(  # pylint: disable=too-many-arguments
         self,
         adv_hash: str,
         day_from: date,

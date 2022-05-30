@@ -1,7 +1,10 @@
+"""Definitions of exceptions used in SDK."""
 from typing import Any, Dict
 
 
 class ApiException(Exception):
+    """Base API Exception."""
+
     def __init__(self, message):
         super().__init__(message)
         self.message = message
@@ -11,10 +14,12 @@ class ApiException(Exception):
 
 
 class ApiVersionMismatch(ApiException):
-    pass
+    """Indicates SDK version is behind API version and needs to be updated."""
 
 
 class ApiRequestException(ApiException):
+    """Indicates there's something wrong with request."""
+
     message = "Unexpected error"
     app_code = "UNKNOWN"
     errors: Dict[str, Any] = {}
@@ -34,6 +39,8 @@ class ApiRequestException(ApiException):
 
 
 class ApiRateLimitException(ApiRequestException):
+    """Indicates that rate limit was exceeded."""
+
     message = "Resource usage limits reached"
 
     def __init__(self, response):

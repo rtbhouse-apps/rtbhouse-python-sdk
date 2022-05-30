@@ -1,3 +1,4 @@
+"""Common fixtures."""
 import copy
 
 import pytest

@@ -1,3 +1,6 @@
+"""Schemas for API data."""
+# pylint: disable=no-name-in-module
+# pylint: disable=too-few-public-methods
 from datetime import date, datetime
 from typing import Any, Dict, List, Optional
 

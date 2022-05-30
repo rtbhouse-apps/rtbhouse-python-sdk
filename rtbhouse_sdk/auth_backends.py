@@ -1,3 +1,4 @@
+"""Defines auth backends used by SDK."""
 import typing
 
 from httpx import Auth
@@ -6,10 +7,12 @@ from httpx import Request, Response
 
 
 class BasicAuth(HttpxBasicAuth):
-    pass
+    """A basic auth backend redefinition."""
 
 
 class BasicTokenAuth(Auth):
+    """Basic token auth backend."""
+
     def __init__(self, token: str):
         self._token = token
 

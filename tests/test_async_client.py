@@ -1,3 +1,4 @@
+"""Tests for async client."""
 from datetime import date
 
 import pytest

@@ -5,17 +5,6 @@ from rtbhouse_sdk.auth_backends import BasicAuth, BasicTokenAuth
 from rtbhouse_sdk.client import Client
 
 
-def test_no_auth_provided():
-    with pytest.raises(ValueError) as cm:
-        Client()
-
-    assert str(cm.value) == "You need to provide either auth or username and password."
-
-
-def test_auth_with_username_and_password():
-    Client(username="name", password="pwd")
-
-
 @pytest.mark.parametrize(
     "auth_backend",
     (

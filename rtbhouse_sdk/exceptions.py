@@ -10,6 +10,10 @@ class ApiException(Exception):
         return self.message
 
 
+class ApiVersionMismatch(ApiException):
+    pass
+
+
 class ApiRequestException(ApiException):
     message = "Unexpected error"
     app_code = "UNKNOWN"

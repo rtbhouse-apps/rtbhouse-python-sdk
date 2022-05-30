@@ -4,6 +4,7 @@ import pytest
 import pytest_asyncio
 from httpx import Response
 
+from rtbhouse_sdk.auth_backends import BasicAuth
 from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
 
 DAY_FROM = date(2020, 9, 1)
@@ -14,7 +15,7 @@ BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 @pytest_asyncio.fixture(name="api")
 async def api_client():
-    async with AsyncClient("test", "test") as cli:
+    async with AsyncClient(auth=BasicAuth("test", "test")) as cli:
         yield cli
 
 

@@ -3,11 +3,10 @@ from datetime import date
 import pytest
 from httpx import Response
 
+from rtbhouse_sdk.auth_backends import BasicAuth
 from rtbhouse_sdk.client import (
     API_BASE_URL,
     API_VERSION,
-    ApiException,
-    ApiRateLimitException,
     Client,
     CountConvention,
     DeviceType,
@@ -16,6 +15,7 @@ from rtbhouse_sdk.client import (
     SubcampaignsFilter,
     UserSegment,
 )
+from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatch
 
 DAY_FROM = date(2020, 9, 1)
 DAY_TO = date(2020, 9, 1)
@@ -25,7 +25,7 @@ BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 @pytest.fixture(name="api")
 def api_client():
-    with Client("test", "test") as api:
+    with Client(auth=BasicAuth("test", "test")) as api:
         yield api
 
 
@@ -34,7 +34,7 @@ def test_validate_response_raises_error_on_too_old_api_version(api):
     newest_version = int(API_VERSION.strip("v")) + 2
     response.headers["X-Current-Api-Version"] = f"v{newest_version}"
 
-    with pytest.raises(ApiException) as cm:
+    with pytest.raises(ApiVersionMismatch) as cm:
         api.validate_response(response)
 
     assert cm.value.message.startswith("Unsupported api version")

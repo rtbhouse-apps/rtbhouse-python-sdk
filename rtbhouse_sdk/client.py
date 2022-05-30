@@ -10,7 +10,12 @@ import httpx
 from . import __version__ as sdk_version
 from . import schema
 from .auth_backends import BasicAuth, BasicTokenAuth
-from .exceptions import ApiException, ApiRateLimitException, ApiRequestException
+from .exceptions import (
+    ApiException,
+    ApiRateLimitException,
+    ApiRequestException,
+    ApiVersionMismatch,
+)
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
 API_VERSION = "v5"
@@ -87,24 +92,7 @@ class SubcampaignsFilter(str, Enum):
     ACTIVE = "ACTIVE"
 
 
-SUPPORTED_AUTH_BACKENDS = (BasicAuth, BasicTokenAuth)
-
-
-class _Base:
-    def __init__(self, username: str = "", password: str = "", timeout=DEFAULT_TIMEOUT, auth=None, httpx_client=None):
-        if auth is None:
-            if not all([username, password]):
-                raise ValueError("You need to provide either auth or username and password.")
-            auth = httpx.BasicAuth(username, password)
-        elif not isinstance(auth, SUPPORTED_AUTH_BACKENDS):
-            backends = ", ".join(cls.__name__ for cls in SUPPORTED_AUTH_BACKENDS)
-            raise ValueError(f"The only supported auth backend are: {backends}")
-        self._auth = auth
-        self._timeout = timeout
-        self._httpx_client = httpx_client
-
-
-class Client(_Base):
+class Client:
     """
     A standard synchronous API client.
 
@@ -124,6 +112,11 @@ class Client(_Base):
         adv = cli.get_advertiser(hash)
     ```
     """
+
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout=DEFAULT_TIMEOUT, httpx_client=None):
+        self._auth = auth
+        self._timeout = timeout
+        self._httpx_client = httpx_client
 
     def __enter__(self):
         self._httpx_client = httpx.Client().__enter__()
@@ -149,7 +142,7 @@ class Client(_Base):
     def validate_response(response):
         if response.status_code == 410:
             newest_version = response.headers.get("X-Current-Api-Version")
-            raise ApiException(
+            raise ApiVersionMismatch(
                 f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
                 f"by updating rtbhouse_sdk package."
             )
@@ -367,7 +360,7 @@ class Client(_Base):
         return params
 
 
-class AsyncClient(_Base):
+class AsyncClient:
     """
     An asynchronous API client.
 
@@ -377,6 +370,11 @@ class AsyncClient(_Base):
     info = await cli.get_user_info()
     ```
     """
+
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout=DEFAULT_TIMEOUT, httpx_client=None):
+        self._auth = auth
+        self._timeout = timeout
+        self._httpx_client = httpx_client
 
     async def __aenter__(self):
         self._httpx_client = await httpx.AsyncClient().__aenter__()

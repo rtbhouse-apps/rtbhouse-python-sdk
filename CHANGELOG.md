@@ -1,3 +1,8 @@
+# v8.1.0
+Dependencies bump
+Support for Python 3.10
+Drop support for python 3.5 and 3.6
+
 # v8.0.0
 Remove `get_dpa_accounts`, `get_dpa_stats`, `get_dpa_conversions` functions
 

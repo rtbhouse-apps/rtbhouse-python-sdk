@@ -6,8 +6,7 @@ import pytest
 import respx
 from httpx import Response
 
-from rtbhouse_sdk.auth_backends import BasicAuth
-from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, Client
+from rtbhouse_sdk.client import API_VERSION, BasicAuth, Client
 from rtbhouse_sdk.enums import (
     CountConvention,
     DeviceType,
@@ -18,10 +17,7 @@ from rtbhouse_sdk.enums import (
 )
 from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatch
 
-DAY_FROM = date(2020, 9, 1)
-DAY_TO = date(2020, 9, 1)
-
-BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
+from . import BASE_URL, DAY_FROM, DAY_TO
 
 
 @pytest.fixture(name="api")

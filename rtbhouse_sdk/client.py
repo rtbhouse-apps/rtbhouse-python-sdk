@@ -1,5 +1,7 @@
 """Contains definitions of standard (sync) client as well as async client."""
+import dataclasses
 import warnings
+from base64 import b64encode
 from datetime import date
 from types import TracebackType
 from typing import Any, Dict, List, Optional, Type, Union
@@ -31,6 +33,27 @@ DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
+@dataclasses.dataclass
+class BasicAuth:
+    username: str
+    password: str
+
+    @property
+    def header(self) -> str:
+        userpass = b":".join([self.username.encode(), self.password.encode()])
+        token = b64encode(userpass).decode()
+        return f"Basic {token}"
+
+
+@dataclasses.dataclass
+class BasicTokenAuth:
+    token: str
+
+    @property
+    def header(self) -> str:
+        return f"Token {self.token}"
+
+
 class Client:
     """
     A standard synchronous API client.
@@ -51,9 +74,9 @@ class Client:
     ```
     """
 
-    def __init__(self, auth: httpx.Auth, timeout: int = DEFAULT_TIMEOUT):
-        self._auth = auth
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT):
         self._timeout = timeout
+        self._headers = Client.construct_headers(auth)
         self._httpx_client = httpx.Client()
 
     def close(self) -> None:
@@ -70,6 +93,16 @@ class Client:
         traceback: TracebackType,
     ) -> None:
         self._httpx_client.__exit__(exc_type, exc_value, traceback)
+
+    @staticmethod
+    def construct_headers(auth: Union[BasicAuth, BasicTokenAuth]) -> Dict[str, str]:
+        if not isinstance(auth, (BasicAuth, BasicTokenAuth)):
+            raise ValueError("Unknown auth method")
+
+        return {
+            "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
+            "authorization": auth.header,
+        }
 
     @staticmethod
     def validate_response(response: Response) -> None:
@@ -95,15 +128,15 @@ class Client:
 
     def _make_request(self, method: str, path: str, **kwargs: Any) -> Response:
         base_url = f"{API_BASE_URL}/{API_VERSION}"
-        kwargs["timeout"] = self._timeout
-        kwargs.setdefault("headers", {})["user-agent"] = f"rtbhouse-python-sdk/{sdk_version}"
 
-        response = self._httpx_client.request(method, base_url + path, **kwargs)
+        response = self._httpx_client.request(
+            method, base_url + path, headers=self._headers, timeout=self._timeout, **kwargs
+        )
         Client.validate_response(response)
         return response
 
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        response = self._make_request("get", path, auth=self._auth, params=params)
+        response = self._make_request("get", path, params=params)
         try:
             resp_json = response.json()
             return resp_json["data"]
@@ -302,9 +335,9 @@ class AsyncClient:
     ```
     """
 
-    def __init__(self, auth: httpx.Auth, timeout: int = DEFAULT_TIMEOUT) -> None:
-        self._auth = auth
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT) -> None:
         self._timeout = timeout
+        self._headers = Client.construct_headers(auth)
         self._httpx_client = httpx.AsyncClient()
 
     async def close(self) -> None:
@@ -324,15 +357,15 @@ class AsyncClient:
 
     async def _make_request(self, method: str, path: str, **kwargs: Any) -> Response:
         base_url = f"{API_BASE_URL}/{API_VERSION}"
-        kwargs["timeout"] = self._timeout
-        kwargs.setdefault("headers", {})["user-agent"] = f"rtbhouse-python-sdk/{sdk_version}"
 
-        response = await self._httpx_client.request(method, base_url + path, **kwargs)
+        response = await self._httpx_client.request(
+            method, base_url + path, headers=self._headers, timeout=self._timeout, **kwargs
+        )
         Client.validate_response(response)
         return response
 
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        response = await self._make_request("get", path, auth=self._auth, params=params)
+        response = await self._make_request("get", path, params=params)
         try:
             resp_json = response.json()
             return resp_json["data"]

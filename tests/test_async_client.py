@@ -8,7 +8,8 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.auth_backends import BasicAuth
-from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient, GroupBy, Metric
+from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, AsyncClient
+from rtbhouse_sdk.enums import GroupBy, Metric
 
 DAY_FROM = date(2020, 9, 1)
 DAY_TO = date(2020, 9, 1)

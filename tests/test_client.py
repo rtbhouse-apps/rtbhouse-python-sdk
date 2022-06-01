@@ -7,10 +7,8 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.auth_backends import BasicAuth
-from rtbhouse_sdk.client import (
-    API_BASE_URL,
-    API_VERSION,
-    Client,
+from rtbhouse_sdk.client import API_BASE_URL, API_VERSION, Client
+from rtbhouse_sdk.enums import (
     CountConvention,
     DeviceType,
     GroupBy,

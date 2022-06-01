@@ -2,7 +2,7 @@
 import warnings
 from datetime import date
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type, Union, cast
+from typing import Any, Dict, List, Optional, Type, Union
 
 import httpx
 from httpx import Response
@@ -29,8 +29,6 @@ API_VERSION = "v5"
 
 DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
-
-ResponseData = Union[Dict[str, Any], List[Dict[str, Any]]]
 
 
 class Client:
@@ -104,48 +102,40 @@ class Client:
         Client.validate_response(response)
         return response
 
-    def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> ResponseData:
+    def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         response = self._make_request("get", path, auth=self._auth, params=params)
         try:
             resp_json = response.json()
-            return cast(ResponseData, resp_json["data"])
+            return resp_json["data"]
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
-    def _get_dict(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        data = self._get(path, params)
-        return cast(Dict[str, Any], data)
-
-    def _get_list(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        data = self._get(path, params)
-        return cast(List[Dict[str, Any]], data)
-
     def get_user_info(self) -> schema.UserInfo:
-        data = self._get_dict("/user/info")
+        data = self._get("/user/info")
         return schema.UserInfo(**data)
 
     def get_advertisers(self) -> List[schema.Advertiser]:
-        data = self._get_list("/advertisers")
+        data = self._get("/advertisers")
         return [schema.Advertiser(**adv) for adv in data]
 
     def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
-        data = self._get_dict(f"/advertisers/{adv_hash}")
+        data = self._get(f"/advertisers/{adv_hash}")
         return schema.Advertiser(**data)
 
     def get_invoicing_data(self, adv_hash: str) -> schema.InvoiceData:
-        data = self._get_dict(f"/advertisers/{adv_hash}/client")
+        data = self._get(f"/advertisers/{adv_hash}/client")
         return schema.InvoiceData(**data["invoicing"])
 
     def get_offer_categories(self, adv_hash: str) -> List[schema.Category]:
-        data = self._get_list(f"/advertisers/{adv_hash}/offer-categories")
+        data = self._get(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
     def get_offers(self, adv_hash: str) -> List[schema.Offer]:
-        data = self._get_list(f"/advertisers/{adv_hash}/offers")
+        data = self._get(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
     def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
-        data = self._get_list(f"/advertisers/{adv_hash}/campaigns")
+        data = self._get(f"/advertisers/{adv_hash}/campaigns")
         return [schema.Campaign(**camp) for camp in data]
 
     def get_billing(
@@ -154,7 +144,7 @@ class Client:
         day_from: date,
         day_to: date,
     ) -> schema.Billing:
-        data = self._get_dict(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
+        data = self._get(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
         return schema.Billing(**data)
 
     def get_rtb_creatives(
@@ -164,7 +154,7 @@ class Client:
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = self.create_rtb_creatives_params(subcampaigns, active_only)
-        data = self._get_list(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
+        data = self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
     @staticmethod
@@ -208,7 +198,7 @@ class Client:
 
         result = []
         while True:
-            resp_data = self._get_dict(path, params=request_params)
+            resp_data = self._get(path, params=request_params)
             result += resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
@@ -233,7 +223,7 @@ class Client:
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return self._get_list(f"/advertisers/{adv_hash}/rtb-stats", params)
+        return list(self._get(f"/advertisers/{adv_hash}/rtb-stats", params))
 
     @staticmethod
     def create_rtb_stats_params(  # pylint: disable=too-many-arguments
@@ -275,7 +265,7 @@ class Client:
     ) -> List[Dict[str, Any]]:
         params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
-        return self._get_list(f"/advertisers/{adv_hash}/summary-stats", params)
+        return list(self._get(f"/advertisers/{adv_hash}/summary-stats", params))
 
     @staticmethod
     def create_summary_stats_params(  # pylint: disable=too-many-arguments
@@ -341,48 +331,40 @@ class AsyncClient:
         Client.validate_response(response)
         return response
 
-    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> ResponseData:
+    async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         response = await self._make_request("get", path, auth=self._auth, params=params)
         try:
             resp_json = response.json()
-            return cast(ResponseData, resp_json["data"])
+            return resp_json["data"]
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
-    async def _get_dict(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        data = await self._get(path, params)
-        return cast(Dict[str, Any], data)
-
-    async def _get_list(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
-        data = await self._get(path, params)
-        return cast(List[Dict[str, Any]], data)
-
     async def get_user_info(self) -> schema.UserInfo:
-        data = await self._get_dict("/user/info")
+        data = await self._get("/user/info")
         return schema.UserInfo(**data)
 
     async def get_advertisers(self) -> List[schema.Advertiser]:
-        data = await self._get_list("/advertisers")
+        data = await self._get("/advertisers")
         return [schema.Advertiser(**adv) for adv in data]
 
     async def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
-        data = await self._get_dict(f"/advertisers/{adv_hash}")
+        data = await self._get(f"/advertisers/{adv_hash}")
         return schema.Advertiser(**data)
 
     async def get_invoicing_data(self, adv_hash: str) -> schema.InvoiceData:
-        data = await self._get_dict(f"/advertisers/{adv_hash}/client")
+        data = await self._get(f"/advertisers/{adv_hash}/client")
         return schema.InvoiceData(**data["invoicing"])
 
     async def get_offer_categories(self, adv_hash: str) -> List[schema.Category]:
-        data = await self._get_list(f"/advertisers/{adv_hash}/offer-categories")
+        data = await self._get(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
     async def get_offers(self, adv_hash: str) -> List[schema.Offer]:
-        data = await self._get_list(f"/advertisers/{adv_hash}/offers")
+        data = await self._get(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
     async def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
-        data = await self._get_list(f"/advertisers/{adv_hash}/campaigns")
+        data = await self._get(f"/advertisers/{adv_hash}/campaigns")
         return [schema.Campaign(**camp) for camp in data]
 
     async def get_billing(
@@ -391,7 +373,7 @@ class AsyncClient:
         day_from: date,
         day_to: date,
     ) -> schema.Billing:
-        data = await self._get_dict(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
+        data = await self._get(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
         return schema.Billing(**data)
 
     async def get_rtb_creatives(
@@ -401,7 +383,7 @@ class AsyncClient:
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = Client.create_rtb_creatives_params(subcampaigns, active_only)
-        data = await self._get_list(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
+        data = await self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
     async def get_rtb_conversions(
@@ -429,7 +411,7 @@ class AsyncClient:
 
         result = []
         while True:
-            resp_data = await self._get_dict(path, params=request_params)
+            resp_data = await self._get(path, params=request_params)
             result += resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
@@ -454,7 +436,7 @@ class AsyncClient:
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return await self._get_list(f"/advertisers/{adv_hash}/rtb-stats", params)
+        return list(await self._get(f"/advertisers/{adv_hash}/rtb-stats", params))
 
     async def get_summary_stats(  # pylint: disable=too-many-arguments
         self,
@@ -468,4 +450,4 @@ class AsyncClient:
     ) -> List[Dict[str, Any]]:
         params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
-        return await self._get_list(f"/advertisers/{adv_hash}/summary-stats", params)
+        return list(await self._get(f"/advertisers/{adv_hash}/summary-stats", params))

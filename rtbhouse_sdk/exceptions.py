@@ -1,15 +1,17 @@
 """Definitions of exceptions used in SDK."""
 from typing import Any, Dict
 
+from httpx import Response
+
 
 class ApiException(Exception):
     """Base API Exception."""
 
-    def __init__(self, message):
+    def __init__(self, message: str) -> None:
         super().__init__(message)
         self.message = message
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.message
 
 
@@ -24,7 +26,7 @@ class ApiRequestException(ApiException):
     app_code = "UNKNOWN"
     errors: Dict[str, Any] = {}
 
-    def __init__(self, response):
+    def __init__(self, response: Response) -> None:
         self.raw_response = response
         try:
             self._response_data = response.json()
@@ -43,12 +45,12 @@ class ApiRateLimitException(ApiRequestException):
 
     message = "Resource usage limits reached"
 
-    def __init__(self, response):
+    def __init__(self, response: Response) -> None:
         super().__init__(response)
         self.limits = parse_resource_usage_header(response.headers.get("X-Resource-Usage"))
 
 
-def parse_resource_usage_header(header) -> Dict:
+def parse_resource_usage_header(header: str) -> Dict[str, Dict[str, Dict[str, float]]]:
     """parse string like WORKER_TIME-3600=11.7/10000000;DB_QUERY_TIME-21600=4.62/2000 into dict"""
     if not header:
         return {}

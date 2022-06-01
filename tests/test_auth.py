@@ -1,6 +1,7 @@
 """Tests for auth backends."""
 import httpx
 import pytest
+import respx
 
 from rtbhouse_sdk.auth_backends import BasicAuth, BasicTokenAuth
 from rtbhouse_sdk.client import Client
@@ -13,11 +14,11 @@ from rtbhouse_sdk.client import Client
         BasicTokenAuth("token"),
     ),
 )
-def test_auth_backend_is_supported(auth_backend):
+def test_auth_backend_is_supported(auth_backend: httpx.Auth) -> None:
     Client(auth=auth_backend)
 
 
-def test_basic_token_auth_flow(mocked_response):
+def test_basic_token_auth_flow(mocked_response: respx.MockRouter) -> None:
     url = "http://example.com"
     mocked_response.get(url).respond(200)
 

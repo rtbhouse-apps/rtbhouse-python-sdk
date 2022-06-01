@@ -1,7 +1,9 @@
 """Tests for client."""
 from datetime import date
+from typing import Any, Dict, Iterator, Optional
 
 import pytest
+import respx
 from httpx import Response
 
 from rtbhouse_sdk.auth_backends import BasicAuth
@@ -25,12 +27,12 @@ BASE_URL = f"{API_BASE_URL}/{API_VERSION}"
 
 
 @pytest.fixture(name="api")
-def api_client():
+def api_client() -> Iterator[Client]:
     with Client(auth=BasicAuth("test", "test")) as api:
         yield api
 
 
-def test_validate_response_raises_error_on_too_old_api_version(api):
+def test_validate_response_raises_error_on_too_old_api_version(api: Client) -> None:
     response = Response(410)
     newest_version = int(API_VERSION.strip("v")) + 2
     response.headers["X-Current-Api-Version"] = f"v{newest_version}"
@@ -41,7 +43,7 @@ def test_validate_response_raises_error_on_too_old_api_version(api):
     assert cm.value.message.startswith("Unsupported api version")
 
 
-def test_validate_response_warns_on_not_the_newest_api_version(api):
+def test_validate_response_warns_on_not_the_newest_api_version(api: Client) -> None:
     response = Response(200)
     newest_version = f'v{int(API_VERSION.strip("v")) + 1}'
     response.headers["X-Current-Api-Version"] = newest_version
@@ -56,7 +58,7 @@ def test_validate_response_warns_on_not_the_newest_api_version(api):
     assert str(cm[0].message) == msg
 
 
-def test_validate_response_raises_error_on_resource_usage_limit_reached(api):
+def test_validate_response_raises_error_on_resource_usage_limit_reached(api: Client) -> None:
     header = ";".join(
         [
             "WORKER_TIME-3600=11.78/10000000",
@@ -76,7 +78,7 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(api):
     assert data["DB_QUERY_TIME"]["86400"]["5000"] == 17.995
 
 
-def test_get_user_info(api, mocked_response, user_info_response):
+def test_get_user_info(api: Client, mocked_response: respx.MockRouter, user_info_response: Dict[str, Any]) -> None:
     mocked_response.get(f"{BASE_URL}/user/info").respond(200, json=user_info_response)
 
     data = api.get_user_info()
@@ -84,7 +86,7 @@ def test_get_user_info(api, mocked_response, user_info_response):
     assert data.hash_id == "hid"
 
 
-def test_get_advertisers(api, mocked_response, advertisers_response):
+def test_get_advertisers(api: Client, mocked_response: respx.MockRouter, advertisers_response: Dict[str, Any]) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers").respond(200, json=advertisers_response)
 
     (advertiser,) = api.get_advertisers()
@@ -92,7 +94,9 @@ def test_get_advertisers(api, mocked_response, advertisers_response):
     assert advertiser.name == "Adv"
 
 
-def test_get_advertiser(api, adv_hash, mocked_response, advertiser_response):
+def test_get_advertiser(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, advertiser_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
     advertiser = api.get_advertiser(adv_hash)
@@ -100,7 +104,9 @@ def test_get_advertiser(api, adv_hash, mocked_response, advertiser_response):
     assert advertiser.name == "Adv"
 
 
-def test_get_invoicing_data(api, adv_hash, mocked_response, invoice_data_response):
+def test_get_invoicing_data(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, invoice_data_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
     invoice_data = api.get_invoicing_data(adv_hash)
@@ -108,7 +114,9 @@ def test_get_invoicing_data(api, adv_hash, mocked_response, invoice_data_respons
     assert invoice_data.company_name == "Ltd"
 
 
-def test_get_offer_categories(api, adv_hash, mocked_response, offer_categories_response):
+def test_get_offer_categories(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, offer_categories_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offer-categories").respond(
         200, json=offer_categories_response
     )
@@ -118,7 +126,9 @@ def test_get_offer_categories(api, adv_hash, mocked_response, offer_categories_r
     assert offer_cat.name == "full cat"
 
 
-def test_get_offers(api, adv_hash, mocked_response, offers_response):
+def test_get_offers(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, offers_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
     (offer,) = api.get_offers(adv_hash)
@@ -127,7 +137,9 @@ def test_get_offers(api, adv_hash, mocked_response, offers_response):
     assert offer.images[0].width == "700"
 
 
-def test_get_advertiser_campaigns(api, adv_hash, mocked_response, advertiser_campaigns_response):
+def test_get_advertiser_campaigns(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, advertiser_campaigns_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
     (campaign,) = api.get_advertiser_campaigns(adv_hash)
@@ -135,7 +147,9 @@ def test_get_advertiser_campaigns(api, adv_hash, mocked_response, advertiser_cam
     assert campaign.name == "Campaign"
 
 
-def test_get_billing(api, adv_hash, mocked_response, billing_response):
+def test_get_billing(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, billing_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
 
     billing = api.get_billing(adv_hash, DAY_FROM, DAY_TO)
@@ -145,7 +159,9 @@ def test_get_billing(api, adv_hash, mocked_response, billing_response):
     assert bill.day == date(2020, 11, 25)
 
 
-def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_response):
+def test_get_rtb_creatives(
+    api: Client, adv_hash: str, mocked_response: respx.MockRouter, rtb_creatives_response: Dict[str, Any]
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
     (rtb_creative,) = api.get_rtb_creatives(adv_hash)
@@ -183,14 +199,14 @@ def test_get_rtb_creatives(api, adv_hash, mocked_response, rtb_creatives_respons
         ),
     ],
 )
-def test_get_rtb_creatives_with_extra_params(
-    api,
-    adv_hash,
-    mocked_response,
-    subcampaigns,
-    active_only,
-    params,
-):  # pylint: disable=too-many-arguments
+def test_get_rtb_creatives_with_extra_params(  # pylint: disable=too-many-arguments
+    api: Client,
+    adv_hash: str,
+    mocked_response: respx.MockRouter,
+    subcampaigns: SubcampaignsFilter,
+    active_only: Optional[bool],
+    params: Dict[str, str],
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-creatives").respond(
         200, json={"status": "ok", "data": []}
     )
@@ -201,8 +217,12 @@ def test_get_rtb_creatives_with_extra_params(
 
 
 def test_get_rtb_conversions(
-    api, adv_hash, mocked_response, conversions_with_next_cursor_response, conversions_without_next_cursor_response
-):
+    api: Client,
+    adv_hash: str,
+    mocked_response: respx.MockRouter,
+    conversions_with_next_cursor_response: Dict[str, Any],
+    conversions_without_next_cursor_response: Dict[str, Any],
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/conversions").mock(
         side_effect=[
             Response(200, json=conversions_with_next_cursor_response),
@@ -219,7 +239,7 @@ def test_get_rtb_conversions(
     assert conversions[0].conversion_hash == "chash"
 
 
-def test_get_rtb_stats(api, adv_hash, mocked_response):
+def test_get_rtb_stats(api: Client, adv_hash: str, mocked_response: respx.MockRouter) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats").respond(
         200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 51.0}]},
@@ -251,15 +271,15 @@ def test_get_rtb_stats(api, adv_hash, mocked_response):
         ("device_types", "deviceTypes", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
     ],
 )
-def test_get_rtb_stats_extra_params(
-    api,
-    adv_hash,
-    mocked_response,
-    param,
-    query_param,
-    value,
-    query_value,
-):  # pylint: disable=too-many-arguments
+def test_get_rtb_stats_extra_params(  # pylint: disable=too-many-arguments
+    api: Client,
+    adv_hash: str,
+    mocked_response: respx.MockRouter,
+    param: str,
+    query_param: str,
+    value: Any,
+    query_value: str,
+) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/rtb-stats").respond(
         200,
         json={"status": "ok", "data": []},
@@ -271,7 +291,7 @@ def test_get_rtb_stats_extra_params(
     assert mocked_response.calls[0].request.url.params[query_param] == query_value
 
 
-def test_get_summary_stats(api, adv_hash, mocked_response):
+def test_get_summary_stats(api: Client, adv_hash: str, mocked_response: respx.MockRouter) -> None:
     mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/summary-stats").respond(
         200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 108.0}]},

@@ -42,11 +42,10 @@ class Client:
     cli = Client(...)
     info = cli.get_user_info()
     adv = cli.get_advertiser(hash)
+    cli.close()
     ```
-    This will however result in new http connection per each query.
 
-
-    It's also possible to use context manager:
+    It's also possible to use it as context manager:
     ```
     with Client(...) as cli:
         info = cli.get_user_info()
@@ -57,7 +56,10 @@ class Client:
     def __init__(self, auth: httpx.Auth, timeout: int = DEFAULT_TIMEOUT):
         self._auth = auth
         self._timeout = timeout
-        self._httpx_client: Optional[httpx.Client] = None
+        self._httpx_client = httpx.Client()
+
+    def close(self) -> None:
+        self._httpx_client.close()
 
     def __enter__(self) -> "Client":
         self._httpx_client = httpx.Client().__enter__()
@@ -69,8 +71,7 @@ class Client:
         exc_value: BaseException,
         traceback: TracebackType,
     ) -> None:
-        if self._httpx_client is not None:
-            self._httpx_client.__exit__(exc_type, exc_value, traceback)
+        self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
     @staticmethod
     def validate_response(response: Response) -> None:
@@ -99,8 +100,6 @@ class Client:
         kwargs["timeout"] = self._timeout
         kwargs.setdefault("headers", {})["user-agent"] = f"rtbhouse-python-sdk/{sdk_version}"
 
-        if not self._httpx_client:
-            raise ValueError("No http client")
         response = self._httpx_client.request(method, base_url + path, **kwargs)
         Client.validate_response(response)
         return response
@@ -309,13 +308,17 @@ class AsyncClient:
     ```
     cli = AsyncClient(...)
     info = await cli.get_user_info()
+    await cli.close()
     ```
     """
 
     def __init__(self, auth: httpx.Auth, timeout: int = DEFAULT_TIMEOUT) -> None:
         self._auth = auth
         self._timeout = timeout
-        self._httpx_client: Optional[httpx.AsyncClient] = None
+        self._httpx_client = httpx.AsyncClient()
+
+    async def close(self) -> None:
+        await self._httpx_client.aclose()
 
     async def __aenter__(self) -> "AsyncClient":
         self._httpx_client = await httpx.AsyncClient().__aenter__()
@@ -327,16 +330,13 @@ class AsyncClient:
         exc_value: BaseException,
         traceback: TracebackType,
     ) -> None:
-        if self._httpx_client is not None:
-            await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
+        await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
     async def _make_request(self, method: str, path: str, **kwargs: Any) -> Response:
         base_url = f"{API_BASE_URL}/{API_VERSION}"
         kwargs["timeout"] = self._timeout
         kwargs.setdefault("headers", {})["user-agent"] = f"rtbhouse-python-sdk/{sdk_version}"
 
-        if not self._httpx_client:
-            raise ValueError("No http client")
         response = await self._httpx_client.request(method, base_url + path, **kwargs)
         Client.validate_response(response)
         return response

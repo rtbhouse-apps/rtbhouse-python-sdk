@@ -30,6 +30,16 @@ def api_client() -> Iterator[Client]:
         yield api
 
 
+def test_client_close() -> None:
+    cli = Client(auth=BasicAuth("test", "test"))
+    cli.close()
+
+
+def test_client_as_context_manager() -> None:
+    with Client(auth=BasicAuth("test", "test")):
+        pass
+
+
 def test_validate_response_raises_error_on_too_old_api_version(api: Client) -> None:
     response = Response(410)
     newest_version = int(API_VERSION.strip("v")) + 2

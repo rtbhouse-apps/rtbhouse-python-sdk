@@ -24,6 +24,18 @@ async def api_client() -> AsyncIterator[AsyncClient]:
 
 
 @pytest.mark.asyncio
+async def test_client_close() -> None:
+    cli = AsyncClient(auth=BasicAuth("test", "test"))
+    await cli.close()
+
+
+@pytest.mark.asyncio
+async def test_client_as_context_manager() -> None:
+    async with AsyncClient(auth=BasicAuth("test", "test")):
+        pass
+
+
+@pytest.mark.asyncio
 async def test_get_user_info(
     api: AsyncClient, mocked_response: respx.MockRouter, user_info_response: Dict[str, Any]
 ) -> None:

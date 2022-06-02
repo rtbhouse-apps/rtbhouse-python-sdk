@@ -1,13 +1,11 @@
 """Contains definitions of standard (sync) client as well as async client."""
 import dataclasses
 import warnings
-from base64 import b64encode
 from datetime import date
 from types import TracebackType
-from typing import Any, Dict, List, Optional, Type, Union
+from typing import Any, Dict, Generator, List, Optional, Type, Union
 
 import httpx
-from httpx import Response
 
 from . import __version__ as sdk_version
 from . import schema
@@ -33,16 +31,25 @@ DEFAULT_TIMEOUT = 60
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
+class HttpxBasicTokenAuth(httpx.Auth):
+    """Basic token auth backend."""
+
+    def __init__(self, token: str):
+        self._token = token
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        request.headers["Authorization"] = f"Token {self._token}"
+        yield request
+
+
 @dataclasses.dataclass
 class BasicAuth:
     username: str
     password: str
 
     @property
-    def header(self) -> str:
-        userpass = b":".join([self.username.encode(), self.password.encode()])
-        token = b64encode(userpass).decode()
-        return f"Basic {token}"
+    def httpx_auth_backend(self) -> httpx.Auth:
+        return httpx.BasicAuth(self.username, self.password)
 
 
 @dataclasses.dataclass
@@ -50,8 +57,8 @@ class BasicTokenAuth:
     token: str
 
     @property
-    def header(self) -> str:
-        return f"Token {self.token}"
+    def httpx_auth_backend(self) -> httpx.Auth:
+        return HttpxBasicTokenAuth(self.token)
 
 
 class Client:
@@ -75,15 +82,15 @@ class Client:
     """
 
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT):
-        self._timeout = timeout
-        self._headers = Client.construct_headers(auth)
-        self._httpx_client = httpx.Client()
+        self._httpx_client = httpx.Client(
+            auth=Client.choose_auth_backend(auth), headers=Client.construct_headers(), timeout=timeout
+        )
 
     def close(self) -> None:
         self._httpx_client.close()
 
     def __enter__(self) -> "Client":
-        self._httpx_client = httpx.Client().__enter__()
+        self._httpx_client.__enter__()
         return self
 
     def __exit__(
@@ -95,17 +102,19 @@ class Client:
         self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
     @staticmethod
-    def construct_headers(auth: Union[BasicAuth, BasicTokenAuth]) -> Dict[str, str]:
+    def choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
         if not isinstance(auth, (BasicAuth, BasicTokenAuth)):
             raise ValueError("Unknown auth method")
+        return auth.httpx_auth_backend
 
+    @staticmethod
+    def construct_headers() -> Dict[str, str]:
         return {
             "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
-            "authorization": auth.header,
         }
 
     @staticmethod
-    def validate_response(response: Response) -> None:
+    def validate_response(response: httpx.Response) -> None:
         if response.status_code == 410:
             newest_version = response.headers.get("X-Current-Api-Version")
             raise ApiVersionMismatch(
@@ -126,12 +135,10 @@ class Client:
         if response.is_error:
             raise ApiRequestException(response)
 
-    def _make_request(self, method: str, path: str, **kwargs: Any) -> Response:
+    def _make_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         base_url = f"{API_BASE_URL}/{API_VERSION}"
 
-        response = self._httpx_client.request(
-            method, base_url + path, headers=self._headers, timeout=self._timeout, **kwargs
-        )
+        response = self._httpx_client.request(method, base_url + path, **kwargs)
         Client.validate_response(response)
         return response
 
@@ -336,15 +343,15 @@ class AsyncClient:
     """
 
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT) -> None:
-        self._timeout = timeout
-        self._headers = Client.construct_headers(auth)
-        self._httpx_client = httpx.AsyncClient()
+        self._httpx_client = httpx.AsyncClient(
+            auth=Client.choose_auth_backend(auth), headers=Client.construct_headers(), timeout=timeout
+        )
 
     async def close(self) -> None:
         await self._httpx_client.aclose()
 
     async def __aenter__(self) -> "AsyncClient":
-        self._httpx_client = await httpx.AsyncClient().__aenter__()
+        await self._httpx_client.__aenter__()
         return self
 
     async def __aexit__(
@@ -355,12 +362,10 @@ class AsyncClient:
     ) -> None:
         await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
-    async def _make_request(self, method: str, path: str, **kwargs: Any) -> Response:
+    async def _make_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         base_url = f"{API_BASE_URL}/{API_VERSION}"
 
-        response = await self._httpx_client.request(
-            method, base_url + path, headers=self._headers, timeout=self._timeout, **kwargs
-        )
+        response = await self._httpx_client.request(method, base_url + path, **kwargs)
         Client.validate_response(response)
         return response
 

@@ -19,7 +19,7 @@ from .exceptions import (
 API_BASE_URL = "https://api.panel.rtbhouse.com"
 API_VERSION = "v5"
 
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 60.0
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
@@ -73,9 +73,12 @@ class Client:
     ```
     """
 
-    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT):
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT):
         self._httpx_client = httpx.Client(
-            auth=Client.choose_auth_backend(auth), headers=Client.construct_headers(), timeout=timeout
+            base_url=f"{API_BASE_URL}/{API_VERSION}",
+            auth=Client.choose_auth_backend(auth),
+            headers=Client.construct_headers(),
+            timeout=timeout_in_seconds,
         )
 
     def close(self) -> None:
@@ -127,15 +130,9 @@ class Client:
         if response.is_error:
             raise ApiRequestException(response)
 
-    def _make_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
-        base_url = f"{API_BASE_URL}/{API_VERSION}"
-
-        response = self._httpx_client.request(method, base_url + path, **kwargs)
-        Client.validate_response(response)
-        return response
-
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        response = self._make_request("get", path, params=params)
+        response = self._httpx_client.get(path, params=params)
+        Client.validate_response(response)
         try:
             resp_json = response.json()
             return resp_json["data"]
@@ -334,9 +331,12 @@ class AsyncClient:
     ```
     """
 
-    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout: int = DEFAULT_TIMEOUT) -> None:
+    def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT) -> None:
         self._httpx_client = httpx.AsyncClient(
-            auth=Client.choose_auth_backend(auth), headers=Client.construct_headers(), timeout=timeout
+            base_url=f"{API_BASE_URL}/{API_VERSION}",
+            auth=Client.choose_auth_backend(auth),
+            headers=Client.construct_headers(),
+            timeout=timeout_in_seconds,
         )
 
     async def close(self) -> None:
@@ -354,15 +354,9 @@ class AsyncClient:
     ) -> None:
         await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
-    async def _make_request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
-        base_url = f"{API_BASE_URL}/{API_VERSION}"
-
-        response = await self._httpx_client.request(method, base_url + path, **kwargs)
-        Client.validate_response(response)
-        return response
-
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        response = await self._make_request("get", path, params=params)
+        response = await self._httpx_client.get(path, params=params)
+        Client.validate_response(response)
         try:
             resp_json = response.json()
             return resp_json["data"]

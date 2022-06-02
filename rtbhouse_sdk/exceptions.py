@@ -15,7 +15,7 @@ class ApiException(Exception):
         return self.message
 
 
-class ApiVersionMismatch(ApiException):
+class ApiVersionMismatchException(ApiException):
     """Indicates SDK version is behind API version and needs to be updated."""
 
 

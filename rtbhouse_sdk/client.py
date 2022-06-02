@@ -13,7 +13,7 @@ from .exceptions import (
     ApiException,
     ApiRateLimitException,
     ApiRequestException,
-    ApiVersionMismatch,
+    ApiVersionMismatchException,
 )
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
@@ -112,7 +112,7 @@ class Client:
     def validate_response(response: httpx.Response) -> None:
         if response.status_code == 410:
             newest_version = response.headers.get("X-Current-Api-Version")
-            raise ApiVersionMismatch(
+            raise ApiVersionMismatchException(
                 f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
                 f"by updating rtbhouse_sdk package."
             )
@@ -274,7 +274,7 @@ class Client:
         if count_convention is not None:
             params["countConvention"] = count_convention.value
         if subcampaigns is not None:
-            params["subcampaigns"] = subcampaigns
+            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
         if user_segments is not None:
             params["userSegments"] = "-".join(us.value for us in user_segments)
         if device_types is not None:
@@ -312,9 +312,9 @@ class Client:
             "metrics": "-".join(m.value for m in metrics),
         }
         if count_convention is not None:
-            params["countConvention"] = count_convention
+            params["countConvention"] = count_convention.value
         if subcampaigns is not None:
-            params["subcampaigns"] = subcampaigns
+            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
 
         return params
 

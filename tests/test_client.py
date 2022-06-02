@@ -7,7 +7,7 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import API_VERSION, BasicAuth, Client
-from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatch
+from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatchException
 from rtbhouse_sdk.schema import (
     CountConvention,
     DeviceType,
@@ -15,6 +15,7 @@ from rtbhouse_sdk.schema import (
     Metric,
     SubcampaignsFilter,
     UserSegment,
+    to_camel_case,
 )
 
 from . import BASE_URL, DAY_FROM, DAY_TO
@@ -41,7 +42,7 @@ def test_validate_response_raises_error_on_too_old_api_version(api: Client) -> N
     newest_version = int(API_VERSION.strip("v")) + 2
     response.headers["X-Current-Api-Version"] = f"v{newest_version}"
 
-    with pytest.raises(ApiVersionMismatch) as cm:
+    with pytest.raises(ApiVersionMismatchException) as cm:
         api.validate_response(response)
 
     assert cm.value.message.startswith("Unsupported api version")
@@ -267,12 +268,12 @@ def test_get_rtb_stats(api: Client, adv_hash: str, mocked_response: respx.MockRo
 
 
 @pytest.mark.parametrize(
-    "param,query_param,value,query_value",
+    "param,value,query_value",
     [
-        ("count_convention", "countConvention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
-        ("subcampaigns", "subcampaigns", "hash", "hash"),
-        ("user_segments", "userSegments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
-        ("device_types", "deviceTypes", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
+        ("count_convention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+        ("user_segments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
+        ("device_types", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
     ],
 )
 def test_get_rtb_stats_extra_params(  # pylint: disable=too-many-arguments
@@ -280,7 +281,6 @@ def test_get_rtb_stats_extra_params(  # pylint: disable=too-many-arguments
     adv_hash: str,
     mocked_response: respx.MockRouter,
     param: str,
-    query_param: str,
     value: Any,
     query_value: str,
 ) -> None:
@@ -292,7 +292,7 @@ def test_get_rtb_stats_extra_params(  # pylint: disable=too-many-arguments
     extra_params = {param: value}
     api.get_rtb_stats(adv_hash, DAY_FROM, DAY_TO, [GroupBy.ADVERTISER], [Metric.CAMPAIGN_COST], **extra_params)
 
-    assert mocked_response.calls[0].request.url.params[query_param] == query_value
+    assert mocked_response.calls[0].request.url.params[to_camel_case(param)] == query_value
 
 
 def test_get_summary_stats(api: Client, adv_hash: str, mocked_response: respx.MockRouter) -> None:
@@ -316,3 +316,31 @@ def test_get_summary_stats(api: Client, adv_hash: str, mocked_response: respx.Mo
         "metrics": "campaignCost-cr",
     }
     assert stats["advertiser"] == "xyz"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("count_convention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_get_summary_stats_extra_params(  # pylint: disable=too-many-arguments
+    api: Client,
+    adv_hash: str,
+    mocked_response: respx.MockRouter,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    mocked_response.get(f"{BASE_URL}/advertisers/{adv_hash}/summary-stats").respond(
+        200,
+        json={"status": "ok", "data": []},
+    )
+
+    extra_params = {param: value}
+    api.get_summary_stats(
+        adv_hash, DAY_FROM, DAY_TO, [GroupBy.ADVERTISER, GroupBy.DAY], [Metric.CAMPAIGN_COST, Metric.CR], **extra_params
+    )
+
+    assert mocked_response.calls[0].request.url.params[to_camel_case(param)] == query_value

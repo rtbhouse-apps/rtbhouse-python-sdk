@@ -7,7 +7,8 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import API_VERSION, BasicAuth, Client
-from rtbhouse_sdk.enums import (
+from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatch
+from rtbhouse_sdk.schema import (
     CountConvention,
     DeviceType,
     GroupBy,
@@ -15,7 +16,6 @@ from rtbhouse_sdk.enums import (
     SubcampaignsFilter,
     UserSegment,
 )
-from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatch
 
 from . import BASE_URL, DAY_FROM, DAY_TO
 

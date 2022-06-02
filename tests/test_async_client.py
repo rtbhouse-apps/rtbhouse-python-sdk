@@ -8,7 +8,7 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import AsyncClient, BasicAuth
-from rtbhouse_sdk.enums import GroupBy, Metric
+from rtbhouse_sdk.schema import GroupBy, Metric
 
 from . import BASE_URL, DAY_FROM, DAY_TO
 

@@ -9,14 +9,6 @@ import httpx
 
 from . import __version__ as sdk_version
 from . import schema
-from .enums import (
-    CountConvention,
-    DeviceType,
-    GroupBy,
-    Metric,
-    SubcampaignsFilter,
-    UserSegment,
-)
 from .exceptions import (
     ApiException,
     ApiRateLimitException,
@@ -190,7 +182,7 @@ class Client:
     def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = self.create_rtb_creatives_params(subcampaigns, active_only)
@@ -199,12 +191,12 @@ class Client:
 
     @staticmethod
     def create_rtb_creatives_params(
-        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> Dict[str, Any]:
         params: Dict[str, Any] = {}
         if subcampaigns:
-            if isinstance(subcampaigns, SubcampaignsFilter):
+            if isinstance(subcampaigns, schema.SubcampaignsFilter):
                 params["subcampaigns"] = subcampaigns.value
             elif isinstance(subcampaigns, (list, tuple, set)):
                 params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
@@ -218,7 +210,7 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        convention_type: CountConvention = CountConvention.ATTRIBUTED_POST_CLICK,
+        convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> List[schema.Conversion]:
         rows = self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
@@ -252,12 +244,12 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
-        user_segments: Optional[List[UserSegment]] = None,
-        device_types: Optional[List[DeviceType]] = None,
+        user_segments: Optional[List[schema.UserSegment]] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[Dict[str, Any]]:
         params = self.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
@@ -269,12 +261,12 @@ class Client:
     def create_rtb_stats_params(  # pylint: disable=too-many-arguments
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
-        user_segments: Optional[List[UserSegment]] = None,
-        device_types: Optional[List[DeviceType]] = None,
+        user_segments: Optional[List[schema.UserSegment]] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
     ) -> Dict[str, Any]:
         params = {
             "dayFrom": day_from,
@@ -298,9 +290,9 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
@@ -311,9 +303,9 @@ class Client:
     def create_summary_stats_params(  # pylint: disable=too-many-arguments
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> Dict[str, Any]:
         params = {
@@ -417,7 +409,7 @@ class AsyncClient:
     async def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, List[str], SubcampaignsFilter] = None,
+        subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
         params = Client.create_rtb_creatives_params(subcampaigns, active_only)
@@ -429,7 +421,7 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        convention_type: CountConvention = CountConvention.ATTRIBUTED_POST_CLICK,
+        convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> List[schema.Conversion]:
         rows = await self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
@@ -463,12 +455,12 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
-        user_segments: Optional[List[UserSegment]] = None,
-        device_types: Optional[List[DeviceType]] = None,
+        user_segments: Optional[List[schema.UserSegment]] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[Dict[str, Any]]:
         params = Client.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
@@ -481,9 +473,9 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[GroupBy],
-        metrics: List[Metric],
-        count_convention: Optional[CountConvention] = None,
+        group_by: List[schema.GroupBy],
+        metrics: List[schema.Metric],
+        count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[Dict[str, Any]]:
         params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)

@@ -23,7 +23,7 @@ DEFAULT_TIMEOUT = 60.0
 MAX_CURSOR_ROWS_LIMIT = 10000
 
 
-class HttpxBasicTokenAuth(httpx.Auth):
+class _HttpxBasicTokenAuth(httpx.Auth):
     """Basic token auth backend."""
 
     def __init__(self, token: str):
@@ -39,18 +39,10 @@ class BasicAuth:
     username: str
     password: str
 
-    @property
-    def httpx_auth_backend(self) -> httpx.Auth:
-        return httpx.BasicAuth(self.username, self.password)
-
 
 @dataclasses.dataclass
 class BasicTokenAuth:
     token: str
-
-    @property
-    def httpx_auth_backend(self) -> httpx.Auth:
-        return HttpxBasicTokenAuth(self.token)
 
 
 class Client:
@@ -98,9 +90,11 @@ class Client:
 
     @staticmethod
     def choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
-        if not isinstance(auth, (BasicAuth, BasicTokenAuth)):
-            raise ValueError("Unknown auth method")
-        return auth.httpx_auth_backend
+        if isinstance(auth, BasicAuth):
+            return httpx.BasicAuth(auth.username, auth.password)
+        if isinstance(auth, BasicTokenAuth):
+            return _HttpxBasicTokenAuth(auth.token)
+        raise ValueError("Unknown auth method")
 
     @staticmethod
     def construct_headers() -> Dict[str, str]:

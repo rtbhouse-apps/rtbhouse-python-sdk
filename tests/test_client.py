@@ -264,7 +264,8 @@ def test_get_rtb_stats(api: Client, adv_hash: str, mocked_response: respx.MockRo
         "groupBy": "advertiser-day",
         "metrics": "campaignCost-cr",
     }
-    assert stats["advertiser"] == "xyz"
+    assert stats.advertiser == "xyz"
+    assert stats.campaign_cost == 51.0
 
 
 @pytest.mark.parametrize(
@@ -315,7 +316,7 @@ def test_get_summary_stats(api: Client, adv_hash: str, mocked_response: respx.Mo
         "groupBy": "advertiser-day",
         "metrics": "campaignCost-cr",
     }
-    assert stats["advertiser"] == "xyz"
+    assert stats.advertiser == "xyz"
 
 
 @pytest.mark.parametrize(

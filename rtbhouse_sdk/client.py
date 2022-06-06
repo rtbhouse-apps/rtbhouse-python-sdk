@@ -241,12 +241,12 @@ class Client:
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[schema.Stats]:
         params = self.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return list(self._get(f"/advertisers/{adv_hash}/rtb-stats", params))
+        return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/rtb-stats", params)]
 
     @staticmethod
     def create_rtb_stats_params(  # pylint: disable=too-many-arguments
@@ -285,10 +285,10 @@ class Client:
         metrics: List[schema.Metric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[schema.Stats]:
         params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
-        return list(self._get(f"/advertisers/{adv_hash}/summary-stats", params))
+        return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/summary-stats", params)]
 
     @staticmethod
     def create_summary_stats_params(  # pylint: disable=too-many-arguments
@@ -449,12 +449,12 @@ class AsyncClient:
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[schema.Stats]:
         params = Client.create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return list(await self._get(f"/advertisers/{adv_hash}/rtb-stats", params))
+        return [schema.Stats.construct(**st) for st in await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)]
 
     async def get_summary_stats(  # pylint: disable=too-many-arguments
         self,
@@ -465,7 +465,8 @@ class AsyncClient:
         metrics: List[schema.Metric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
-    ) -> List[Dict[str, Any]]:
+    ) -> List[schema.Stats]:
         params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
-        return list(await self._get(f"/advertisers/{adv_hash}/summary-stats", params))
+        data = await self._get(f"/advertisers/{adv_hash}/summary-stats", params)
+        return [schema.Stats(**st) for st in data]

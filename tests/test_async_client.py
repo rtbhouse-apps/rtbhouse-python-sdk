@@ -179,7 +179,7 @@ async def test_get_rtb_stats(api: AsyncClient, adv_hash: str, mocked_response: r
         "groupBy": "advertiser-day",
         "metrics": "campaignCost-cr",
     }
-    assert stats["advertiser"] == "xyz"
+    assert stats.advertiser == "xyz"
 
 
 @pytest.mark.asyncio
@@ -203,4 +203,4 @@ async def test_get_summary_stats(api: AsyncClient, adv_hash: str, mocked_respons
         "groupBy": "advertiser-day",
         "metrics": "campaignCost-cr",
     }
-    assert stats["advertiser"] == "xyz"
+    assert stats.advertiser == "xyz"

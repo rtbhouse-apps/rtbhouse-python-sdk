@@ -88,23 +88,25 @@ class SubcampaignsFilter(str, Enum):
     ACTIVE = "ACTIVE"
 
 
-def to_camel_case(string: str) -> str:
-    words = string.split("_")
+def to_camel_case(word: str) -> str:
+    words = word.split("_")
     return words[0] + "".join(word.capitalize() for word in words[1:])
 
 
-class UserInfo(BaseModel):
+class CamelcasedBaseModel(BaseModel):
+    class Config:
+        alias_generator = to_camel_case
+
+
+class UserInfo(CamelcasedBaseModel):
     hash_id: str
     login: str
     email: str
     is_client_user: bool
     permissions: List[str]
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Advertiser(BaseModel):
+class Advertiser(CamelcasedBaseModel):
     hash: str
     status: str
     name: str
@@ -113,11 +115,8 @@ class Advertiser(BaseModel):
     created_at: datetime
     properties: Dict[str, Any]
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Campaign(BaseModel):
+class Campaign(CamelcasedBaseModel):
     hash: str
     name: str
     creative_ids: List[int]
@@ -126,9 +125,6 @@ class Campaign(BaseModel):
     rateCardId: str
     is_editable: bool
     advertiser_limits: Optional[Dict[str, Optional[str]]]
-
-    class Config:
-        alias_generator = to_camel_case
 
 
 class InvoiceData(BaseModel):
@@ -142,17 +138,14 @@ class InvoiceData(BaseModel):
     email: str
 
 
-class Category(BaseModel):
+class Category(CamelcasedBaseModel):
     category_id: str
     identifier: str
     name: str
     active_offers_number: int
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Image(BaseModel):
+class Image(CamelcasedBaseModel):
     width: str
     height: str
     url: str
@@ -160,7 +153,7 @@ class Image(BaseModel):
     hash: str
 
 
-class Offer(BaseModel):
+class Offer(CamelcasedBaseModel):
     url: str
     full_name: str
     identifier: str
@@ -173,11 +166,8 @@ class Offer(BaseModel):
     updated_at: str
     status: str
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Bill(BaseModel):
+class Bill(CamelcasedBaseModel):
     day: date
     operation: str
     position: int
@@ -186,37 +176,25 @@ class Bill(BaseModel):
     balance: float
     record_number: int
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Billing(BaseModel):
+class Billing(CamelcasedBaseModel):
     initial_balance: float
     bills: List[Bill]
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class CreativePreview(BaseModel):
+class CreativePreview(CamelcasedBaseModel):
     width: int
     height: int
     offers_number: int
     preview_url: str
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Creative(BaseModel):
+class Creative(CamelcasedBaseModel):
     hash: str
     previews: List[CreativePreview]
 
-    class Config:
-        alias_generator = to_camel_case
 
-
-class Conversion(BaseModel):
+class Conversion(CamelcasedBaseModel):
     conversion_identifier: str
     conversion_hash: str
     conversion_class: Optional[str]
@@ -226,6 +204,43 @@ class Conversion(BaseModel):
     conversion_time: datetime
     last_click_time: datetime
     last_impression_time: datetime
+
+
+class Stats(CamelcasedBaseModel):
+    # # from Metric
+    campaign_cost: Optional[float]
+    imps_count: Optional[int]
+    ecpm: Optional[float]
+    clicks_count: Optional[int]
+    ecpc: Optional[float]
+    ctr: Optional[float]
+    conversions_count: Optional[int]
+    ecpa: Optional[float]
+    cr: Optional[float]
+    conversions_value: Optional[float]
+    roas: Optional[float]
+    ecps: Optional[float]
+    video_complete_views: Optional[int]
+    ecpv: Optional[float]
+    vcr: Optional[float]
+    viewability: Optional[float]
+    user_frequency: Optional[float]
+    user_reach: Optional[float]
+    # from GroupBy
+    day: Optional[date]
+    week: Optional[str]
+    month: Optional[str]
+    year: Optional[str]
+    advertiser: Optional[str]
+    subcampaign: Optional[str]
+    subcampaign_hash: Optional[str]
+    user_segment: Optional[str]
+    device_type: Optional[str]
+    creative: Optional[str]
+    category: Optional[str]
+    category_name: Optional[str]
+    country: Optional[str]
+    placement: Optional[str]
 
     class Config:
         alias_generator = to_camel_case

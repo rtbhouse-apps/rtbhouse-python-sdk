@@ -37,24 +37,26 @@ def test_client_as_context_manager() -> None:
         pass
 
 
-def test_validate_response_raises_error_on_too_old_api_version(api: Client) -> None:
-    response = Response(410)
+def test_validate_response_raises_error_on_too_old_api_version(api: Client, mocked_response: respx.MockRouter) -> None:
     newest_version = int(API_VERSION.strip("v")) + 2
-    response.headers["X-Current-Api-Version"] = f"v{newest_version}"
+    mocked_response.get(f"{BASE_URL}/example-endpoint").respond(
+        410, headers={"X-Current-Api-Version": f"v{newest_version}"}
+    )
 
     with pytest.raises(ApiVersionMismatchException) as cm:
-        api.validate_response(response)
+        api._get("/example-endpoint")  # pylint: disable=protected-access
 
     assert cm.value.message.startswith("Unsupported api version")
 
 
-def test_validate_response_warns_on_not_the_newest_api_version(api: Client) -> None:
-    response = Response(200)
+def test_validate_response_warns_on_not_the_newest_api_version(api: Client, mocked_response: respx.MockRouter) -> None:
     newest_version = f'v{int(API_VERSION.strip("v")) + 1}'
-    response.headers["X-Current-Api-Version"] = newest_version
+    mocked_response.get(f"{BASE_URL}/example-endpoint").respond(
+        200, json={"data": {}}, headers={"X-Current-Api-Version": newest_version}
+    )
 
     with pytest.warns(Warning) as cm:
-        api.validate_response(response)
+        api._get("/example-endpoint")  # pylint: disable=protected-access
 
     msg = (
         f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
@@ -63,7 +65,9 @@ def test_validate_response_warns_on_not_the_newest_api_version(api: Client) -> N
     assert str(cm[0].message) == msg
 
 
-def test_validate_response_raises_error_on_resource_usage_limit_reached(api: Client) -> None:
+def test_validate_response_raises_error_on_resource_usage_limit_reached(
+    api: Client, mocked_response: respx.MockRouter
+) -> None:
     header = ";".join(
         [
             "WORKER_TIME-3600=11.78/10000000",
@@ -71,11 +75,10 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(api: Cli
             "DB_QUERY_TIME-86400=17.995/5000",
         ]
     )
-    response = Response(429)
-    response.headers["X-Resource-Usage"] = header
+    mocked_response.get(f"{BASE_URL}/example-endpoint").respond(429, headers={"X-Resource-Usage": header})
 
     with pytest.raises(ApiRateLimitException) as cm:
-        api.validate_response(response)
+        api._get("/example-endpoint")  # pylint: disable=protected-access
 
     data = cm.value.limits
     assert data["WORKER_TIME"]["3600"]["10000000"] == 11.78

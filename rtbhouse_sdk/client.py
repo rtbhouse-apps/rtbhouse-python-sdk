@@ -45,6 +45,108 @@ class BasicTokenAuth:
     token: str
 
 
+def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
+    if isinstance(auth, BasicAuth):
+        return httpx.BasicAuth(auth.username, auth.password)
+    if isinstance(auth, BasicTokenAuth):
+        return _HttpxBasicTokenAuth(auth.token)
+    raise ValueError("Unknown auth method")
+
+
+def _construct_headers() -> Dict[str, str]:
+    return {
+        "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
+    }
+
+
+def _validate_response(response: httpx.Response) -> None:
+    if response.status_code == 410:
+        newest_version = response.headers.get("X-Current-Api-Version")
+        raise ApiVersionMismatchException(
+            f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
+            f"by updating rtbhouse_sdk package."
+        )
+
+    if response.status_code == 429:
+        raise ApiRateLimitException(response)
+
+    current_version = response.headers.get("X-Current-Api-Version")
+    if current_version is not None and current_version != API_VERSION:
+        warnings.warn(
+            f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
+            f"by updating rtbhouse_sdk package."
+        )
+
+    if response.is_error:
+        raise ApiRequestException(response)
+
+
+def create_rtb_creatives_params(
+    subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
+    active_only: Optional[bool] = None,
+) -> Dict[str, Any]:
+    params: Dict[str, Any] = {}
+    if subcampaigns:
+        if isinstance(subcampaigns, schema.SubcampaignsFilter):
+            params["subcampaigns"] = subcampaigns.value
+        elif isinstance(subcampaigns, (list, tuple, set)):
+            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if active_only is not None:
+        params["activeOnly"] = active_only
+
+    return params
+
+
+def create_rtb_stats_params(  # pylint: disable=too-many-arguments
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.GroupBy],
+    metrics: List[schema.Metric],
+    count_convention: Optional[schema.CountConvention] = None,
+    subcampaigns: Optional[List[str]] = None,
+    user_segments: Optional[List[schema.UserSegment]] = None,
+    device_types: Optional[List[schema.DeviceType]] = None,
+) -> Dict[str, Any]:
+    params = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "groupBy": "-".join(group_by),
+        "metrics": "-".join(metrics),
+    }
+    if count_convention is not None:
+        params["countConvention"] = count_convention.value
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if user_segments is not None:
+        params["userSegments"] = "-".join(us.value for us in user_segments)
+    if device_types is not None:
+        params["deviceTypes"] = "-".join(dt.value for dt in device_types)
+
+    return params
+
+
+def create_summary_stats_params(  # pylint: disable=too-many-arguments
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.GroupBy],
+    metrics: List[schema.Metric],
+    count_convention: Optional[schema.CountConvention] = None,
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "groupBy": "-".join(gb.value for gb in group_by),
+        "metrics": "-".join(m.value for m in metrics),
+    }
+    if count_convention is not None:
+        params["countConvention"] = count_convention.value
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params
+
+
 class Client:
     """
     A standard synchronous API client.
@@ -68,8 +170,8 @@ class Client:
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT):
         self._httpx_client = httpx.Client(
             base_url=f"{API_BASE_URL}/{API_VERSION}",
-            auth=Client.choose_auth_backend(auth),
-            headers=Client.construct_headers(),
+            auth=_choose_auth_backend(auth),
+            headers=_construct_headers(),
             timeout=timeout_in_seconds,
         )
 
@@ -88,45 +190,9 @@ class Client:
     ) -> None:
         self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
-    @staticmethod
-    def choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
-        if isinstance(auth, BasicAuth):
-            return httpx.BasicAuth(auth.username, auth.password)
-        if isinstance(auth, BasicTokenAuth):
-            return _HttpxBasicTokenAuth(auth.token)
-        raise ValueError("Unknown auth method")
-
-    @staticmethod
-    def construct_headers() -> Dict[str, str]:
-        return {
-            "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
-        }
-
-    @staticmethod
-    def validate_response(response: httpx.Response) -> None:
-        if response.status_code == 410:
-            newest_version = response.headers.get("X-Current-Api-Version")
-            raise ApiVersionMismatchException(
-                f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
-                f"by updating rtbhouse_sdk package."
-            )
-
-        if response.status_code == 429:
-            raise ApiRateLimitException(response)
-
-        current_version = response.headers.get("X-Current-Api-Version")
-        if current_version is not None and current_version != API_VERSION:
-            warnings.warn(
-                f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
-                f"by updating rtbhouse_sdk package."
-            )
-
-        if response.is_error:
-            raise ApiRequestException(response)
-
     def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         response = self._httpx_client.get(path, params=params)
-        Client.validate_response(response)
+        _validate_response(response)
         try:
             resp_json = response.json()
             return resp_json["data"]
@@ -176,25 +242,9 @@ class Client:
         subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = self.create_rtb_creatives_params(subcampaigns, active_only)
+        params = create_rtb_creatives_params(subcampaigns, active_only)
         data = self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
-
-    @staticmethod
-    def create_rtb_creatives_params(
-        subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
-        active_only: Optional[bool] = None,
-    ) -> Dict[str, Any]:
-        params: Dict[str, Any] = {}
-        if subcampaigns:
-            if isinstance(subcampaigns, schema.SubcampaignsFilter):
-                params["subcampaigns"] = subcampaigns.value
-            elif isinstance(subcampaigns, (list, tuple, set)):
-                params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-        if active_only is not None:
-            params["activeOnly"] = active_only
-
-        return params
 
     def get_rtb_conversions(
         self,
@@ -242,39 +292,11 @@ class Client:
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[schema.Stats]:
-        params = self.create_rtb_stats_params(
+        params = create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
         return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/rtb-stats", params)]
-
-    @staticmethod
-    def create_rtb_stats_params(  # pylint: disable=too-many-arguments
-        day_from: date,
-        day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
-        count_convention: Optional[schema.CountConvention] = None,
-        subcampaigns: Optional[List[str]] = None,
-        user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[List[schema.DeviceType]] = None,
-    ) -> Dict[str, Any]:
-        params = {
-            "dayFrom": day_from,
-            "dayTo": day_to,
-            "groupBy": "-".join(group_by),
-            "metrics": "-".join(metrics),
-        }
-        if count_convention is not None:
-            params["countConvention"] = count_convention.value
-        if subcampaigns is not None:
-            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-        if user_segments is not None:
-            params["userSegments"] = "-".join(us.value for us in user_segments)
-        if device_types is not None:
-            params["deviceTypes"] = "-".join(dt.value for dt in device_types)
-
-        return params
 
     def get_summary_stats(  # pylint: disable=too-many-arguments
         self,
@@ -286,31 +308,9 @@ class Client:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = self.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/summary-stats", params)]
-
-    @staticmethod
-    def create_summary_stats_params(  # pylint: disable=too-many-arguments
-        day_from: date,
-        day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
-        count_convention: Optional[schema.CountConvention] = None,
-        subcampaigns: Optional[List[str]] = None,
-    ) -> Dict[str, Any]:
-        params = {
-            "dayFrom": day_from,
-            "dayTo": day_to,
-            "groupBy": "-".join(gb.value for gb in group_by),
-            "metrics": "-".join(m.value for m in metrics),
-        }
-        if count_convention is not None:
-            params["countConvention"] = count_convention.value
-        if subcampaigns is not None:
-            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-
-        return params
 
 
 class AsyncClient:
@@ -328,8 +328,8 @@ class AsyncClient:
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT) -> None:
         self._httpx_client = httpx.AsyncClient(
             base_url=f"{API_BASE_URL}/{API_VERSION}",
-            auth=Client.choose_auth_backend(auth),
-            headers=Client.construct_headers(),
+            auth=_choose_auth_backend(auth),
+            headers=_construct_headers(),
             timeout=timeout_in_seconds,
         )
 
@@ -350,7 +350,7 @@ class AsyncClient:
 
     async def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
         response = await self._httpx_client.get(path, params=params)
-        Client.validate_response(response)
+        _validate_response(response)
         try:
             resp_json = response.json()
             return resp_json["data"]
@@ -400,7 +400,7 @@ class AsyncClient:
         subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = Client.create_rtb_creatives_params(subcampaigns, active_only)
+        params = create_rtb_creatives_params(subcampaigns, active_only)
         data = await self._get(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
@@ -450,7 +450,7 @@ class AsyncClient:
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[schema.Stats]:
-        params = Client.create_rtb_stats_params(
+        params = create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
@@ -466,7 +466,7 @@ class AsyncClient:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = Client.create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         data = await self._get(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]

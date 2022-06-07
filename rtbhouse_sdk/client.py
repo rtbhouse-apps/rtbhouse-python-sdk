@@ -4,7 +4,17 @@ import dataclasses
 import warnings
 from datetime import date
 from types import TracebackType
-from typing import Any, Dict, Generator, List, Optional, Type, Union
+from typing import (
+    Any,
+    AsyncIterable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Type,
+    Union,
+)
 
 import httpx
 
@@ -284,22 +294,20 @@ class Client:
         )
         return [schema.Conversion(**conv) for conv in rows]
 
-    def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
         request_params.update(params or {})
 
-        result = []
         while True:
             resp_data = self._get_dict(path, params=request_params)
-            result += resp_data["rows"]
+            for row in resp_data["rows"]:
+                yield row
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
             request_params["nextCursor"] = next_cursor
-
-        return result
 
     def get_rtb_stats(
         self,
@@ -312,13 +320,14 @@ class Client:
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
-    ) -> List[schema.Stats]:
+    ) -> Iterable[schema.Stats]:
         params = create_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
-        return [schema.Stats(**st) for st in data]
+        for st in data:
+            yield schema.Stats(**st)
 
     def get_summary_stats(
         self,
@@ -449,8 +458,8 @@ class AsyncClient:
         day_from: date,
         day_to: date,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
-    ) -> List[schema.Conversion]:
-        rows = await self._get_from_cursor(
+    ) -> AsyncIterable[schema.Conversion]:
+        rows = self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
                 "dayFrom": day_from,
@@ -458,24 +467,23 @@ class AsyncClient:
                 "countConvention": convention_type.value,
             },
         )
-        return [schema.Conversion(**conv) for conv in rows]
+        async for conv in rows:
+            yield schema.Conversion(**conv)
 
-    async def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> List[Dict[str, Any]]:
+    async def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
         request_params.update(params or {})
 
-        result = []
         while True:
             resp_data = await self._get_dict(path, params=request_params)
-            result += resp_data["rows"]
+            for row in resp_data["rows"]:
+                yield row
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
             request_params["nextCursor"] = next_cursor
-
-        return result
 
     async def get_rtb_stats(
         self,

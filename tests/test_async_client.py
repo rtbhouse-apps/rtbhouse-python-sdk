@@ -180,7 +180,9 @@ async def test_get_rtb_conversions(
         ]
     )
 
-    conversions = await api.get_rtb_conversions(adv_hash, day_from, day_to)
+    conversions = []
+    async for conv in api.get_rtb_conversions(adv_hash, day_from, day_to):
+        conversions.append(conv)
 
     assert len(conversions) == 2
     assert conversions[0].conversion_hash == "chash"

@@ -324,7 +324,7 @@ def test_get_rtb_stats_extra_params(
     )
 
     extra_params = {param: value}
-    api.get_rtb_stats(adv_hash, day_from, day_to, [GroupBy.ADVERTISER], [Metric.CAMPAIGN_COST], **extra_params)
+    list(api.get_rtb_stats(adv_hash, day_from, day_to, [GroupBy.ADVERTISER], [Metric.CAMPAIGN_COST], **extra_params))
 
     assert mocked_response.calls[0].request.url.params[to_camel_case(param)] == query_value
 

@@ -283,7 +283,7 @@ class Client:
         day_from: date,
         day_to: date,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
-    ) -> List[schema.Conversion]:
+    ) -> Iterable[schema.Conversion]:
         rows = self._get_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
@@ -292,7 +292,8 @@ class Client:
                 "countConvention": convention_type.value,
             },
         )
-        return [schema.Conversion(**conv) for conv in rows]
+        for conv in rows:
+            yield schema.Conversion(**conv)
 
     def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
         request_params = {

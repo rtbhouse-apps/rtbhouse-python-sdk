@@ -263,7 +263,7 @@ def test_get_rtb_conversions(
         ]
     )
 
-    conversions = api.get_rtb_conversions(adv_hash, day_from, day_to)
+    conversions = list(api.get_rtb_conversions(adv_hash, day_from, day_to))
 
     call1, call2 = mocked_response.calls
     assert set(call1.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit"}

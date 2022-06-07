@@ -96,72 +96,6 @@ def build_base_url() -> str:
     return f"{API_BASE_URL}/{API_VERSION}"
 
 
-def create_rtb_creatives_params(
-    subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
-    active_only: Optional[bool] = None,
-) -> Dict[str, Any]:
-    params: Dict[str, Any] = {}
-    if subcampaigns:
-        if isinstance(subcampaigns, schema.SubcampaignsFilter):
-            params["subcampaigns"] = subcampaigns.value
-        elif isinstance(subcampaigns, (list, tuple, set)):
-            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-    if active_only is not None:
-        params["activeOnly"] = active_only
-
-    return params
-
-
-def create_rtb_stats_params(
-    day_from: date,
-    day_to: date,
-    group_by: List[schema.GroupBy],
-    metrics: List[schema.Metric],
-    count_convention: Optional[schema.CountConvention] = None,
-    subcampaigns: Optional[List[str]] = None,
-    user_segments: Optional[List[schema.UserSegment]] = None,
-    device_types: Optional[List[schema.DeviceType]] = None,
-) -> Dict[str, Any]:
-    params = {
-        "dayFrom": day_from,
-        "dayTo": day_to,
-        "groupBy": "-".join(group_by),
-        "metrics": "-".join(metrics),
-    }
-    if count_convention is not None:
-        params["countConvention"] = count_convention.value
-    if subcampaigns is not None:
-        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-    if user_segments is not None:
-        params["userSegments"] = "-".join(us.value for us in user_segments)
-    if device_types is not None:
-        params["deviceTypes"] = "-".join(dt.value for dt in device_types)
-
-    return params
-
-
-def create_summary_stats_params(
-    day_from: date,
-    day_to: date,
-    group_by: List[schema.GroupBy],
-    metrics: List[schema.Metric],
-    count_convention: Optional[schema.CountConvention] = None,
-    subcampaigns: Optional[List[str]] = None,
-) -> Dict[str, Any]:
-    params = {
-        "dayFrom": day_from,
-        "dayTo": day_to,
-        "groupBy": "-".join(gb.value for gb in group_by),
-        "metrics": "-".join(m.value for m in metrics),
-    }
-    if count_convention is not None:
-        params["countConvention"] = count_convention.value
-    if subcampaigns is not None:
-        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
-
-    return params
-
-
 class Client:
     """
     A standard synchronous API client.
@@ -273,7 +207,7 @@ class Client:
         subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = create_rtb_creatives_params(subcampaigns, active_only)
+        params = _build_rtb_creatives_params(subcampaigns, active_only)
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
@@ -322,7 +256,7 @@ class Client:
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> Iterable[schema.Stats]:
-        params = create_rtb_stats_params(
+        params = _build_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
@@ -340,7 +274,7 @@ class Client:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
@@ -449,7 +383,7 @@ class AsyncClient:
         subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
         active_only: Optional[bool] = None,
     ) -> List[schema.Creative]:
-        params = create_rtb_creatives_params(subcampaigns, active_only)
+        params = _build_rtb_creatives_params(subcampaigns, active_only)
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
         return [schema.Creative(**cr) for cr in data]
 
@@ -498,7 +432,7 @@ class AsyncClient:
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[schema.Stats]:
-        params = create_rtb_stats_params(
+        params = _build_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
@@ -515,7 +449,73 @@ class AsyncClient:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
+
+
+def _build_rtb_creatives_params(
+    subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
+    active_only: Optional[bool] = None,
+) -> Dict[str, Any]:
+    params: Dict[str, Any] = {}
+    if subcampaigns:
+        if isinstance(subcampaigns, schema.SubcampaignsFilter):
+            params["subcampaigns"] = subcampaigns.value
+        elif isinstance(subcampaigns, (list, tuple, set)):
+            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if active_only is not None:
+        params["activeOnly"] = active_only
+
+    return params
+
+
+def _build_rtb_stats_params(
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.GroupBy],
+    metrics: List[schema.Metric],
+    count_convention: Optional[schema.CountConvention] = None,
+    subcampaigns: Optional[List[str]] = None,
+    user_segments: Optional[List[schema.UserSegment]] = None,
+    device_types: Optional[List[schema.DeviceType]] = None,
+) -> Dict[str, Any]:
+    params = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "groupBy": "-".join(group_by),
+        "metrics": "-".join(metrics),
+    }
+    if count_convention is not None:
+        params["countConvention"] = count_convention.value
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if user_segments is not None:
+        params["userSegments"] = "-".join(us.value for us in user_segments)
+    if device_types is not None:
+        params["deviceTypes"] = "-".join(dt.value for dt in device_types)
+
+    return params
+
+
+def _build_summary_stats_params(
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.GroupBy],
+    metrics: List[schema.Metric],
+    count_convention: Optional[schema.CountConvention] = None,
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "groupBy": "-".join(gb.value for gb in group_by),
+        "metrics": "-".join(m.value for m in metrics),
+    }
+    if count_convention is not None:
+        params["countConvention"] = count_convention.value
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params

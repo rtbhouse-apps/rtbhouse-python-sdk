@@ -207,13 +207,13 @@ class Client:
     def _get_dict(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         data = self._get(path, params)
         if not isinstance(data, dict):
-            raise ValueError("Result is not of dict type")
+            raise ValueError("Result is not a dict")
         return data
 
     def _get_list(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         data = self._get(path, params)
-        if not isinstance(data, list):
-            raise ValueError("Result is not of list type")
+        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+            raise ValueError("Result is not a list of dicts")
         return data
 
     def get_user_info(self) -> schema.UserInfo:
@@ -379,13 +379,13 @@ class AsyncClient:
     async def _get_dict(self, path: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         data = await self._get(path, params)
         if not isinstance(data, dict):
-            raise ValueError("Result is not of dict type")
+            raise ValueError("Result is not a dict")
         return data
 
     async def _get_list(self, path: str, params: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         data = await self._get(path, params)
-        if not isinstance(data, list):
-            raise ValueError("Result is not of list type")
+        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+            raise ValueError("Result is not of a list of dicts")
         return data
 
     async def get_user_info(self) -> schema.UserInfo:

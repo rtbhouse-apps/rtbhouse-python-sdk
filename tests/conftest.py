@@ -6,7 +6,7 @@ from typing import Any, Dict, Iterator
 import pytest
 import respx
 
-from rtbhouse_sdk.client import construct_base_url
+from rtbhouse_sdk.client import build_base_url
 
 
 @pytest.fixture()
@@ -16,7 +16,7 @@ def adv_hash() -> str:
 
 @pytest.fixture()
 def base_url() -> str:
-    return construct_base_url()
+    return build_base_url()
 
 
 @pytest.fixture()

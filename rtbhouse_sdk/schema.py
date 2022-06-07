@@ -3,9 +3,13 @@
 # pylint: disable=too-few-public-methods
 from datetime import date, datetime
 from enum import Enum
+from functools import partial
 from typing import Any, Dict, List, Optional
 
+from inflection import camelize
 from pydantic import BaseModel
+
+to_camel_case = partial(camelize, uppercase_first_letter=False)
 
 
 class CountConvention(str, Enum):
@@ -86,11 +90,6 @@ class SubcampaignsFilter(str, Enum):
     ALL = "ALL"
     ANY = "ANY"
     ACTIVE = "ACTIVE"
-
-
-def to_camel_case(word: str) -> str:
-    words = word.split("_")
-    return words[0] + "".join(word.capitalize() for word in words[1:])
 
 
 class CamelcasedBaseModel(BaseModel):
@@ -207,7 +206,23 @@ class Conversion(CamelcasedBaseModel):
 
 
 class Stats(CamelcasedBaseModel):
-    # # from Metric
+    # from GroupBy
+    day: Optional[date]
+    week: Optional[str]
+    month: Optional[str]
+    year: Optional[str]
+    advertiser: Optional[str]
+    subcampaign: Optional[str]
+    subcampaign_hash: Optional[str]
+    user_segment: Optional[str]
+    device_type: Optional[str]
+    creative: Optional[str]
+    category: Optional[str]
+    category_name: Optional[str]
+    country: Optional[str]
+    placement: Optional[str]
+
+    # from Metric
     campaign_cost: Optional[float]
     imps_count: Optional[int]
     ecpm: Optional[float]
@@ -226,21 +241,6 @@ class Stats(CamelcasedBaseModel):
     viewability: Optional[float]
     user_frequency: Optional[float]
     user_reach: Optional[float]
-    # from GroupBy
-    day: Optional[date]
-    week: Optional[str]
-    month: Optional[str]
-    year: Optional[str]
-    advertiser: Optional[str]
-    subcampaign: Optional[str]
-    subcampaign_hash: Optional[str]
-    user_segment: Optional[str]
-    device_type: Optional[str]
-    creative: Optional[str]
-    category: Optional[str]
-    category_name: Optional[str]
-    country: Optional[str]
-    placement: Optional[str]
 
     class Config:
         alias_generator = to_camel_case

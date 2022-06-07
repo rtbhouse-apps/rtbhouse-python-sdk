@@ -23,6 +23,7 @@ python = ">=3.7, <4.0"
 
 pydantic = "^1.9.0"
 httpx = "^0.22.0"
+inflection = "^0.5.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"

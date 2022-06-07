@@ -6,8 +6,6 @@ import respx
 
 from rtbhouse_sdk.client import BasicAuth, BasicTokenAuth, Client
 
-from . import BASE_URL
-
 
 @pytest.mark.parametrize(
     "auth_backend",
@@ -20,8 +18,8 @@ def test_auth_backend_is_supported(auth_backend: Union[BasicAuth, BasicTokenAuth
     Client(auth=auth_backend)
 
 
-def test_basic_token_auth_flow(mocked_response: respx.MockRouter) -> None:
-    mocked_response.get(f"{BASE_URL}/example-endpoint").respond(200, json={"data": {}})
+def test_basic_token_auth_flow(base_url: str, mocked_response: respx.MockRouter) -> None:
+    mocked_response.get(f"{base_url}/example-endpoint").respond(200, json={"data": {}})
 
     auth = BasicTokenAuth("abc")
     with Client(auth=auth) as cli:

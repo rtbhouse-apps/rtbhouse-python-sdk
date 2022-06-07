@@ -1,4 +1,5 @@
 """Contains definitions of standard (sync) client as well as async client."""
+# pylint: disable=too-many-arguments
 import dataclasses
 import warnings
 from datetime import date
@@ -81,6 +82,10 @@ def _validate_response(response: httpx.Response) -> None:
         raise ApiRequestException(response)
 
 
+def construct_base_url() -> str:
+    return f"{API_BASE_URL}/{API_VERSION}"
+
+
 def create_rtb_creatives_params(
     subcampaigns: Union[None, List[str], schema.SubcampaignsFilter] = None,
     active_only: Optional[bool] = None,
@@ -97,7 +102,7 @@ def create_rtb_creatives_params(
     return params
 
 
-def create_rtb_stats_params(  # pylint: disable=too-many-arguments
+def create_rtb_stats_params(
     day_from: date,
     day_to: date,
     group_by: List[schema.GroupBy],
@@ -125,7 +130,7 @@ def create_rtb_stats_params(  # pylint: disable=too-many-arguments
     return params
 
 
-def create_summary_stats_params(  # pylint: disable=too-many-arguments
+def create_summary_stats_params(
     day_from: date,
     day_to: date,
     group_by: List[schema.GroupBy],
@@ -169,7 +174,7 @@ class Client:
 
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT):
         self._httpx_client = httpx.Client(
-            base_url=f"{API_BASE_URL}/{API_VERSION}",
+            base_url=construct_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_construct_headers(),
             timeout=timeout_in_seconds,
@@ -280,7 +285,7 @@ class Client:
 
         return result
 
-    def get_rtb_stats(  # pylint: disable=too-many-arguments
+    def get_rtb_stats(
         self,
         adv_hash: str,
         day_from: date,
@@ -296,9 +301,10 @@ class Client:
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/rtb-stats", params)]
+        data = self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
+        return [schema.Stats(**st) for st in data]
 
-    def get_summary_stats(  # pylint: disable=too-many-arguments
+    def get_summary_stats(
         self,
         adv_hash: str,
         day_from: date,
@@ -310,7 +316,8 @@ class Client:
     ) -> List[schema.Stats]:
         params = create_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
-        return [schema.Stats(**st) for st in self._get(f"/advertisers/{adv_hash}/summary-stats", params)]
+        data = self._get(f"/advertisers/{adv_hash}/summary-stats", params)
+        return [schema.Stats(**st) for st in data]
 
 
 class AsyncClient:
@@ -327,7 +334,7 @@ class AsyncClient:
 
     def __init__(self, auth: Union[BasicAuth, BasicTokenAuth], timeout_in_seconds: float = DEFAULT_TIMEOUT) -> None:
         self._httpx_client = httpx.AsyncClient(
-            base_url=f"{API_BASE_URL}/{API_VERSION}",
+            base_url=construct_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_construct_headers(),
             timeout=timeout_in_seconds,
@@ -438,7 +445,7 @@ class AsyncClient:
 
         return result
 
-    async def get_rtb_stats(  # pylint: disable=too-many-arguments
+    async def get_rtb_stats(
         self,
         adv_hash: str,
         day_from: date,
@@ -454,9 +461,10 @@ class AsyncClient:
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )
 
-        return [schema.Stats.construct(**st) for st in await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)]
+        data = await self._get(f"/advertisers/{adv_hash}/rtb-stats", params)
+        return [schema.Stats(**st) for st in data]
 
-    async def get_summary_stats(  # pylint: disable=too-many-arguments
+    async def get_summary_stats(
         self,
         adv_hash: str,
         day_from: date,

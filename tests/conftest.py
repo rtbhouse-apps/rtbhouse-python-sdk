@@ -1,14 +1,32 @@
 """Common fixtures."""
 import copy
+from datetime import date
 from typing import Any, Dict, Iterator
 
 import pytest
 import respx
 
+from rtbhouse_sdk.client import construct_base_url
+
 
 @pytest.fixture()
 def adv_hash() -> str:
     return "advhash"
+
+
+@pytest.fixture()
+def base_url() -> str:
+    return construct_base_url()
+
+
+@pytest.fixture()
+def day_from() -> date:
+    return date(2020, 9, 1)
+
+
+@pytest.fixture()
+def day_to() -> date:
+    return date(2020, 9, 1)
 
 
 @pytest.fixture(autouse=True)

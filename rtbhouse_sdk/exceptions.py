@@ -36,6 +36,8 @@ class ApiRequestException(ApiException):
 class ApiRateLimitException(ApiRequestException):
     """Indicates that rate limit was exceeded."""
 
+    limits: Dict[str, Dict[str, Dict[str, float]]]
+
     def __init__(
         self,
         message: str,

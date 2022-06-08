@@ -24,10 +24,10 @@ class CountConvention(str, Enum):
 class UserSegment(str, Enum):
     """Holds possible values of user segment parameter."""
 
+    NEW = "NEW"
     VISITORS = "VISITORS"
     SHOPPERS = "SHOPPERS"
     BUYERS = "BUYERS"
-    NEW = "NEW"
 
 
 class DeviceType(str, Enum):
@@ -52,7 +52,7 @@ class StatsGroupBy(str, Enum):
     YEAR = "year"
 
     ADVERTISER = "advertiser"
-    CAMPAIGN = "subcampaign"
+    SUBCAMPAIGN = "subcampaign"
     USER_SEGMENT = "userSegment"
     DEVICE_TYPE = "deviceType"
     CREATIVE = "creative"
@@ -92,12 +92,12 @@ class SubcampaignsFilter(str, Enum):
     ACTIVE = "ACTIVE"
 
 
-class CamelcasedBaseModel(BaseModel):
+class CamelizedBaseModel(BaseModel):
     class Config:
         alias_generator = to_camel_case
 
 
-class UserInfo(CamelcasedBaseModel):
+class UserInfo(CamelizedBaseModel):
     hash_id: str
     login: str
     email: str
@@ -105,7 +105,7 @@ class UserInfo(CamelcasedBaseModel):
     permissions: List[str]
 
 
-class Advertiser(CamelcasedBaseModel):
+class Advertiser(CamelizedBaseModel):
     hash: str
     status: str
     name: str
@@ -115,7 +115,7 @@ class Advertiser(CamelcasedBaseModel):
     properties: Dict[str, Any]
 
 
-class Campaign(CamelcasedBaseModel):
+class Campaign(CamelizedBaseModel):
     hash: str
     name: str
     creative_ids: List[int]
@@ -137,14 +137,14 @@ class InvoiceData(BaseModel):
     email: str
 
 
-class Category(CamelcasedBaseModel):
+class Category(CamelizedBaseModel):
     category_id: str
     identifier: str
     name: str
     active_offers_number: int
 
 
-class Image(CamelcasedBaseModel):
+class Image(CamelizedBaseModel):
     width: str
     height: str
     url: str
@@ -152,7 +152,7 @@ class Image(CamelcasedBaseModel):
     hash: str
 
 
-class Offer(CamelcasedBaseModel):
+class Offer(CamelizedBaseModel):
     url: str
     full_name: str
     identifier: str
@@ -166,7 +166,7 @@ class Offer(CamelcasedBaseModel):
     status: str
 
 
-class Bill(CamelcasedBaseModel):
+class Bill(CamelizedBaseModel):
     day: date
     operation: str
     position: int
@@ -176,24 +176,24 @@ class Bill(CamelcasedBaseModel):
     record_number: int
 
 
-class Billing(CamelcasedBaseModel):
+class Billing(CamelizedBaseModel):
     initial_balance: float
     bills: List[Bill]
 
 
-class CreativePreview(CamelcasedBaseModel):
+class CreativePreview(CamelizedBaseModel):
     width: int
     height: int
     offers_number: int
     preview_url: str
 
 
-class Creative(CamelcasedBaseModel):
+class Creative(CamelizedBaseModel):
     hash: str
     previews: List[CreativePreview]
 
 
-class Conversion(CamelcasedBaseModel):
+class Conversion(CamelizedBaseModel):
     conversion_identifier: str
     conversion_hash: str
     conversion_class: Optional[str]
@@ -205,7 +205,7 @@ class Conversion(CamelcasedBaseModel):
     last_impression_time: datetime
 
 
-class Stats(CamelcasedBaseModel):
+class Stats(CamelizedBaseModel):
     # from GroupBy
     day: Optional[date]
     week: Optional[str]
@@ -241,6 +241,3 @@ class Stats(CamelcasedBaseModel):
     viewability: Optional[float]
     user_frequency: Optional[float]
     user_reach: Optional[float]
-
-    class Config:
-        alias_generator = to_camel_case

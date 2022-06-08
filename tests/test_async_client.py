@@ -31,10 +31,8 @@ async def test_client_as_context_manager() -> None:
 
 
 @pytest.mark.asyncio
-async def test_get_user_info(
-    api: AsyncClient, base_url: str, mocked_response: respx.MockRouter, user_info_response: Dict[str, Any]
-) -> None:
-    mocked_response.get(f"{base_url}/user/info").respond(200, json=user_info_response)
+async def test_get_user_info(api: AsyncClient, api_mock: respx.MockRouter, user_info_response: Dict[str, Any]) -> None:
+    api_mock.get("/user/info").respond(200, json=user_info_response)
 
     data = await api.get_user_info()
 
@@ -43,9 +41,9 @@ async def test_get_user_info(
 
 @pytest.mark.asyncio
 async def test_get_advertisers(
-    api: AsyncClient, base_url: str, mocked_response: respx.MockRouter, advertisers_response: Dict[str, Any]
+    api: AsyncClient, api_mock: respx.MockRouter, advertisers_response: Dict[str, Any]
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers").respond(200, json=advertisers_response)
+    api_mock.get("/advertisers").respond(200, json=advertisers_response)
 
     (advertiser,) = await api.get_advertisers()
 
@@ -55,12 +53,11 @@ async def test_get_advertisers(
 @pytest.mark.asyncio
 async def test_get_advertiser(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     advertiser_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}").respond(200, json=advertiser_response)
+    api_mock.get(f"/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
     advertiser = await api.get_advertiser(adv_hash)
 
@@ -70,12 +67,11 @@ async def test_get_advertiser(
 @pytest.mark.asyncio
 async def test_get_invoicing_data(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     invoice_data_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
+    api_mock.get(f"/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
     invoice_data = await api.get_invoicing_data(adv_hash)
 
@@ -85,14 +81,11 @@ async def test_get_invoicing_data(
 @pytest.mark.asyncio
 async def test_get_offer_categories(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     offer_categories_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/offer-categories").respond(
-        200, json=offer_categories_response
-    )
+    api_mock.get(f"/advertisers/{adv_hash}/offer-categories").respond(200, json=offer_categories_response)
 
     (offer_cat,) = await api.get_offer_categories(adv_hash)
 
@@ -101,9 +94,9 @@ async def test_get_offer_categories(
 
 @pytest.mark.asyncio
 async def test_get_offers(
-    api: AsyncClient, base_url: str, adv_hash: str, mocked_response: respx.MockRouter, offers_response: Dict[str, Any]
+    api: AsyncClient, adv_hash: str, api_mock: respx.MockRouter, offers_response: Dict[str, Any]
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
+    api_mock.get(f"/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
     (offer,) = await api.get_offers(adv_hash)
 
@@ -114,12 +107,11 @@ async def test_get_offers(
 @pytest.mark.asyncio
 async def test_get_advertiser_campaigns(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     advertiser_campaigns_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
+    api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
     (campaign,) = await api.get_advertiser_campaigns(adv_hash)
 
@@ -129,14 +121,13 @@ async def test_get_advertiser_campaigns(
 @pytest.mark.asyncio
 async def test_get_billing(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     billing_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
+    api_mock.get(f"/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
 
     billing = await api.get_billing(adv_hash, day_from, day_to)
 
@@ -148,16 +139,15 @@ async def test_get_billing(
 @pytest.mark.asyncio
 async def test_get_rtb_creatives(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     rtb_creatives_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
+    api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
     (rtb_creative,) = await api.get_rtb_creatives(adv_hash)
 
-    assert dict(mocked_response.calls[0].request.url.params) == {}
+    assert dict(api_mock.calls[0].request.url.params) == {}
     assert rtb_creative.hash == "hash"
     assert len(rtb_creative.previews) == 1
 
@@ -165,15 +155,14 @@ async def test_get_rtb_creatives(
 @pytest.mark.asyncio
 async def test_get_rtb_conversions(
     api: AsyncClient,
-    base_url: str,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    mocked_response: respx.MockRouter,
+    api_mock: respx.MockRouter,
     conversions_with_next_cursor_response: Dict[str, Any],
     conversions_without_next_cursor_response: Dict[str, Any],
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/conversions").mock(
+    api_mock.get(f"/advertisers/{adv_hash}/conversions").mock(
         side_effect=[
             Response(200, json=conversions_with_next_cursor_response),
             Response(200, json=conversions_without_next_cursor_response),
@@ -190,9 +179,9 @@ async def test_get_rtb_conversions(
 
 @pytest.mark.asyncio
 async def test_get_rtb_stats(
-    api: AsyncClient, base_url: str, adv_hash: str, day_from: date, day_to: date, mocked_response: respx.MockRouter
+    api: AsyncClient, adv_hash: str, day_from: date, day_to: date, api_mock: respx.MockRouter
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/rtb-stats").respond(
+    api_mock.get(f"/advertisers/{adv_hash}/rtb-stats").respond(
         200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 51.0}]},
     )
@@ -205,7 +194,7 @@ async def test_get_rtb_stats(
         [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
-    assert dict(mocked_response.calls[0].request.url.params) == {
+    assert dict(api_mock.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
@@ -216,9 +205,9 @@ async def test_get_rtb_stats(
 
 @pytest.mark.asyncio
 async def test_get_summary_stats(
-    api: AsyncClient, base_url: str, adv_hash: str, day_from: date, day_to: date, mocked_response: respx.MockRouter
+    api: AsyncClient, adv_hash: str, day_from: date, day_to: date, api_mock: respx.MockRouter
 ) -> None:
-    mocked_response.get(f"{base_url}/advertisers/{adv_hash}/summary-stats").respond(
+    api_mock.get(f"/advertisers/{adv_hash}/summary-stats").respond(
         200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 108.0}]},
     )
@@ -231,7 +220,7 @@ async def test_get_summary_stats(
         [Metric.CAMPAIGN_COST, Metric.CR],
     )
 
-    assert dict(mocked_response.calls[0].request.url.params) == {
+    assert dict(api_mock.calls[0].request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",

@@ -15,11 +15,6 @@ def adv_hash() -> str:
 
 
 @pytest.fixture()
-def base_url() -> str:
-    return build_base_url()
-
-
-@pytest.fixture()
 def day_from() -> date:
     return date(2020, 9, 1)
 
@@ -30,8 +25,8 @@ def day_to() -> date:
 
 
 @pytest.fixture(autouse=True)
-def mocked_response() -> Iterator[respx.MockRouter]:
-    with respx.mock() as mock:  # pylint: disable=not-context-manager
+def api_mock() -> Iterator[respx.MockRouter]:
+    with respx.mock(base_url=build_base_url()) as mock:  # pylint: disable=not-context-manager
         yield mock
 
 

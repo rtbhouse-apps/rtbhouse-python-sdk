@@ -18,11 +18,11 @@ def test_auth_backend_is_supported(auth_backend: Union[BasicAuth, BasicTokenAuth
     Client(auth=auth_backend)
 
 
-def test_basic_token_auth_flow(base_url: str, mocked_response: respx.MockRouter) -> None:
-    mocked_response.get(f"{base_url}/example-endpoint").respond(200, json={"data": {}})
+def test_basic_token_auth_flow(api_mock: respx.MockRouter) -> None:
+    api_mock.get("/example-endpoint").respond(200, json={"data": {}})
 
     auth = BasicTokenAuth("abc")
     with Client(auth=auth) as cli:
         cli._get("/example-endpoint")  # pylint: disable=protected-access
 
-    assert mocked_response.calls[0].request.headers["authorization"] == "Token abc"
+    assert api_mock.calls[0].request.headers["authorization"] == "Token abc"

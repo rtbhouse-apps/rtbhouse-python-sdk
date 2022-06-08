@@ -26,7 +26,7 @@ from .exceptions import (
     ApiRateLimitException,
     ApiRequestException,
     ApiVersionMismatchException,
-    ErrorData,
+    ErrorDetails,
 )
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
@@ -76,9 +76,9 @@ def _validate_response(response: httpx.Response) -> None:
     try:
         response_data = response.json()
     except JSONDecodeError:
-        error_data = None
+        error_details = None
     else:
-        error_data = ErrorData(
+        error_details = ErrorDetails(
             app_code=response_data.get("appCode"),
             errors=response_data.get("errors"),
             message=response_data.get("message"),
@@ -94,12 +94,15 @@ def _validate_response(response: httpx.Response) -> None:
     if response.status_code == 429:
         raise ApiRateLimitException(
             "Resource usage limits reached",
-            error_data=error_data,
+            details=error_details,
             usage_header=response.headers.get("X-Resource-Usage"),
         )
 
     if response.is_error:
-        raise ApiRequestException("Unexpected error", error_data=error_data)
+        raise ApiRequestException(
+            error_details.message if error_details else "Unexpected error",
+            details=error_details,
+        )
 
     current_version = response.headers.get("X-Current-Api-Version")
     if current_version is not None and current_version != API_VERSION:
@@ -278,8 +281,7 @@ class Client:
         )
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
-        for st in data:
-            yield schema.Stats(**st)
+        return [schema.Stats(**st) for st in data]
 
     def get_summary_stats(
         self,

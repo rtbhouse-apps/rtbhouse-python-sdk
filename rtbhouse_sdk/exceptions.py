@@ -4,19 +4,19 @@ from typing import Any, Dict, Optional
 
 
 @dataclasses.dataclass
-class ErrorData:
+class ErrorDetails:
     app_code: str
     message: str
-    errors: Dict[str, Any]
+    errors: Optional[Dict[str, Any]]
 
 
 class ApiException(Exception):
     """Base API Exception."""
 
-    def __init__(self, message: str, error_data: Optional[ErrorData] = None) -> None:
+    def __init__(self, message: str, details: Optional[ErrorDetails] = None) -> None:
         super().__init__(message)
         self.message = message
-        self.error_data = error_data
+        self.error_details = details
 
     def __str__(self) -> str:
         return self.message
@@ -36,10 +36,10 @@ class ApiRateLimitException(ApiRequestException):
     def __init__(
         self,
         message: str,
-        error_data: Optional[ErrorData],
+        details: Optional[ErrorDetails],
         usage_header: Optional[str],
     ) -> None:
-        super().__init__(message, error_data)
+        super().__init__(message, details)
         self.limits = _parse_resource_usage_header(usage_header)
 
 

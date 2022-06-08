@@ -13,6 +13,9 @@ class ErrorDetails:
 class ApiException(Exception):
     """Base API Exception."""
 
+    message: str
+    error_details: Optional[ErrorDetails]
+
     def __init__(self, message: str, details: Optional[ErrorDetails] = None) -> None:
         super().__init__(message)
         self.message = message

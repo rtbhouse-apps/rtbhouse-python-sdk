@@ -169,7 +169,7 @@ class Client:
         day_to: date,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> Iterable[schema.Conversion]:
-        rows = self._get_from_cursor(
+        rows = self._get_list_of_dicts_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
                 "dayFrom": day_from,
@@ -180,7 +180,7 @@ class Client:
         for conv in rows:
             yield schema.Conversion(**conv)
 
-    def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+    def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
@@ -344,7 +344,7 @@ class AsyncClient:
         day_to: date,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
     ) -> AsyncIterable[schema.Conversion]:
-        rows = self._get_from_cursor(
+        rows = self._get_list_of_dicts_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
             params={
                 "dayFrom": day_from,
@@ -355,7 +355,7 @@ class AsyncClient:
         async for conv in rows:
             yield schema.Conversion(**conv)
 
-    async def _get_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
+    async def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
@@ -416,18 +416,22 @@ class _HttpxBasicTokenAuth(httpx.Auth):
         yield request
 
 
-def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
-    if isinstance(auth, BasicAuth):
-        return httpx.BasicAuth(auth.username, auth.password)
-    if isinstance(auth, BasicTokenAuth):
-        return _HttpxBasicTokenAuth(auth.token)
-    raise ValueError("Unknown auth method")
+def build_base_url() -> str:
+    return f"{API_BASE_URL}/{API_VERSION}"
 
 
 def _build_headers() -> Dict[str, str]:
     return {
         "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
     }
+
+
+def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
+    if isinstance(auth, BasicAuth):
+        return httpx.BasicAuth(auth.username, auth.password)
+    if isinstance(auth, BasicTokenAuth):
+        return _HttpxBasicTokenAuth(auth.token)
+    raise ValueError("Unknown auth method")
 
 
 def _validate_response(response: httpx.Response) -> None:
@@ -468,10 +472,6 @@ def _validate_response(response: httpx.Response) -> None:
             f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
             f"by updating rtbhouse_sdk package."
         )
-
-
-def build_base_url() -> str:
-    return f"{API_BASE_URL}/{API_VERSION}"
 
 
 def _build_rtb_creatives_params(

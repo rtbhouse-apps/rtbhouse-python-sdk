@@ -1,15 +1,22 @@
 """Definitions of exceptions used in SDK."""
-from typing import Any, Dict
+import dataclasses
+from typing import Any, Dict, Optional
 
-from httpx import Response
+
+@dataclasses.dataclass
+class ErrorData:
+    app_code: str
+    message: str
+    errors: Dict[str, Any]
 
 
 class ApiException(Exception):
     """Base API Exception."""
 
-    def __init__(self, message: str) -> None:
+    def __init__(self, message: str, error_data: Optional[ErrorData] = None) -> None:
         super().__init__(message)
         self.message = message
+        self.error_data = error_data
 
     def __str__(self) -> str:
         return self.message
@@ -22,35 +29,21 @@ class ApiVersionMismatchException(ApiException):
 class ApiRequestException(ApiException):
     """Indicates there's something wrong with request."""
 
-    message = "Unexpected error"
-    app_code = "UNKNOWN"
-    errors: Dict[str, Any] = {}
-
-    def __init__(self, response: Response) -> None:
-        self.raw_response = response
-        try:
-            self._response_data = response.json()
-        except ValueError:
-            message = f"{response.reason_phrase} ({response.status_code})"
-        else:
-            self.app_code = self._response_data.get("appCode")
-            self.errors = self._response_data.get("errors")
-            message = self._response_data.get("message")
-
-        super().__init__(message)
-
 
 class ApiRateLimitException(ApiRequestException):
     """Indicates that rate limit was exceeded."""
 
-    message = "Resource usage limits reached"
+    def __init__(
+        self,
+        message: str,
+        error_data: Optional[ErrorData],
+        usage_header: Optional[str],
+    ) -> None:
+        super().__init__(message, error_data)
+        self.limits = _parse_resource_usage_header(usage_header)
 
-    def __init__(self, response: Response) -> None:
-        super().__init__(response)
-        self.limits = parse_resource_usage_header(response.headers.get("X-Resource-Usage"))
 
-
-def parse_resource_usage_header(header: str) -> Dict[str, Dict[str, Dict[str, float]]]:
+def _parse_resource_usage_header(header: Optional[str]) -> Dict[str, Dict[str, Dict[str, float]]]:
     """parse string like WORKER_TIME-3600=11.7/10000000;DB_QUERY_TIME-21600=4.62/2000 into dict"""
     if not header:
         return {}

@@ -3,6 +3,7 @@
 import dataclasses
 import warnings
 from datetime import date
+from json import JSONDecodeError
 from types import TracebackType
 from typing import (
     Any,
@@ -25,6 +26,7 @@ from .exceptions import (
     ApiRateLimitException,
     ApiRequestException,
     ApiVersionMismatchException,
+    ErrorData,
 )
 
 API_BASE_URL = "https://api.panel.rtbhouse.com"
@@ -71,6 +73,17 @@ def _build_headers() -> Dict[str, str]:
 
 
 def _validate_response(response: httpx.Response) -> None:
+    try:
+        response_data = response.json()
+    except JSONDecodeError:
+        error_data = None
+    else:
+        error_data = ErrorData(
+            app_code=response_data.get("appCode"),
+            errors=response_data.get("errors"),
+            message=response_data.get("message"),
+        )
+
     if response.status_code == 410:
         newest_version = response.headers.get("X-Current-Api-Version")
         raise ApiVersionMismatchException(
@@ -79,7 +92,14 @@ def _validate_response(response: httpx.Response) -> None:
         )
 
     if response.status_code == 429:
-        raise ApiRateLimitException(response)
+        raise ApiRateLimitException(
+            "Resource usage limits reached",
+            error_data=error_data,
+            usage_header=response.headers.get("X-Resource-Usage"),
+        )
+
+    if response.is_error:
+        raise ApiRequestException("Unexpected error", error_data=error_data)
 
     current_version = response.headers.get("X-Current-Api-Version")
     if current_version is not None and current_version != API_VERSION:
@@ -87,9 +107,6 @@ def _validate_response(response: httpx.Response) -> None:
             f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
             f"by updating rtbhouse_sdk package."
         )
-
-    if response.is_error:
-        raise ApiRequestException(response)
 
 
 def build_base_url() -> str:

@@ -9,7 +9,7 @@ import respx
 from httpx import Response
 
 from rtbhouse_sdk.client import AsyncClient, BasicAuth
-from rtbhouse_sdk.schema import GroupBy, Metric
+from rtbhouse_sdk.schema import StatsGroupBy, StatsMetric
 
 
 @pytest_asyncio.fixture(name="api")
@@ -190,8 +190,8 @@ async def test_get_rtb_stats(
         adv_hash,
         day_from,
         day_to,
-        [GroupBy.ADVERTISER, GroupBy.DAY],
-        [Metric.CAMPAIGN_COST, Metric.CR],
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
     assert dict(api_mock.calls[0].request.url.params) == {
@@ -216,8 +216,8 @@ async def test_get_summary_stats(
         adv_hash,
         day_from,
         day_to,
-        [GroupBy.ADVERTISER, GroupBy.DAY],
-        [Metric.CAMPAIGN_COST, Metric.CR],
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
     assert dict(api_mock.calls[0].request.url.params) == {

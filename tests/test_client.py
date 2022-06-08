@@ -12,8 +12,8 @@ from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatchExc
 from rtbhouse_sdk.schema import (
     CountConvention,
     DeviceType,
-    GroupBy,
-    Metric,
+    StatsGroupBy,
+    StatsMetric,
     SubcampaignsFilter,
     UserSegment,
     to_camel_case,
@@ -259,8 +259,8 @@ def test_get_rtb_stats(api: Client, adv_hash: str, day_from: date, day_to: date,
         adv_hash,
         day_from,
         day_to,
-        [GroupBy.ADVERTISER, GroupBy.DAY],
-        [Metric.CAMPAIGN_COST, Metric.CR],
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
     assert dict(api_mock.calls[0].request.url.params) == {
@@ -298,7 +298,11 @@ def test_get_rtb_stats_extra_params(
     )
 
     extra_params = {param: value}
-    list(api.get_rtb_stats(adv_hash, day_from, day_to, [GroupBy.ADVERTISER], [Metric.CAMPAIGN_COST], **extra_params))
+    list(
+        api.get_rtb_stats(
+            adv_hash, day_from, day_to, [StatsGroupBy.ADVERTISER], [StatsMetric.CAMPAIGN_COST], **extra_params
+        )
+    )
 
     assert api_mock.calls[0].request.url.params[to_camel_case(param)] == query_value
 
@@ -315,8 +319,8 @@ def test_get_summary_stats(
         adv_hash,
         day_from,
         day_to,
-        [GroupBy.ADVERTISER, GroupBy.DAY],
-        [Metric.CAMPAIGN_COST, Metric.CR],
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
     assert dict(api_mock.calls[0].request.url.params) == {
@@ -352,7 +356,12 @@ def test_get_summary_stats_extra_params(
 
     extra_params = {param: value}
     api.get_summary_stats(
-        adv_hash, day_from, day_to, [GroupBy.ADVERTISER, GroupBy.DAY], [Metric.CAMPAIGN_COST, Metric.CR], **extra_params
+        adv_hash,
+        day_from,
+        day_to,
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
+        **extra_params,
     )
 
     assert api_mock.calls[0].request.url.params[to_camel_case(param)] == query_value

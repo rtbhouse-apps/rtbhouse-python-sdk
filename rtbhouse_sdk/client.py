@@ -36,17 +36,6 @@ DEFAULT_TIMEOUT_IN_SECONDS = 60.0
 MAX_CURSOR_ROWS = 10000
 
 
-class _HttpxBasicTokenAuth(httpx.Auth):
-    """Basic token auth backend."""
-
-    def __init__(self, token: str):
-        self._token = token
-
-    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
-        request.headers["Authorization"] = f"Token {self._token}"
-        yield request
-
-
 @dataclasses.dataclass
 class BasicAuth:
     username: str
@@ -56,64 +45,6 @@ class BasicAuth:
 @dataclasses.dataclass
 class BasicTokenAuth:
     token: str
-
-
-def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
-    if isinstance(auth, BasicAuth):
-        return httpx.BasicAuth(auth.username, auth.password)
-    if isinstance(auth, BasicTokenAuth):
-        return _HttpxBasicTokenAuth(auth.token)
-    raise ValueError("Unknown auth method")
-
-
-def _build_headers() -> Dict[str, str]:
-    return {
-        "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
-    }
-
-
-def _validate_response(response: httpx.Response) -> None:
-    try:
-        response_data = response.json()
-    except JSONDecodeError:
-        error_details = None
-    else:
-        error_details = ErrorDetails(
-            app_code=response_data.get("appCode"),
-            errors=response_data.get("errors"),
-            message=response_data.get("message"),
-        )
-
-    if response.status_code == 410:
-        newest_version = response.headers.get("X-Current-Api-Version")
-        raise ApiVersionMismatchException(
-            f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
-            f"by updating rtbhouse_sdk package."
-        )
-
-    if response.status_code == 429:
-        raise ApiRateLimitException(
-            "Resource usage limits reached",
-            details=error_details,
-            usage_header=response.headers.get("X-Resource-Usage"),
-        )
-
-    if response.is_error:
-        raise ApiRequestException(
-            error_details.message if error_details else "Unexpected error",
-            details=error_details,
-        )
-
-    current_version = response.headers.get("X-Current-Api-Version")
-    if current_version is not None and current_version != API_VERSION:
-        warnings.warn(
-            f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
-            f"by updating rtbhouse_sdk package."
-        )
-
-
-def build_base_url() -> str:
-    return f"{API_BASE_URL}/{API_VERSION}"
 
 
 class Client:
@@ -269,8 +200,8 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
@@ -288,8 +219,8 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
@@ -444,8 +375,8 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
@@ -463,8 +394,8 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        group_by: List[schema.GroupBy],
-        metrics: List[schema.Metric],
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
@@ -472,6 +403,75 @@ class AsyncClient:
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
+
+
+class _HttpxBasicTokenAuth(httpx.Auth):
+    """Basic token auth backend."""
+
+    def __init__(self, token: str):
+        self._token = token
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        request.headers["Authorization"] = f"Token {self._token}"
+        yield request
+
+
+def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
+    if isinstance(auth, BasicAuth):
+        return httpx.BasicAuth(auth.username, auth.password)
+    if isinstance(auth, BasicTokenAuth):
+        return _HttpxBasicTokenAuth(auth.token)
+    raise ValueError("Unknown auth method")
+
+
+def _build_headers() -> Dict[str, str]:
+    return {
+        "user-agent": f"rtbhouse-python-sdk/{sdk_version}",
+    }
+
+
+def _validate_response(response: httpx.Response) -> None:
+    try:
+        response_data = response.json()
+    except JSONDecodeError:
+        error_details = None
+    else:
+        error_details = ErrorDetails(
+            app_code=response_data.get("appCode"),
+            errors=response_data.get("errors"),
+            message=response_data.get("message"),
+        )
+
+    if response.status_code == 410:
+        newest_version = response.headers.get("X-Current-Api-Version")
+        raise ApiVersionMismatchException(
+            f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
+            f"by updating rtbhouse_sdk package."
+        )
+
+    if response.status_code == 429:
+        raise ApiRateLimitException(
+            "Resource usage limits reached",
+            details=error_details,
+            usage_header=response.headers.get("X-Resource-Usage"),
+        )
+
+    if response.is_error:
+        raise ApiRequestException(
+            error_details.message if error_details else "Unexpected error",
+            details=error_details,
+        )
+
+    current_version = response.headers.get("X-Current-Api-Version")
+    if current_version is not None and current_version != API_VERSION:
+        warnings.warn(
+            f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
+            f"by updating rtbhouse_sdk package."
+        )
+
+
+def build_base_url() -> str:
+    return f"{API_BASE_URL}/{API_VERSION}"
 
 
 def _build_rtb_creatives_params(
@@ -493,8 +493,8 @@ def _build_rtb_creatives_params(
 def _build_rtb_stats_params(
     day_from: date,
     day_to: date,
-    group_by: List[schema.GroupBy],
-    metrics: List[schema.Metric],
+    group_by: List[schema.StatsGroupBy],
+    metrics: List[schema.StatsMetric],
     count_convention: Optional[schema.CountConvention] = None,
     subcampaigns: Optional[List[str]] = None,
     user_segments: Optional[List[schema.UserSegment]] = None,
@@ -521,8 +521,8 @@ def _build_rtb_stats_params(
 def _build_summary_stats_params(
     day_from: date,
     day_to: date,
-    group_by: List[schema.GroupBy],
-    metrics: List[schema.Metric],
+    group_by: List[schema.StatsGroupBy],
+    metrics: List[schema.StatsMetric],
     count_convention: Optional[schema.CountConvention] = None,
     subcampaigns: Optional[List[str]] = None,
 ) -> Dict[str, Any]:

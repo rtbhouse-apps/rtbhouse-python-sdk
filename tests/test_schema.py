@@ -3,7 +3,7 @@ from itertools import chain
 
 import pytest
 
-from rtbhouse_sdk.schema import GroupBy, Metric, Stats, to_camel_case
+from rtbhouse_sdk.schema import Stats, StatsGroupBy, StatsMetric, to_camel_case
 
 
 def to_snake_case(word: str) -> str:
@@ -29,6 +29,6 @@ def test_to_camel_case(word: str, expected: str) -> None:
 
 def test_stats_schema_is_up_to_date() -> None:
     """In case Metric or GroupBy gets updated we need to update Stats as well."""
-    metric_plus_groupby_fields = {to_snake_case(f) for f in chain(Metric, GroupBy)}
+    metric_plus_groupby_fields = {to_snake_case(f) for f in chain(StatsMetric, StatsGroupBy)}
     stats_fields = set(Stats.schema(False).get("properties").keys())  # type: ignore
     assert metric_plus_groupby_fields < stats_fields, "`Stats` schema needs an update"

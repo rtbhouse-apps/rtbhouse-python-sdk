@@ -43,7 +43,7 @@ class DeviceType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-class GroupBy(str, Enum):
+class StatsGroupBy(str, Enum):
     """Holds possible values of group by parameter."""
 
     DAY = "day"
@@ -61,7 +61,7 @@ class GroupBy(str, Enum):
     PLACEMENT = "placement"
 
 
-class Metric(str, Enum):
+class StatsMetric(str, Enum):
     """Holds possible values of metric parameter."""
 
     CAMPAIGN_COST = "campaignCost"

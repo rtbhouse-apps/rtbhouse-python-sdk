@@ -115,6 +115,21 @@ class Client:
             raise ValueError("Result is not a list of dicts")
         return data
 
+    def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+        request_params = {
+            "limit": MAX_CURSOR_ROWS,
+        }
+        request_params.update(params or {})
+
+        while True:
+            resp_data = self._get_dict(path, params=request_params)
+            for row in resp_data["rows"]:
+                yield row
+            next_cursor = resp_data["nextCursor"]
+            if next_cursor is None:
+                break
+            request_params["nextCursor"] = next_cursor
+
     def get_user_info(self) -> schema.UserInfo:
         data = self._get_dict("/user/info")
         return schema.UserInfo(**data)
@@ -179,21 +194,6 @@ class Client:
         )
         for conv in rows:
             yield schema.Conversion(**conv)
-
-    def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
-        request_params = {
-            "limit": MAX_CURSOR_ROWS,
-        }
-        request_params.update(params or {})
-
-        while True:
-            resp_data = self._get_dict(path, params=request_params)
-            for row in resp_data["rows"]:
-                yield row
-            next_cursor = resp_data["nextCursor"]
-            if next_cursor is None:
-                break
-            request_params["nextCursor"] = next_cursor
 
     def get_rtb_stats(
         self,
@@ -290,6 +290,21 @@ class AsyncClient:
             raise ValueError("Result is not of a list of dicts")
         return data
 
+    async def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
+        request_params = {
+            "limit": MAX_CURSOR_ROWS,
+        }
+        request_params.update(params or {})
+
+        while True:
+            resp_data = await self._get_dict(path, params=request_params)
+            for row in resp_data["rows"]:
+                yield row
+            next_cursor = resp_data["nextCursor"]
+            if next_cursor is None:
+                break
+            request_params["nextCursor"] = next_cursor
+
     async def get_user_info(self) -> schema.UserInfo:
         data = await self._get_dict("/user/info")
         return schema.UserInfo(**data)
@@ -354,21 +369,6 @@ class AsyncClient:
         )
         async for conv in rows:
             yield schema.Conversion(**conv)
-
-    async def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
-        request_params = {
-            "limit": MAX_CURSOR_ROWS,
-        }
-        request_params.update(params or {})
-
-        while True:
-            resp_data = await self._get_dict(path, params=request_params)
-            for row in resp_data["rows"]:
-                yield row
-            next_cursor = resp_data["nextCursor"]
-            if next_cursor is None:
-                break
-            request_params["nextCursor"] = next_cursor
 
     async def get_rtb_stats(
         self,

@@ -225,7 +225,8 @@ def conversions_with_next_cursor_response_fixture() -> Dict[str, Any]:
                     "lastClickTime": "2020-01-02T21:35:06.279000+00:00",
                     "lastImpressionTime": "2020-01-02T21:38:13.346000+00:00",
                 }
-            ],
+            ]
+            * 3,
             "nextCursor": "123",
             "total": 1,
         },

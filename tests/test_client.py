@@ -81,7 +81,11 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(
     assert data["DB_QUERY_TIME"]["86400"]["5000"] == 17.995
 
 
-def test_get_user_info(api: Client, api_mock: respx.MockRouter, user_info_response: Dict[str, Any]) -> None:
+def test_get_user_info(
+    api: Client,
+    api_mock: respx.MockRouter,
+    user_info_response: Dict[str, Any],
+) -> None:
     api_mock.get("/user/info").respond(200, json=user_info_response)
 
     data = api.get_user_info()
@@ -89,7 +93,11 @@ def test_get_user_info(api: Client, api_mock: respx.MockRouter, user_info_respon
     assert data.hash_id == "hid"
 
 
-def test_get_advertisers(api: Client, api_mock: respx.MockRouter, advertisers_response: Dict[str, Any]) -> None:
+def test_get_advertisers(
+    api: Client,
+    api_mock: respx.MockRouter,
+    advertisers_response: Dict[str, Any],
+) -> None:
     api_mock.get("/advertisers").respond(200, json=advertisers_response)
 
     (advertiser,) = api.get_advertisers()
@@ -98,7 +106,10 @@ def test_get_advertisers(api: Client, api_mock: respx.MockRouter, advertisers_re
 
 
 def test_get_advertiser(
-    api: Client, adv_hash: str, api_mock: respx.MockRouter, advertiser_response: Dict[str, Any]
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    advertiser_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
@@ -108,7 +119,10 @@ def test_get_advertiser(
 
 
 def test_get_invoicing_data(
-    api: Client, adv_hash: str, api_mock: respx.MockRouter, invoice_data_response: Dict[str, Any]
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    invoice_data_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
@@ -119,8 +133,8 @@ def test_get_invoicing_data(
 
 def test_get_offer_categories(
     api: Client,
-    adv_hash: str,
     api_mock: respx.MockRouter,
+    adv_hash: str,
     offer_categories_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offer-categories").respond(200, json=offer_categories_response)
@@ -130,7 +144,12 @@ def test_get_offer_categories(
     assert offer_cat.name == "full cat"
 
 
-def test_get_offers(api: Client, adv_hash: str, api_mock: respx.MockRouter, offers_response: Dict[str, Any]) -> None:
+def test_get_offers(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    offers_response: Dict[str, Any],
+) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
     (offer,) = api.get_offers(adv_hash)
@@ -141,8 +160,8 @@ def test_get_offers(api: Client, adv_hash: str, api_mock: respx.MockRouter, offe
 
 def test_get_advertiser_campaigns(
     api: Client,
-    adv_hash: str,
     api_mock: respx.MockRouter,
+    adv_hash: str,
     advertiser_campaigns_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
@@ -154,10 +173,10 @@ def test_get_advertiser_campaigns(
 
 def test_get_billing(
     api: Client,
+    api_mock: respx.MockRouter,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    api_mock: respx.MockRouter,
     billing_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
@@ -170,13 +189,17 @@ def test_get_billing(
 
 
 def test_get_rtb_creatives(
-    api: Client, adv_hash: str, api_mock: respx.MockRouter, rtb_creatives_response: Dict[str, Any]
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    rtb_creatives_response: Dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
     (rtb_creative,) = api.get_rtb_creatives(adv_hash)
 
-    assert dict(api_mock.calls[0].request.url.params) == {}
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {}
     assert rtb_creative.hash == "hash"
     assert len(rtb_creative.previews) == 1
 
@@ -211,8 +234,8 @@ def test_get_rtb_creatives(
 )
 def test_get_rtb_creatives_with_extra_params(
     api: Client,
-    adv_hash: str,
     api_mock: respx.MockRouter,
+    adv_hash: str,
     subcampaigns: SubcampaignsFilter,
     active_only: Optional[bool],
     params: Dict[str, str],
@@ -221,15 +244,16 @@ def test_get_rtb_creatives_with_extra_params(
 
     api.get_rtb_creatives(adv_hash, subcampaigns=subcampaigns, active_only=active_only)
 
-    assert dict(api_mock.calls[0].request.url.params) == params
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == params
 
 
 def test_get_rtb_conversions(
     api: Client,
+    api_mock: respx.MockRouter,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    api_mock: respx.MockRouter,
     conversions_with_next_cursor_response: Dict[str, Any],
     conversions_without_next_cursor_response: Dict[str, Any],
 ) -> None:
@@ -245,11 +269,17 @@ def test_get_rtb_conversions(
     call1, call2 = api_mock.calls
     assert set(call1.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit"}
     assert set(call2.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit", "nextCursor"}
-    assert len(conversions) == 2
+    assert len(conversions) == 6
     assert conversions[0].conversion_hash == "chash"
 
 
-def test_get_rtb_stats(api: Client, adv_hash: str, day_from: date, day_to: date, api_mock: respx.MockRouter) -> None:
+def test_get_rtb_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-stats").respond(
         200,
         json={"status": "ok", "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 51.0}]},
@@ -263,7 +293,8 @@ def test_get_rtb_stats(api: Client, adv_hash: str, day_from: date, day_to: date,
         [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
-    assert dict(api_mock.calls[0].request.url.params) == {
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
@@ -284,10 +315,10 @@ def test_get_rtb_stats(api: Client, adv_hash: str, day_from: date, day_to: date,
 )
 def test_get_rtb_stats_extra_params(
     api: Client,
+    api_mock: respx.MockRouter,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    api_mock: respx.MockRouter,
     param: str,
     value: Any,
     query_value: str,
@@ -304,11 +335,16 @@ def test_get_rtb_stats_extra_params(
         )
     )
 
-    assert api_mock.calls[0].request.url.params[to_camel_case(param)] == query_value
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
 
 
 def test_get_summary_stats(
-    api: Client, adv_hash: str, day_from: date, day_to: date, api_mock: respx.MockRouter
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/summary-stats").respond(
         200,
@@ -323,7 +359,8 @@ def test_get_summary_stats(
         [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
-    assert dict(api_mock.calls[0].request.url.params) == {
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
         "groupBy": "advertiser-day",
@@ -341,10 +378,10 @@ def test_get_summary_stats(
 )
 def test_get_summary_stats_extra_params(
     api: Client,
+    api_mock: respx.MockRouter,
     adv_hash: str,
     day_from: date,
     day_to: date,
-    api_mock: respx.MockRouter,
     param: str,
     value: Any,
     query_value: str,
@@ -364,4 +401,5 @@ def test_get_summary_stats_extra_params(
         **extra_params,
     )
 
-    assert api_mock.calls[0].request.url.params[to_camel_case(param)] == query_value
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value

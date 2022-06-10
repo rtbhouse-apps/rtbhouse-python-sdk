@@ -1,21 +1,9 @@
 """Tests for schema and it's utilities."""
 from itertools import chain
 
-import pytest
 from inflection import underscore
 
-from rtbhouse_sdk.schema import Stats, StatsGroupBy, StatsMetric, to_camel_case
-
-
-@pytest.mark.parametrize(
-    "word,expected",
-    [
-        ("one", "one"),
-        ("one_two_seven", "oneTwoSeven"),
-    ],
-)
-def test_to_camel_case(word: str, expected: str) -> None:
-    assert to_camel_case(word) == expected
+from rtbhouse_sdk.schema import Stats, StatsGroupBy, StatsMetric
 
 
 def test_stats_schema_is_up_to_date() -> None:

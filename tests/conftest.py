@@ -9,17 +9,17 @@ import respx
 from rtbhouse_sdk.client import build_base_url
 
 
-@pytest.fixture()
+@pytest.fixture
 def adv_hash() -> str:
     return "advhash"
 
 
-@pytest.fixture()
+@pytest.fixture
 def day_from() -> date:
     return date(2020, 9, 1)
 
 
-@pytest.fixture()
+@pytest.fixture
 def day_to() -> date:
     return date(2020, 9, 1)
 

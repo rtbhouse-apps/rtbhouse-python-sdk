@@ -4,7 +4,6 @@ from datetime import date
 from typing import Any, AsyncIterator, Dict
 
 import pytest
-import pytest_asyncio
 import respx
 from httpx import Response
 
@@ -12,25 +11,22 @@ from rtbhouse_sdk.client import AsyncClient, BasicAuth
 from rtbhouse_sdk.schema import StatsGroupBy, StatsMetric
 
 
-@pytest_asyncio.fixture(name="api")
+@pytest.fixture(name="api")
 async def api_client() -> AsyncIterator[AsyncClient]:
     async with AsyncClient(auth=BasicAuth("test", "test")) as cli:
         yield cli
 
 
-@pytest.mark.asyncio
 async def test_client_close() -> None:
     cli = AsyncClient(auth=BasicAuth("test", "test"))
     await cli.close()
 
 
-@pytest.mark.asyncio
 async def test_client_as_context_manager() -> None:
     async with AsyncClient(auth=BasicAuth("test", "test")):
         pass
 
 
-@pytest.mark.asyncio
 async def test_get_user_info(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -43,7 +39,6 @@ async def test_get_user_info(
     assert data.hash_id == "hid"
 
 
-@pytest.mark.asyncio
 async def test_get_advertisers(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -56,7 +51,6 @@ async def test_get_advertisers(
     assert advertiser.name == "Adv"
 
 
-@pytest.mark.asyncio
 async def test_get_advertiser(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -70,7 +64,6 @@ async def test_get_advertiser(
     assert advertiser.name == "Adv"
 
 
-@pytest.mark.asyncio
 async def test_get_invoicing_data(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -84,7 +77,6 @@ async def test_get_invoicing_data(
     assert invoice_data.company_name == "Ltd"
 
 
-@pytest.mark.asyncio
 async def test_get_offer_categories(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -98,7 +90,6 @@ async def test_get_offer_categories(
     assert offer_cat.name == "full cat"
 
 
-@pytest.mark.asyncio
 async def test_get_offers(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -113,7 +104,6 @@ async def test_get_offers(
     assert offer.images[0].width == "700"
 
 
-@pytest.mark.asyncio
 async def test_get_advertiser_campaigns(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -127,7 +117,6 @@ async def test_get_advertiser_campaigns(
     assert campaign.name == "Campaign"
 
 
-@pytest.mark.asyncio
 async def test_get_billing(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -145,7 +134,6 @@ async def test_get_billing(
     assert bill.day == date(2020, 11, 25)
 
 
-@pytest.mark.asyncio
 async def test_get_rtb_creatives(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -162,7 +150,6 @@ async def test_get_rtb_creatives(
     assert len(rtb_creative.previews) == 1
 
 
-@pytest.mark.asyncio
 async def test_get_rtb_conversions(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -187,7 +174,6 @@ async def test_get_rtb_conversions(
     assert conversions[0].conversion_hash == "chash"
 
 
-@pytest.mark.asyncio
 async def test_get_rtb_stats(
     api: AsyncClient,
     api_mock: respx.MockRouter,
@@ -218,7 +204,6 @@ async def test_get_rtb_stats(
     assert stats.advertiser == "xyz"
 
 
-@pytest.mark.asyncio
 async def test_get_summary_stats(
     api: AsyncClient,
     api_mock: respx.MockRouter,

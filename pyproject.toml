@@ -37,11 +37,11 @@ mypy = "^0.960"
 pylint = "^2.13.9"
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
+asyncio_mode = "auto"
 
 [tool.black]
 line-length = 120
-target-version = ['py37', 'py38', 'py39', 'py310']
+target-version = ["py37", "py38", "py39", "py310"]
 
 [tool.isort]
 profile = "black"
@@ -67,6 +67,7 @@ disable = """
     suppressed-message,
     use-implicit-booleaness-not-comparison
 """
+extension-pkg-whitelist="pydantic"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

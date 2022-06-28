@@ -2,7 +2,7 @@
 # pylint: disable=too-many-arguments
 import dataclasses
 import warnings
-from datetime import date
+from datetime import date, timedelta
 from json import JSONDecodeError
 from types import TracebackType
 from typing import (
@@ -32,7 +32,7 @@ from .exceptions import (
 API_BASE_URL = "https://api.panel.rtbhouse.com"
 API_VERSION = "v5"
 
-DEFAULT_TIMEOUT_IN_SECONDS = 60.0
+DEFAULT_TIMEOUT = timedelta(seconds=60.0)
 MAX_CURSOR_ROWS = 10000
 
 
@@ -70,13 +70,13 @@ class Client:
     def __init__(
         self,
         auth: Union[BasicAuth, BasicTokenAuth],
-        timeout_in_seconds: float = DEFAULT_TIMEOUT_IN_SECONDS,
+        timeout: float = DEFAULT_TIMEOUT.seconds,
     ):
         self._httpx_client = httpx.Client(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_build_headers(),
-            timeout=timeout_in_seconds,
+            timeout=timeout,
         )
 
     def close(self) -> None:
@@ -245,13 +245,13 @@ class AsyncClient:
     def __init__(
         self,
         auth: Union[BasicAuth, BasicTokenAuth],
-        timeout_in_seconds: float = DEFAULT_TIMEOUT_IN_SECONDS,
+        timeout: float = DEFAULT_TIMEOUT.seconds,
     ) -> None:
         self._httpx_client = httpx.AsyncClient(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_build_headers(),
-            timeout=timeout_in_seconds,
+            timeout=timeout,
         )
 
     async def close(self) -> None:
@@ -503,8 +503,8 @@ def _build_rtb_stats_params(
     params = {
         "dayFrom": day_from,
         "dayTo": day_to,
-        "groupBy": "-".join(group_by),
-        "metrics": "-".join(metrics),
+        "groupBy": "-".join(gb.value for gb in group_by),
+        "metrics": "-".join(m.value for m in metrics),
     }
     if count_convention is not None:
         params["countConvention"] = count_convention.value

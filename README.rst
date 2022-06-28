@@ -29,38 +29,46 @@ First, create ``config.py`` file with your credentials: ::
 
 Set up virtualenv and install requirements: ::
 
-    $ pip install rtbhouse_sdk tabulate
+    $ pip install rtbhouse_sdk tabulate inflection
 
 
 .. code-block:: python
 
     from datetime import date, timedelta
-    from operator import itemgetter
+    from operator import attrgetter
 
-    from rtbhouse_sdk.reports_api import Conversions, ReportsApiSession
+    from rtbhouse_sdk.client import BasicAuth, Client
+    from rtbhouse_sdk.schema import CountConvention, StatsGroupBy, StatsMetric
     from tabulate import tabulate
+    from inflection import underscore
 
     from config import PASSWORD, USERNAME
 
     if __name__ == "__main__":
-        api = ReportsApiSession(USERNAME, PASSWORD)
+        api = Client(auth=BasicAuth(USERNAME, PASSWORD))
         advertisers = api.get_advertisers()
         day_to = date.today()
         day_from = day_to - timedelta(days=30)
-        group_by = ["day"]
-        metrics = ["impsCount", "clicksCount", "campaignCost", "conversionsCount", "ctr"]
+        group_by = [StatsGroupBy.DAY]
+        metrics = [
+            StatsMetric.IMPS_COUNT,
+            StatsMetric.CLICKS_COUNT,
+            StatsMetric.CAMPAIGN_COST,
+            StatsMetric.CONVERSIONS_COUNT,
+            StatsMetric.CTR
+        ]
         stats = api.get_rtb_stats(
-            advertisers[0]["hash"],
+            advertisers[0].hash,
             day_from,
             day_to,
             group_by,
             metrics,
-            count_convention=Conversions.ATTRIBUTED_POST_CLICK,
+            count_convention=CountConvention.ATTRIBUTED_POST_CLICK,
         )
         columns = group_by + metrics
         data_frame = [
-            [row[c] for c in columns]
-            for row in reversed(sorted(stats, key=itemgetter("day")))
+            [getattr(row, underscore(c.value)) for c in columns]
+            for row in reversed(sorted(stats, key=attrgetter("day")))
         ]
         print(tabulate(data_frame, headers=columns))
 

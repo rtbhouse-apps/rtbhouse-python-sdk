@@ -14,7 +14,7 @@ RUN apt-get update \
 RUN python -m pip install --upgrade --no-cache-dir pip==21.0.1
 
 # Install Poetry
-RUN export POETRY_VERSION=1.1.5 \
+RUN export POETRY_VERSION=1.1.13 \
     && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python \
     && chmod a+x ${POETRY_HOME}/bin/poetry \
     && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry \

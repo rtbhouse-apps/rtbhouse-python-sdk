@@ -1,3 +1,9 @@
+# v9.0.0
+- Drop support for Python2
+- Add asynchronous client
+- Add token authentication method
+- Support type annotations
+
 # v8.1.0
 Dependencies bump
 Support for Python 3.10

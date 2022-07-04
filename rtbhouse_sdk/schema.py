@@ -86,7 +86,6 @@ class StatsMetric(str, Enum):
 class SubcampaignsFilter(str, Enum):
     """Holds possible values of subcampaigns parameter."""
 
-    ALL = "ALL"
     ANY = "ANY"
     ACTIVE = "ACTIVE"
 

@@ -70,13 +70,13 @@ class Client:
     def __init__(
         self,
         auth: Union[BasicAuth, BasicTokenAuth],
-        timeout: float = DEFAULT_TIMEOUT.seconds,
+        timeout: timedelta = DEFAULT_TIMEOUT,
     ):
         self._httpx_client = httpx.Client(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_build_headers(),
-            timeout=timeout,
+            timeout=timeout.total_seconds(),
         )
 
     def close(self) -> None:
@@ -245,13 +245,13 @@ class AsyncClient:
     def __init__(
         self,
         auth: Union[BasicAuth, BasicTokenAuth],
-        timeout: float = DEFAULT_TIMEOUT.seconds,
+        timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         self._httpx_client = httpx.AsyncClient(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
             headers=_build_headers(),
-            timeout=timeout,
+            timeout=timeout.total_seconds(),
         )
 
     async def close(self) -> None:

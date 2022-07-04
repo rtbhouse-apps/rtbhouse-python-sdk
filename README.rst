@@ -29,7 +29,7 @@ First, create ``config.py`` file with your credentials: ::
 
 Set up virtualenv and install requirements: ::
 
-    $ pip install rtbhouse_sdk tabulate inflection
+    $ pip install rtbhouse_sdk tabulate
 
 
 .. code-block:: python
@@ -40,34 +40,33 @@ Set up virtualenv and install requirements: ::
     from rtbhouse_sdk.client import BasicAuth, Client
     from rtbhouse_sdk.schema import CountConvention, StatsGroupBy, StatsMetric
     from tabulate import tabulate
-    from inflection import underscore
 
     from config import PASSWORD, USERNAME
 
     if __name__ == "__main__":
-        api = Client(auth=BasicAuth(USERNAME, PASSWORD))
-        advertisers = api.get_advertisers()
-        day_to = date.today()
-        day_from = day_to - timedelta(days=30)
-        group_by = [StatsGroupBy.DAY]
-        metrics = [
-            StatsMetric.IMPS_COUNT,
-            StatsMetric.CLICKS_COUNT,
-            StatsMetric.CAMPAIGN_COST,
-            StatsMetric.CONVERSIONS_COUNT,
-            StatsMetric.CTR
-        ]
-        stats = api.get_rtb_stats(
-            advertisers[0].hash,
-            day_from,
-            day_to,
-            group_by,
-            metrics,
-            count_convention=CountConvention.ATTRIBUTED_POST_CLICK,
-        )
+        with Client(auth=BasicAuth(USERNAME, PASSWORD)) as api:
+            advertisers = api.get_advertisers()
+            day_to = date.today()
+            day_from = day_to - timedelta(days=30)
+            group_by = [StatsGroupBy.DAY]
+            metrics = [
+                StatsMetric.IMPS_COUNT,
+                StatsMetric.CLICKS_COUNT,
+                StatsMetric.CAMPAIGN_COST,
+                StatsMetric.CONVERSIONS_COUNT,
+                StatsMetric.CTR
+            ]
+            stats = api.get_rtb_stats(
+                advertisers[0].hash,
+                day_from,
+                day_to,
+                group_by,
+                metrics,
+                count_convention=CountConvention.ATTRIBUTED_POST_CLICK,
+            )
         columns = group_by + metrics
         data_frame = [
-            [getattr(row, underscore(c.value)) for c in columns]
+            [getattr(row, c.name.lower()) for c in columns]
             for row in reversed(sorted(stats, key=attrgetter("day")))
         ]
         print(tabulate(data_frame, headers=columns))

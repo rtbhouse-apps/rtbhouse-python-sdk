@@ -206,7 +206,7 @@ class Client:
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
-    ) -> Iterable[schema.Stats]:
+    ) -> List[schema.Stats]:
         params = _build_rtb_stats_params(
             day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
         )

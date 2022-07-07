@@ -57,8 +57,6 @@ max-line-length = "120"
 [tool.pylint.message_control]
 enable = "all"
 disable = """
-    bad-continuation,
-    bad-whitespace,
     duplicate-code,
     invalid-name,
     locally-disabled,

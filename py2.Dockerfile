@@ -1,4 +1,4 @@
-FROM python:2.7.16-stretch
+FROM python:2.7.18-stretch
 
 ARG UNAME=apps
 ARG UID=1000

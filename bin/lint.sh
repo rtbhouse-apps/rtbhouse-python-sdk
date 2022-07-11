@@ -22,4 +22,14 @@ if poetry show | cut -f 1 -d ' ' | grep \^flake8\$ > /dev/null; then
   poetry run flake8 || exit_code=1
 fi
 
+if poetry show | cut -f 1 -d ' ' | grep \^mypy\$ > /dev/null; then
+  echo -e "\nRunning mypy..."
+  poetry run mypy . || exit_code=1
+fi
+
+if poetry show | cut -f 1 -d ' ' | grep \^pylint\$ > /dev/null; then
+  echo -e "\nRunning pylint..."
+  poetry run pylint rtbhouse_sdk tests || exit_code=1
+fi
+
 exit $exit_code

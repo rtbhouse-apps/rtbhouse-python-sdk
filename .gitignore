@@ -12,4 +12,5 @@ config.py
 /results
 .pytest_cache
 .mypy_cache
+.mypy.xml
 .coverage

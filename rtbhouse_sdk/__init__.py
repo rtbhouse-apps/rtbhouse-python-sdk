@@ -1,1 +1,2 @@
-__version__ = "7.0.0"
+"""RTB House Python SDK."""
+__version__ = "9.0.0"

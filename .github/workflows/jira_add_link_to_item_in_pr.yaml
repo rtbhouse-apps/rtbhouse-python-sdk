@@ -9,6 +9,6 @@ on:
 jobs:
   jira_pr_comment:
     name: "Add comment to PR"
-    uses: "rtbhouse-apps/github-workflows-jira/.github/workflows/add_jira_link_to_pr.yaml@v0"
+    uses: "rtbhouse-apps/github-workflows-jira/.github/workflows/add_jira_link_to_pr.yaml@v1"
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}

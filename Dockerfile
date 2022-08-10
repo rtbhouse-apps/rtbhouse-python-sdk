@@ -11,10 +11,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -fr /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade --no-cache-dir pip==21.0.1
+RUN python -m pip install --upgrade --no-cache-dir pip==22.2.2
 
 # Install Poetry
-RUN export POETRY_VERSION=1.1.13 \
+RUN export POETRY_VERSION=1.1.14 \
     && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python \
     && chmod a+x ${POETRY_HOME}/bin/poetry \
     && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry \

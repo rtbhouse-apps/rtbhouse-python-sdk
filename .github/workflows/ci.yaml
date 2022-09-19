@@ -15,7 +15,7 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
         python-version: ["3.7", "3.8", "3.9", "3.10"]
-        poetry-version: ["1.1.14"]
+        poetry-version: ["1.2.1"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
 
@@ -30,14 +30,9 @@ jobs:
 
       - name: Setup poetry ${{ matrix.poetry-version }}
         run: |
-          curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
-          POETRY_VERSION=${{ matrix.poetry-version }} python get-poetry.py -y
+          curl -sSl https://install.python-poetry.org | python - --version ${{ matrix.poetry-version }}
+          ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
-          rm -rf get-poetry.py
-
-      - name: Configure poetry
-        run: |
-          poetry config virtualenvs.in-project true
 
       - name: Set up poetry cache
         uses: actions/cache@v3

@@ -14,18 +14,11 @@ RUN apt-get update \
 RUN python -m pip install --upgrade --no-cache-dir pip==22.2.2
 
 # Install Poetry
-RUN export POETRY_VERSION=1.1.14 \
-    && curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python \
-    && chmod a+x ${POETRY_HOME}/bin/poetry \
-    && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry \
-    && poetry config virtualenvs.create false \
-    && cp -r ~/.config/ /etc/skel/
+RUN curl -sSl https://install.python-poetry.org | python - --version 1.2.1 \
+    && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
 
 RUN groupadd -g $GID $UNAME \
     && useradd -m -u $UID -g $GID -s /bin/bash $UNAME \
-    && mkdir -p $HOMEDIR/.local/lib/python3.8/site-packages \
-    && mkdir -p $HOMEDIR/.local/bin \
-    && chown -R $UID:$GID $HOMEDIR/.local \
     && mkdir -p $WORKDIR \
     && chown $UNAME:$UNAME $WORKDIR
 

@@ -123,8 +123,7 @@ class Client:
 
         while True:
             resp_data = self._get_dict(path, params=request_params)
-            for row in resp_data["rows"]:
-                yield row
+            yield from resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break

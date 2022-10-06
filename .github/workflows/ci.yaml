@@ -34,12 +34,12 @@ jobs:
           ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
-      - name: Set up poetry cache
-        uses: actions/cache@v3
-        with:
-          path: .venv
-          key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: venv-${{ matrix.os }}-${{ matrix.python-version }}-
+      # - name: Set up poetry cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: .venv
+      #     key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+      #     restore-keys: venv-${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |

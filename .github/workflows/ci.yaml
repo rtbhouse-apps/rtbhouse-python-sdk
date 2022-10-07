@@ -37,13 +37,13 @@ jobs:
       - name: Set up poetry cache
         uses: actions/cache@v3
         with:
-          path: .venv
+          path: /home/runner/.cache/pypoetry/virtualenvs
           key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
           restore-keys: venv-${{ matrix.os }}-${{ matrix.python-version }}-
 
       - name: Install dependencies
         run: |
-          poetry install --remove-untracked --no-root
+          poetry install --sync --no-root
 
       - name: Lint
         run: |

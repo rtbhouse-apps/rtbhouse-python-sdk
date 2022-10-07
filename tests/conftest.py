@@ -27,7 +27,7 @@ def day_to() -> date:
 @pytest.fixture(autouse=True)
 def api_mock() -> Iterator[respx.MockRouter]:
     """Keep all httpx calls in a sandbox even when respx was not specifically requested."""
-    with respx.mock(base_url=build_base_url()) as mock:  # pylint: disable=not-context-manager
+    with respx.mock(base_url=build_base_url()) as mock:
         yield mock
 
 

@@ -1,3 +1,6 @@
+# v9.0.1
+- Freeze httpx in version 0.23.0, as 0.23.1 uses bugged httpcore 0.16.x (see https://github.com/encode/httpcore/issues/621)
+
 # v9.0.0
 This version introduces breaking changes. Please see the migration guide below on how to migrate from older versions.
 

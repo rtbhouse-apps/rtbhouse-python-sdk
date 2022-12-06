@@ -1,3 +1,8 @@
+# v10.0.0
+- Dropped support for python 3.7 (which is reaching end-of-life), please use python 3.8.1+
+- Added support for python 3.11
+- Unfrozen httpx, httpcore has been fixed
+
 # v9.0.1
 - Freeze httpx in version 0.23.0, as 0.23.1 uses bugged httpcore 0.16.x (see https://github.com/encode/httpcore/issues/621)
 

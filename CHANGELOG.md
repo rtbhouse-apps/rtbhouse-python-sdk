@@ -1,5 +1,5 @@
 # v10.0.0
-- Dropped support for python 3.7 (which is reaching end-of-life), please use python 3.8.1+
+- Dropped support for python 3.7 (which is reaching end-of-life), please use python 3.8.1+, v9 branch with python 3.7 compatibility will be updated until 2023-06-27
 - Added support for python 3.11
 - Unfrozen httpx, httpcore has been fixed
 

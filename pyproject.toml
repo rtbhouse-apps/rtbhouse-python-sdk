@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rtbhouse-sdk"
-version = "9.0.1"
+version = "10.0.0"
 description = "RTB House SDK"
 authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
 license = "BSD License"
@@ -11,48 +11,52 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
 ]
 repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 
 [tool.poetry.dependencies]
-python = ">=3.7.2, <4.0"
+python = ">=3.8.1, <4.0"
 
-pydantic = "^1.9.0"
-httpx = "0.23.1"
+httpx = "^0.23.1"
 inflection = "^0.5.1"
+pydantic = "^1.9.0"
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
-pytest-cov = "^4.0.0"
-flake8 = "^5.0.0"
+[tool.poetry.group.dev.dependencies]
 black = "^22.3.0"
+flake8 = "^6.0.0"
 isort = "^5.10.1"
-respx = "^0.20.0"
-pytest-asyncio = "^0.20.0"
 mypy = "^0.991"
 pylint = "^2.14.4"
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
+pytest = "^7.1.2"
+pytest-asyncio = "^0.20.0"
+pytest-cov = "^4.0.0"
+respx = "^0.20.0"
 
 [tool.black]
 line-length = 120
-target-version = ["py37", "py38", "py39", "py310"]
+target-version = ["py38", "py39", "py310", "py311"]
+
+[tool.coverage.run]
+branch = true
+omit = ["*/tests/*"]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.isort]
 profile = "black"
 
 [tool.mypy]
-python_version = "3.7"
-ignore_missing_imports = true
+python_version = "3.8"
+no_warn_unused_ignores = true
 strict = true
 
 [tool.pylint.main]
-py-version = "3.7"
+py-version = "3.8"
 load-plugins = """
     pylint.extensions.check_elif,
     pylint.extensions.confusing_elif,
@@ -80,7 +84,11 @@ disable = """
     suppressed-message,
     use-implicit-booleaness-not-comparison
 """
-extension-pkg-whitelist="pydantic"
+extension-pkg-whitelist = "pydantic"
+
+[tool.pytest.ini_options]
+addopts = "--cov=rtbhouse_sdk/ --cov-report=term"
+asyncio_mode = "auto"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

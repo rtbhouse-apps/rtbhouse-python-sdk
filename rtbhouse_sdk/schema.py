@@ -42,12 +42,23 @@ class DeviceType(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
+class DpaPlacement(str, Enum):
+    """Holds possible values of device type parameter."""
+
+    MOBILE = "MOBILE"
+    DESKTOP = "DESKTOP"
+    OTHER = "OTHER"
+    DESKTOP_RIGHT_HAND_COLUMN = "DESKTOP_RIGHT_HAND_COLUMN"
+    UNKNOWN = "UNKNOWN"
+
+
 class StatsGroupBy(str, Enum):
     """Holds possible values of group by parameter."""
 
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
+    QUARTER = "quarter"
     YEAR = "year"
 
     ADVERTISER = "advertiser"
@@ -83,6 +94,13 @@ class StatsMetric(str, Enum):
     USER_REACH = "userReach"
 
 
+class CampaignType(str, Enum):
+    """Holds possible values of subcampaigns parameter."""
+
+    PERFORMANCE = "PERFORMANCE"
+    BRANDING = "BRANDING"
+
+
 class SubcampaignsFilter(str, Enum):
     """Holds possible values of subcampaigns parameter."""
 
@@ -103,6 +121,17 @@ class UserInfo(CamelizedBaseModel):
     permissions: List[str]
 
 
+class AdvertiserListElement(CamelizedBaseModel):
+    hash: str
+    status: str
+    name: str
+    currency: str
+    url: str
+    created_at: datetime
+    features: Dict[str, Any]
+    properties: Dict[str, Any]
+
+
 class Advertiser(CamelizedBaseModel):
     hash: str
     status: str
@@ -110,7 +139,10 @@ class Advertiser(CamelizedBaseModel):
     currency: str
     url: str
     created_at: datetime
+    features: Dict[str, Any]
     properties: Dict[str, Any]
+    feed_identifier: str
+    country: str
 
 
 class Campaign(CamelizedBaseModel):
@@ -119,7 +151,7 @@ class Campaign(CamelizedBaseModel):
     creative_ids: List[int]
     status: str
     updated_at: Optional[datetime]
-    rateCardId: str
+    rate_card_id: str
     is_editable: bool
     advertiser_limits: Optional[Dict[str, Optional[str]]]
 
@@ -156,10 +188,11 @@ class Offer(CamelizedBaseModel):
     identifier: str
     id: str
     images: List[Image]
+    currency: str
     name: str
     price: float
     category_name: str
-    customProperties: Dict[str, str]
+    custom_properties: Dict[str, str]
     updated_at: str
     status: str
 
@@ -188,7 +221,25 @@ class CreativePreview(CamelizedBaseModel):
 
 class Creative(CamelizedBaseModel):
     hash: str
+    status: str
     previews: List[CreativePreview]
+
+
+class ConversionSortBy(str, Enum):
+    """Holds possible values of sortBy parameter."""
+
+    CONVERSION_TYPE = "conversionTime"
+    CONVERSION_VALUE = "conversionValue"
+    COMISSION_VALUE = "commissionValue"
+    LAST_CLICK_TIME = "lastClickTime"
+    LAST_IMPRESSION_TIME = "lastImpressionTime"
+
+
+class ConversionSortDirection(str, Enum):
+    """Holds possible values of sortDirection parameter."""
+
+    DESC = "DESC"
+    ASC = "ASC"
 
 
 class Conversion(CamelizedBaseModel):
@@ -201,6 +252,34 @@ class Conversion(CamelizedBaseModel):
     conversion_time: datetime
     last_click_time: datetime
     last_impression_time: datetime
+
+
+class RateCardBidding(CamelizedBaseModel):
+    visitors: Optional[float]
+    shoppers: Optional[float]
+    buyers: Optional[float]
+
+
+class CategoryRateCardBidding(CamelizedBaseModel):
+    cpc: Optional[float]
+
+
+class CategoryRateCard(CamelizedBaseModel):
+    categoryId: Optional[str]
+    visitors_rate_card: CategoryRateCardBidding
+    shoppers_rate_card: CategoryRateCardBidding
+    buyers_rate_card: CategoryRateCardBidding
+
+
+class InvoiceRateCard(CamelizedBaseModel):
+    id: str
+    cpc: RateCardBidding
+    cpm: RateCardBidding
+    cpa_post_click: RateCardBidding
+    cpa_post_view: RateCardBidding
+    cps_post_click: RateCardBidding
+    cps_post_view: RateCardBidding
+    category_rate_cards: List[CategoryRateCard]
 
 
 class Stats(CamelizedBaseModel):
@@ -239,3 +318,32 @@ class Stats(CamelizedBaseModel):
     viewability: Optional[float]
     user_frequency: Optional[float]
     user_reach: Optional[float]
+
+
+class LastSeenTagsStats(CamelizedBaseModel):
+    last_tag_hour: Optional[str]
+    imps_count: Optional[float]
+    clicks_count: Optional[float]
+
+
+class WinRateStats(CamelizedBaseModel):
+    day: Optional[date]
+    won: Optional[float]
+    total: Optional[float]
+
+
+class TopStatsRankedBy(str, Enum):
+    """Holds possible values of rankedBy parameter."""
+
+    IMPS = "IMPS"
+    CLICKS = "CLICKS"
+
+
+class TopHostsStats(CamelizedBaseModel):
+    host: Optional[str]
+    value: Optional[float]
+
+
+class TopInAppsStats(CamelizedBaseModel):
+    app_name: Optional[str]
+    value: Optional[float]

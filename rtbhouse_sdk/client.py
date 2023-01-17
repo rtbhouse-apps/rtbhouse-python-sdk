@@ -116,26 +116,21 @@ class Client:
         return data
 
     def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
-        request_params = {
-            "limit": MAX_CURSOR_ROWS,
-        }
-        request_params.update(params or {})
-
         while True:
-            resp_data = self._get_dict(path, params=request_params)
+            resp_data = self._get_dict(path, params=params)
             yield from resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
-            request_params["nextCursor"] = next_cursor
+            params["nextCursor"] = next_cursor
 
     def get_user_info(self) -> schema.UserInfo:
         data = self._get_dict("/user/info")
         return schema.UserInfo(**data)
 
-    def get_advertisers(self) -> List[schema.Advertiser]:
+    def get_advertisers(self) -> List[schema.AdvertiserListElement]:
         data = self._get_list_of_dicts("/advertisers")
-        return [schema.Advertiser(**adv) for adv in data]
+        return [schema.AdvertiserListElement(**adv) for adv in data]
 
     def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
         data = self._get_dict(f"/advertisers/{adv_hash}")
@@ -149,12 +144,26 @@ class Client:
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
-    def get_offers(self, adv_hash: str) -> List[schema.Offer]:
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/offers")
+    def get_offers(
+        self,
+        adv_hash: str,
+        name: Optional[str] = None,
+        category_ids: Optional[List[int]] = None,
+        identifiers: Optional[List[str]] = None,
+        limit: Optional[int] = None,
+    ) -> List[schema.Offer]:
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/offers",
+            _extract_not_none_params(
+                {"name": name, "categoryIds": category_ids, "identifiers": identifiers, "limit": limit}
+            ),
+        )
         return [schema.Offer(**offer) for offer in data]
 
-    def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns")
+    def get_advertiser_campaigns(self, adv_hash: str, exclude_archived: Optional[bool] = None) -> List[schema.Campaign]:
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/campaigns", _extract_not_none_params({"excludeArchived": exclude_archived})
+        )
         return [schema.Campaign(**camp) for camp in data]
 
     def get_billing(
@@ -181,18 +190,29 @@ class Client:
         adv_hash: str,
         day_from: date,
         day_to: date,
+        limit: int = MAX_CURSOR_ROWS,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
+        subcampaigns: Optional[List[str]] = None,
+        conversion_identifier: Optional[str] = None,
+        sort_by: Optional[schema.ConversionSortBy] = None,
+        sort_direction: Optional[schema.ConversionSortBy] = None,
     ) -> Iterable[schema.Conversion]:
+        params = _build_rtb_conversions_params(
+            day_from, day_to, limit, convention_type, subcampaigns, conversion_identifier, sort_by, sort_direction
+        )
         rows = self._get_list_of_dicts_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
-            params={
-                "dayFrom": day_from,
-                "dayTo": day_to,
-                "countConvention": convention_type.value,
-            },
+            params=params,
         )
         for conv in rows:
             yield schema.Conversion(**conv)
+
+    def get_invoice_rate_cards(
+        self,
+        adv_hash: str,
+    ) -> List[schema.InvoiceRateCard]:
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rate-cards")
+        return [schema.InvoiceRateCard(**rate_card) for rate_card in data]
 
     def get_rtb_stats(
         self,
@@ -226,6 +246,102 @@ class Client:
         params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
+        return [schema.Stats(**st) for st in data]
+
+    def get_advertisers_summary_stats(
+        self,
+        campaign_type: schema.CampaignType,
+        day_from: date,
+        day_to: date,
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
+        adv_hashes: Optional[List[str]] = None,
+        count_convention: Optional[schema.CountConvention] = None,
+        currency: Optional[str] = None,
+        subcampaigns: Optional[List[str]] = None,
+        user_segments: Optional[List[schema.UserSegment]] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
+        placement: Optional[schema.DpaPlacement] = None,
+    ) -> List[schema.Stats]:
+        params = _build_advertisers_summary_stats_params(
+            campaign_type,
+            day_from,
+            day_to,
+            group_by,
+            metrics,
+            adv_hashes,
+            count_convention,
+            currency,
+            subcampaigns,
+            user_segments,
+            device_types,
+            placement,
+        )
+
+        data = self._get_list_of_dicts("/advertisers-summary-stats", params)
+        return [schema.Stats(**st) for st in data]
+
+    def get_last_seen_tags_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.LastSeenTagsStats]:
+        params = _build_last_seen_tags_stats_params(day_from, day_to, subcampaigns)
+
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/last-seen-tags-stats", params)
+        return [schema.LastSeenTagsStats(**st) for st in data]
+
+    def get_win_rate_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.WinRateStats]:
+        params = _build_win_rate_stats_params(day_from, day_to, subcampaigns)
+
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/win-rate-stats", params)
+        return [schema.WinRateStats(**st) for st in data]
+
+    def get_top_hosts_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        ranked_by: schema.TopStatsRankedBy,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.TopHostsStats]:
+        params = _build_top_stats(day_from, day_to, ranked_by, subcampaigns)
+
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/top-hosts-stats", params)
+        return [schema.TopHostsStats(**st) for st in data]
+
+    def get_top_in_apps_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        ranked_by: schema.TopStatsRankedBy,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.TopInAppsStats]:
+        params = _build_top_stats(day_from, day_to, ranked_by, subcampaigns)
+
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/top-in-apps-stats", params)
+        return [schema.TopInAppsStats(**st) for st in data]
+
+    def get_rtb_deduplication_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[schema.StatsGroupBy],
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.Stats]:
+        params = _build_rtb_deduplication_stats(day_from, day_to, group_by, subcampaigns)
+
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
         return [schema.Stats(**st) for st in data]
 
 
@@ -489,6 +605,34 @@ def _build_rtb_creatives_params(
     return params
 
 
+def _build_rtb_conversions_params(
+    day_from: date,
+    day_to: date,
+    limit: int = MAX_CURSOR_ROWS,
+    convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
+    subcampaigns: Optional[List[str]] = None,
+    conversion_identifier: Optional[str] = None,
+    sort_by: Optional[schema.ConversionSortBy] = None,
+    sort_direction: Optional[schema.ConversionSortBy] = None,
+) -> Dict[str, Any]:
+    params = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "limit": limit,
+        "countConvention": convention_type,
+    }
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if conversion_identifier is not None:
+        params["conversionIdentifier"] = conversion_identifier
+    if sort_by is not None:
+        params["sortBy"] = sort_by
+    if sort_direction is not None:
+        params["sortDirection"] = sort_direction
+
+    return params
+
+
 def _build_rtb_stats_params(
     day_from: date,
     day_to: date,
@@ -537,3 +681,102 @@ def _build_summary_stats_params(
         params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
 
     return params
+
+
+def _build_advertisers_summary_stats_params(
+    campaign_type: schema.CampaignType,
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.StatsGroupBy],
+    metrics: List[schema.StatsMetric],
+    adv_hashes: Optional[List[str]] = None,
+    count_convention: Optional[schema.CountConvention] = None,
+    currency: Optional[str] = None,
+    subcampaigns: Optional[List[str]] = None,
+    user_segments: Optional[List[schema.UserSegment]] = None,
+    device_types: Optional[List[schema.DeviceType]] = None,
+    placement: Optional[schema.DpaPlacement] = None,
+) -> Dict[str, Any]:
+    params = {
+        "campaignType": campaign_type.value,
+        "dayFrom": day_from,
+        "dayTo": day_to,
+        "groupBy": "-".join(gb.value for gb in group_by),
+        "metrics": "-".join(m.value for m in metrics),
+    }
+    if adv_hashes is not None:
+        params["advertisers"] = ",".join(a for a in adv_hashes)
+    if count_convention is not None:
+        params["countConvention"] = count_convention.value
+    if currency is not None:
+        params["currency"] = currency
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+    if user_segments is not None:
+        params["userSegments"] = "-".join(us.value for us in user_segments)
+    if device_types is not None:
+        params["deviceTypes"] = "-".join(dt.value for dt in device_types)
+    if placement is not None:
+        params["placement"] = placement.value
+
+    return params
+
+
+def _build_last_seen_tags_stats_params(
+    day_from: date,
+    day_to: date,
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params: Dict[str, Any] = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+    }
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params
+
+
+def _build_win_rate_stats_params(
+    day_from: date,
+    day_to: date,
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params: Dict[str, Any] = {
+        "dayFrom": day_from,
+        "dayTo": day_to,
+    }
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params
+
+
+def _build_top_stats(
+    day_from: date,
+    day_to: date,
+    ranked_by: schema.TopStatsRankedBy,
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params = {"dayFrom": day_from, "dayTo": day_to, "rankedBy": ranked_by.value}
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params
+
+
+def _build_rtb_deduplication_stats(
+    day_from: date,
+    day_to: date,
+    group_by: List[schema.StatsGroupBy],
+    subcampaigns: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    params = {"dayFrom": day_from, "dayTo": day_to, "groupBy": "-".join(g.value for g in group_by)}
+    if subcampaigns is not None:
+        params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+
+    return params
+
+
+def _extract_not_none_params(params: Dict[str, Any]) -> Dict[str, Any]:
+    return {key: value for key, value in params.items() if value is not None}

@@ -116,13 +116,15 @@ class Client:
         return data
 
     def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> Iterable[Dict[str, Any]]:
+        request_params = dict(params)
+
         while True:
-            resp_data = self._get_dict(path, params=params)
+            resp_data = self._get_dict(path, params=request_params)
             yield from resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
                 break
-            params["nextCursor"] = next_cursor
+            request_params["nextCursor"] = next_cursor
 
     def get_user_info(self) -> schema.UserInfo:
         data = self._get_dict("/user/info")
@@ -406,10 +408,7 @@ class AsyncClient:
         return data
 
     async def _get_list_of_dicts_from_cursor(self, path: str, params: Dict[str, Any]) -> AsyncIterable[Dict[str, Any]]:
-        request_params = {
-            "limit": MAX_CURSOR_ROWS,
-        }
-        request_params.update(params or {})
+        request_params = dict(params)
 
         while True:
             resp_data = await self._get_dict(path, params=request_params)
@@ -424,9 +423,9 @@ class AsyncClient:
         data = await self._get_dict("/user/info")
         return schema.UserInfo(**data)
 
-    async def get_advertisers(self) -> List[schema.Advertiser]:
+    async def get_advertisers(self) -> List[schema.AdvertiserListElement]:
         data = await self._get_list_of_dicts("/advertisers")
-        return [schema.Advertiser(**adv) for adv in data]
+        return [schema.AdvertiserListElement(**adv) for adv in data]
 
     async def get_advertiser(self, adv_hash: str) -> schema.Advertiser:
         data = await self._get_dict(f"/advertisers/{adv_hash}")
@@ -440,12 +439,28 @@ class AsyncClient:
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/offer-categories")
         return [schema.Category(**cat) for cat in data]
 
-    async def get_offers(self, adv_hash: str) -> List[schema.Offer]:
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/offers")
+    async def get_offers(
+        self,
+        adv_hash: str,
+        name: Optional[str] = None,
+        category_ids: Optional[List[int]] = None,
+        identifiers: Optional[List[str]] = None,
+        limit: Optional[int] = None,
+    ) -> List[schema.Offer]:
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/offers",
+            _extract_not_none_params(
+                {"name": name, "categoryIds": category_ids, "identifiers": identifiers, "limit": limit}
+            ),
+        )
         return [schema.Offer(**offer) for offer in data]
 
-    async def get_advertiser_campaigns(self, adv_hash: str) -> List[schema.Campaign]:
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns")
+    async def get_advertiser_campaigns(
+        self, adv_hash: str, exclude_archived: Optional[bool] = None
+    ) -> List[schema.Campaign]:
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/campaigns", _extract_not_none_params({"excludeArchived": exclude_archived})
+        )
         return [schema.Campaign(**camp) for camp in data]
 
     async def get_billing(
@@ -472,18 +487,29 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
+        limit: int = MAX_CURSOR_ROWS,
         convention_type: schema.CountConvention = schema.CountConvention.ATTRIBUTED_POST_CLICK,
+        subcampaigns: Optional[List[str]] = None,
+        conversion_identifier: Optional[str] = None,
+        sort_by: Optional[schema.ConversionSortBy] = None,
+        sort_direction: Optional[schema.ConversionSortBy] = None,
     ) -> AsyncIterable[schema.Conversion]:
+        params = _build_rtb_conversions_params(
+            day_from, day_to, limit, convention_type, subcampaigns, conversion_identifier, sort_by, sort_direction
+        )
         rows = self._get_list_of_dicts_from_cursor(
             f"/advertisers/{adv_hash}/conversions",
-            params={
-                "dayFrom": day_from,
-                "dayTo": day_to,
-                "countConvention": convention_type.value,
-            },
+            params=params,
         )
         async for conv in rows:
             yield schema.Conversion(**conv)
+
+    async def get_invoice_rate_cards(
+        self,
+        adv_hash: str,
+    ) -> List[schema.InvoiceRateCard]:
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rate-cards")
+        return [schema.InvoiceRateCard(**rate_card) for rate_card in data]
 
     async def get_rtb_stats(
         self,
@@ -517,6 +543,102 @@ class AsyncClient:
         params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
+        return [schema.Stats(**st) for st in data]
+
+    async def get_advertisers_summary_stats(
+        self,
+        campaign_type: schema.CampaignType,
+        day_from: date,
+        day_to: date,
+        group_by: List[schema.StatsGroupBy],
+        metrics: List[schema.StatsMetric],
+        adv_hashes: Optional[List[str]] = None,
+        count_convention: Optional[schema.CountConvention] = None,
+        currency: Optional[str] = None,
+        subcampaigns: Optional[List[str]] = None,
+        user_segments: Optional[List[schema.UserSegment]] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
+        placement: Optional[schema.DpaPlacement] = None,
+    ) -> List[schema.Stats]:
+        params = _build_advertisers_summary_stats_params(
+            campaign_type,
+            day_from,
+            day_to,
+            group_by,
+            metrics,
+            adv_hashes,
+            count_convention,
+            currency,
+            subcampaigns,
+            user_segments,
+            device_types,
+            placement,
+        )
+
+        data = await self._get_list_of_dicts("/advertisers-summary-stats", params)
+        return [schema.Stats(**st) for st in data]
+
+    async def get_last_seen_tags_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.LastSeenTagsStats]:
+        params = _build_last_seen_tags_stats_params(day_from, day_to, subcampaigns)
+
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/last-seen-tags-stats", params)
+        return [schema.LastSeenTagsStats(**st) for st in data]
+
+    async def get_win_rate_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.WinRateStats]:
+        params = _build_win_rate_stats_params(day_from, day_to, subcampaigns)
+
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/win-rate-stats", params)
+        return [schema.WinRateStats(**st) for st in data]
+
+    async def get_top_hosts_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        ranked_by: schema.TopStatsRankedBy,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.TopHostsStats]:
+        params = _build_top_stats(day_from, day_to, ranked_by, subcampaigns)
+
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/top-hosts-stats", params)
+        return [schema.TopHostsStats(**st) for st in data]
+
+    async def get_top_in_apps_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        ranked_by: schema.TopStatsRankedBy,
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.TopInAppsStats]:
+        params = _build_top_stats(day_from, day_to, ranked_by, subcampaigns)
+
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/top-in-apps-stats", params)
+        return [schema.TopInAppsStats(**st) for st in data]
+
+    async def get_rtb_deduplication_stats(
+        self,
+        adv_hash: str,
+        day_from: date,
+        day_to: date,
+        group_by: List[schema.StatsGroupBy],
+        subcampaigns: Optional[List[str]] = None,
+    ) -> List[schema.Stats]:
+        params = _build_rtb_deduplication_stats(day_from, day_to, group_by, subcampaigns)
+
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
         return [schema.Stats(**st) for st in data]
 
 

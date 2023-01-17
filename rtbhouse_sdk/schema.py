@@ -287,6 +287,7 @@ class Stats(CamelizedBaseModel):
     day: Optional[date]
     week: Optional[str]
     month: Optional[str]
+    quarter: Optional[str]
     year: Optional[str]
     advertiser: Optional[str]
     subcampaign: Optional[str]

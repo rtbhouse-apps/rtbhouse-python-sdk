@@ -81,6 +81,7 @@ def advertiser_response() -> Dict[str, Any]:
             "version": "2020-10-15T12:58:19.509985+00:00",
             "feedIdentifier": "xyz",
             "country": "US",
+            "features": {"key": "val"},
         }
     }
 
@@ -127,6 +128,7 @@ def offers_response() -> Dict[str, Any]:
                 "fullName": "FN",
                 "identifier": "ident",
                 "id": "id",
+                "currency": "PLN",
                 "images": [
                     {
                         "added": "123",

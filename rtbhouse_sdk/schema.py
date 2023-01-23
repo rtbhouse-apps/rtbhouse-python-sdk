@@ -43,7 +43,7 @@ class DeviceType(str, Enum):
 
 
 class DpaPlacement(str, Enum):
-    """Holds possible values of device type parameter."""
+    """Holds possible values of placement parameter."""
 
     MOBILE = "MOBILE"
     DESKTOP = "DESKTOP"

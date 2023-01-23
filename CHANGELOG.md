@@ -1,3 +1,25 @@
+# v11.0.0
+This version improves SDK compliance with API documentation and also introduces breaking changes.
+
+## Changes
+- `get_advertisers` function returns new type `AdvertiserListElement` thus `get_advertiser` and `get_advertisers` return types are different.
+- `get_offers` function gets new optional parameters: `name`, `category_ids`, `identifiers`, `limit`.
+- `get_advertiser_campaigns` function gets new optional parameter `exclude_archived`.
+- `get_billing` function gets new optional parameters: `limit`, `count_convention`, `subcampaigns`, `conversion_identifier`, `sort_by`, `sort_direction`.
+- `get_summary_stats` function gets new optional parameters: `user_segments`, `device_types`, `placement`.
+- Add new functions: `get_invoice_rate_cards`, `get_advertisers_summary_stats`, `get_last_seen_tags_stats`, `get_win_rate_stats`, `get_top_hosts_stats`, `get_top_in_apps_stats`, `get_rtb_deduplication_stats`.
+- Add `QUARTER` to `StatsGroupBy` schema.
+- Rename `rateCardId` field in `Campaign` schema to `rate_card_id`.
+- Rename `customProperties` field to `custom_properties` and add `currency` field to `Offer` schema.
+- Add new fields to `Advertiser` schema: `features`, `feed_identifier`, `country`.
+- Add `status` field to `Creative` schema.
+- Add `quarter`, `device_types`, `device_type` to `Stats` schema. 
+- Add new schemas: `DpaPlacement`, `CampaignType`, `AdvertiserListElement`, `ConversionSortBy`, `SortDirection`, `RateCardBidding`, `CategoryRateCardBidding`, `CategoryRateCard`, `InvoiceRateCard`, `LastSeenTagsStats`, `WinRateStats`, `TopStatsRankedBy`, `TopHostsStats`, 
+`TopInAppsStats`, `DeduplicationStats`. 
+
+## Fixes
+- Fix `device_types` parameter typing in `get_rtb_stats` function. `Optional[List[schema.DeviceType]]` changed to `Optional[schema.DeviceType]`
+
 # v10.0.0
 - Dropped support for python 3.7 (which is reaching end-of-life), please use python 3.8.1+, v9 branch with python 3.7 compatibility will be updated until 2023-06-27
 - Added support for python 3.11

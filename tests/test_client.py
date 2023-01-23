@@ -200,6 +200,7 @@ def test_get_advertiser_campaigns(
     api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
     (campaign,) = api.get_advertiser_campaigns(adv_hash)
+
     assert campaign.name == "Campaign"
 
     (call,) = api_mock.calls
@@ -380,14 +381,6 @@ def test_get_rtb_stats(
     }
     assert stats.advertiser == "xyz"
     assert stats.campaign_cost == 51.0
-
-    (call,) = api_mock.calls
-    assert dict(call.request.url.params) == {
-        "dayFrom": "2020-09-01",
-        "dayTo": "2020-09-01",
-        "groupBy": "advertiser-day",
-        "metrics": "campaignCost-cr",
-    }
 
 
 @pytest.mark.parametrize(

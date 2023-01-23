@@ -458,7 +458,7 @@ class AsyncClient:
         self, adv_hash: str, exclude_archived: Optional[bool] = None
     ) -> List[schema.Campaign]:
         params = _build_advertiser_campaigns_params(exclude_archived)
-        data = self._get_list_of_dicts(
+        data = await self._get_list_of_dicts(
             f"/advertisers/{adv_hash}/campaigns",
             params=params,
         )
@@ -644,7 +644,7 @@ class AsyncClient:
     ) -> List[schema.Stats]:
         params = _build_rtb_deduplication_stats(day_from, day_to, group_by, subcampaigns)
 
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
+        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
         return [schema.DeduplicationStats(**st) for st in data]
 
 

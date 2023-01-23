@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rtbhouse-sdk"
-version = "10.0.0"
+version = "11.0.0"
 description = "RTB House SDK"
 authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
 license = "BSD License"

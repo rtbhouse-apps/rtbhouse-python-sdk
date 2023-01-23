@@ -750,10 +750,11 @@ def _build_rtb_creatives_params(
 ) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
     if subcampaigns:
-        if isinstance(subcampaigns, schema.SubcampaignsFilter):
-            params["subcampaigns"] = subcampaigns.value
-        elif isinstance(subcampaigns, (list, tuple, set)):
-            params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
+        params["subcampaigns"] = (
+            subcampaigns.value
+            if isinstance(subcampaigns, schema.SubcampaignsFilter)
+            else "-".join(str(sub) for sub in subcampaigns)
+        )
     if active_only is not None:
         params["activeOnly"] = active_only
 

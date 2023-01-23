@@ -360,7 +360,7 @@ def test_get_invoice_rate_cards(
     invoice_rate_cards = api.get_invoice_rate_cards(adv_hash)
 
     (invoice_rate_card,) = invoice_rate_cards
-    invoice_rate_card.id == "xyz"
+    assert invoice_rate_card.id == "xyz"
 
 
 def test_get_rtb_stats(

@@ -235,7 +235,7 @@ class ConversionSortBy(str, Enum):
     LAST_IMPRESSION_TIME = "lastImpressionTime"
 
 
-class ConversionSortDirection(str, Enum):
+class SortDirection(str, Enum):
     """Holds possible values of sortDirection parameter."""
 
     DESC = "DESC"
@@ -293,12 +293,13 @@ class Stats(CamelizedBaseModel):
     subcampaign: Optional[str]
     subcampaign_hash: Optional[str]
     user_segment: Optional[str]
-    device_type: Optional[str]
+    device_types: Optional[str]
     creative: Optional[str]
     category: Optional[str]
     category_name: Optional[str]
     country: Optional[str]
     placement: Optional[str]
+    device_type: Optional[str]
 
     # from Metric
     campaign_cost: Optional[float]
@@ -348,3 +349,25 @@ class TopHostsStats(CamelizedBaseModel):
 class TopInAppsStats(CamelizedBaseModel):
     app_name: Optional[str]
     value: Optional[float]
+
+class DeduplicationStats(CamelizedBaseModel):
+    # from GroupBy
+    day: Optional[date]
+    week: Optional[str]
+    month: Optional[str]
+    quarter: Optional[str]
+    year: Optional[str]
+    subcampaign_hash: Optional[str]
+    user_segment: Optional[str]
+
+    # from Metric
+    imps_count: Optional[int]
+    clicks_count: Optional[int]
+
+    # from Deduplication Stats
+    attributed_conversions_count: Optional[float]
+    all_conversions_count: Optional[float]
+    count_decuplication_rate: Optional[float]
+    attributed_conversions_value: Optional[float]
+    all_conversions_value: Optional[float]
+    value_deduplication_rate: Optional[float]

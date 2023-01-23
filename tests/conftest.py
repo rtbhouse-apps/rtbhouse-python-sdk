@@ -122,6 +122,7 @@ def offer_categories_response() -> Dict[str, Any]:
 @pytest.fixture
 def offers_response() -> Dict[str, Any]:
     return {
+        "status": "ok",
         "data": [
             {
                 "url": "url",
@@ -145,7 +146,7 @@ def offers_response() -> Dict[str, Any]:
                 "updatedAt": "2020-10-15T22:26:49.511000+00:00",
                 "status": "ACTIVE",
             }
-        ]
+        ],
     }
 
 

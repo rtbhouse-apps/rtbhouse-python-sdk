@@ -1,7 +1,7 @@
 """Tests for client."""
 # pylint: disable=too-many-arguments
 from datetime import date
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Dict, Iterator, List, Optional
 
 import pytest
 import respx
@@ -10,11 +10,16 @@ from httpx import Response
 from rtbhouse_sdk.client import API_VERSION, BasicAuth, Client
 from rtbhouse_sdk.exceptions import ApiRateLimitException, ApiVersionMismatchException
 from rtbhouse_sdk.schema import (
+    CampaignType,
+    ConversionSortBy,
     CountConvention,
     DeviceType,
+    DpaPlacement,
+    SortDirection,
     StatsGroupBy,
     StatsMetric,
     SubcampaignsFilter,
+    TopStatsRankedBy,
     UserSegment,
     to_camel_case,
 )
@@ -157,6 +162,34 @@ def test_get_offers(
     assert offer.full_name == "FN"
     assert offer.images[0].width == "700"
 
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {}
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("name", "abc", "abc"),
+        (
+            "category_ids",
+            [1, 2],
+            "1,2",
+        ),
+        ("identifiers", ["def", "ghi"], "def,ghi"),
+        ("limit", 100, "100"),
+    ],
+)
+def test_get_offers_with_extra_params(
+    api: Client, api_mock: respx.MockRouter, adv_hash: str, param: str, value: Any, query_value: Any
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/offers").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_offers(adv_hash=adv_hash, **extra_params)
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
 
 def test_get_advertiser_campaigns(
     api: Client,
@@ -167,8 +200,33 @@ def test_get_advertiser_campaigns(
     api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
     (campaign,) = api.get_advertiser_campaigns(adv_hash)
-
     assert campaign.name == "Campaign"
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {}
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("exclude_archived", True, "true"),
+    ],
+)
+def test_get_advertiser_campaigns_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    param: str,
+    value: Any,
+    query_value: Any,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_advertiser_campaigns(adv_hash=adv_hash, **extra_params)
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
 
 
 def test_get_billing(
@@ -203,32 +261,19 @@ def test_get_rtb_creatives(
     assert rtb_creative.hash == "hash"
     assert len(rtb_creative.previews) == 1
 
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {}
+
 
 @pytest.mark.parametrize(
-    "subcampaigns,active_only,params",
+    "param,value,query_value",
     [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+        ("subcampaigns", SubcampaignsFilter.ACTIVE, "ACTIVE"),
         (
-            ["abc", "def"],
+            "active_only",
             True,
-            {
-                "subcampaigns": "abc-def",
-                "activeOnly": "true",
-            },
-        ),
-        (
-            SubcampaignsFilter.ACTIVE,
-            False,
-            {
-                "subcampaigns": "ACTIVE",
-                "activeOnly": "false",
-            },
-        ),
-        (
-            SubcampaignsFilter.ANY,
-            None,
-            {
-                "subcampaigns": "ANY",
-            },
+            "true",
         ),
     ],
 )
@@ -236,16 +281,17 @@ def test_get_rtb_creatives_with_extra_params(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    subcampaigns: SubcampaignsFilter,
-    active_only: Optional[bool],
-    params: Dict[str, str],
+    param: str,
+    value: Any,
+    query_value: Any,
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json={"status": "ok", "data": []})
 
-    api.get_rtb_creatives(adv_hash, subcampaigns=subcampaigns, active_only=active_only)
+    extra_params = {param: value}
+    api.get_rtb_creatives(adv_hash=adv_hash, **extra_params)
 
     (call,) = api_mock.calls
-    assert dict(call.request.url.params) == params
+    assert call.request.url.params[to_camel_case(param)] == query_value
 
 
 def test_get_rtb_conversions(
@@ -271,6 +317,38 @@ def test_get_rtb_conversions(
     assert set(call2.request.url.params.keys()) == {"dayFrom", "dayTo", "countConvention", "limit", "nextCursor"}
     assert len(conversions) == 6
     assert conversions[0].conversion_hash == "chash"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("limit", 100, "100"),
+        ("count_convention", CountConvention.ALL_CONVERSIONS, "ALL_CONVERSIONS"),
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+        ("conversion_identifier", "ghi", "ghi"),
+        ("sort_by", ConversionSortBy.COMISSION_VALUE, "commissionValue"),
+        ("sort_direction", SortDirection.DESC, "DESC"),
+    ],
+)
+def test_get_rtb_conversions_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: Any,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/conversions").mock(
+        side_effect=[Response(200, json={"status": "ok", "data": {"rows": [], "nextCursor": None}})]
+    )
+
+    extra_params = {param: value}
+    list(api.get_rtb_conversions(adv_hash=adv_hash, day_from=day_from, day_to=day_to, **extra_params))
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
 
 
 def test_get_rtb_stats(
@@ -303,6 +381,14 @@ def test_get_rtb_stats(
     assert stats.advertiser == "xyz"
     assert stats.campaign_cost == 51.0
 
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {
+        "dayFrom": "2020-09-01",
+        "dayTo": "2020-09-01",
+        "groupBy": "advertiser-day",
+        "metrics": "campaignCost-cr",
+    }
+
 
 @pytest.mark.parametrize(
     "param,value,query_value",
@@ -310,7 +396,7 @@ def test_get_rtb_stats(
         ("count_convention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
         ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
         ("user_segments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
-        ("device_types", [DeviceType.PC, DeviceType.MOBILE], "PC-MOBILE"),
+        ("device_types", DeviceType.PC, "PC"),
     ],
 )
 def test_get_rtb_stats_extra_params(
@@ -329,10 +415,9 @@ def test_get_rtb_stats_extra_params(
     )
 
     extra_params = {param: value}
-    list(
-        api.get_rtb_stats(
-            adv_hash, day_from, day_to, [StatsGroupBy.ADVERTISER], [StatsMetric.CAMPAIGN_COST], **extra_params
-        )
+
+    api.get_rtb_stats(
+        adv_hash, day_from, day_to, [StatsGroupBy.ADVERTISER], [StatsMetric.CAMPAIGN_COST], **extra_params
     )
 
     (call,) = api_mock.calls
@@ -374,6 +459,9 @@ def test_get_summary_stats(
     [
         ("count_convention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
         ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+        ("user_segments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
+        ("device_types", DeviceType.PC, "PC"),
+        ("placement", DpaPlacement.DESKTOP, "DESKTOP"),
     ],
 )
 def test_get_summary_stats_extra_params(
@@ -398,6 +486,363 @@ def test_get_summary_stats_extra_params(
         day_to,
         [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
         [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_advertisers_summary_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers-summary-stats").respond(
+        200,
+        json={
+            "status": "ok",
+            "data": [{"day": "2022-01-01", "advertiser": "xyz", "campaignCost": 108.0, "clickCount": 231}],
+        },
+    )
+
+    (stats,) = api.get_advertisers_summary_stats(
+        CampaignType.PERFORMANCE,
+        day_from,
+        day_to,
+        [StatsGroupBy.DAY, StatsGroupBy.ADVERTISER],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CLICKS_COUNT],
+    )
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {
+        "campaignType": "PERFORMANCE",
+        "dayFrom": "2020-09-01",
+        "dayTo": "2020-09-01",
+        "groupBy": "day-advertiser",
+        "metrics": "campaignCost-clicksCount",
+    }
+    assert stats.advertiser == "xyz"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("advertisers", ["advhash1", "advhash2"], "advhash1,advhash2"),
+        ("count_convention", CountConvention.ATTRIBUTED_POST_CLICK, "ATTRIBUTED"),
+        ("currency", "USD", "USD"),
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+        ("user_segments", [UserSegment.BUYERS, UserSegment.SHOPPERS], "BUYERS-SHOPPERS"),
+        ("device_types", DeviceType.PC, "PC"),
+        ("placement", DpaPlacement.DESKTOP, "DESKTOP"),
+    ],
+)
+def test_get_advertisers_summary_stats_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers-summary-stats").respond(
+        200,
+        json={"status": "ok", "data": []},
+    )
+    extra_params = {param: value}
+    api.get_advertisers_summary_stats(
+        CampaignType.PERFORMANCE,
+        day_from,
+        day_to,
+        [StatsGroupBy.DAY, StatsGroupBy.ADVERTISER],
+        [StatsMetric.CAMPAIGN_COST, StatsMetric.CLICKS_COUNT],
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_last_seen_tags_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/last-seen-tags-stats").respond(
+        200,
+        json={"status": "ok", "data": [{"lastTagHour": "123-456", "impsCount": 123, "clicksCount": 456}]},
+    )
+
+    (stats,) = api.get_last_seen_tags_stats(
+        adv_hash,
+        day_from,
+        day_to,
+    )
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {"dayFrom": "2020-09-01", "dayTo": "2020-09-01"}
+    assert stats.last_tag_hour == "123-456"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_last_seen_tags_stats_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/last-seen-tags-stats").respond(
+        200,
+        json={"status": "ok", "data": []},
+    )
+
+    extra_params = {param: value}
+    api.get_last_seen_tags_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_win_rate_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/win-rate-stats").respond(
+        200,
+        json={"status": "ok", "data": [{"day": "2020-09-01", "won": 123, "total": 12345}]},
+    )
+
+    (stats,) = api.get_win_rate_stats(
+        adv_hash,
+        day_from,
+        day_to,
+    )
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {"dayFrom": "2020-09-01", "dayTo": "2020-09-01"}
+    assert str(stats.day) == "2020-09-01"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_win_rate_stats_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/win-rate-stats").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_win_rate_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_top_hosts_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/top-hosts-stats").respond(
+        200,
+        json={"status": "ok", "data": [{"host": "xyz", "value": 123}]},
+    )
+
+    (stats,) = api.get_top_hosts_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        TopStatsRankedBy.CLICKS,
+    )
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {"dayFrom": "2020-09-01", "dayTo": "2020-09-01", "rankedBy": "CLICKS"}
+    assert stats.host == "xyz"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_top_hosts_stats_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/top-hosts-stats").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_top_hosts_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        TopStatsRankedBy.CLICKS,
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_top_in_apps_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/top-in-apps-stats").respond(
+        200,
+        json={"status": "ok", "data": [{"appName": "name", "value": 123}]},
+    )
+
+    (stats,) = api.get_top_in_apps_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        TopStatsRankedBy.CLICKS,
+    )
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {"dayFrom": "2020-09-01", "dayTo": "2020-09-01", "rankedBy": "CLICKS"}
+    assert stats.app_name == "name"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_top_in_apps_stats_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/top-in-apps-stats").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_top_in_apps_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        TopStatsRankedBy.CLICKS,
+        **extra_params,
+    )
+
+    (call,) = api_mock.calls
+    assert call.request.url.params[to_camel_case(param)] == query_value
+
+
+def test_rtb_deduplication_stats_stats(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/rtb-deduplication-stats").respond(
+        200,
+        json={
+            "status": "ok",
+            "data": [
+                {
+                    "quarter": "01 (2023)",
+                    "day": "2020-09-01",
+                    "clicksCount": 111,
+                    "impsCount": 222,
+                    "attributedConversionsCount": 333,
+                    "allConversionsCount": 444,
+                    "countDecuplicationRate": 555.55,
+                    "attributedConversionsValue": 666.66,
+                    "allConversionsValue": 777.7,
+                    "valueDeduplicationRate": 0.888,
+                }
+            ],
+        },
+    )
+
+    (stats,) = api.get_rtb_deduplication_stats(adv_hash, day_from, day_to, [StatsGroupBy.QUARTER, StatsGroupBy.DAY])
+
+    (call,) = api_mock.calls
+    assert dict(call.request.url.params) == {"dayFrom": "2020-09-01", "dayTo": "2020-09-01", "groupBy": "quarter-day"}
+    assert str(stats.day) == "2020-09-01"
+
+
+@pytest.mark.parametrize(
+    "param,value,query_value",
+    [
+        ("subcampaigns", ["hash1", "hash2"], "hash1-hash2"),
+    ],
+)
+def test_rtb_deduplication_stats_with_extra_params(
+    api: Client,
+    api_mock: respx.MockRouter,
+    adv_hash: str,
+    day_from: date,
+    day_to: date,
+    param: str,
+    value: Any,
+    query_value: str,
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/rtb-deduplication-stats").respond(200, json={"status": "ok", "data": []})
+
+    extra_params = {param: value}
+    api.get_rtb_deduplication_stats(
+        adv_hash,
+        day_from,
+        day_to,
+        [StatsGroupBy.DAY],
         **extra_params,
     )
 

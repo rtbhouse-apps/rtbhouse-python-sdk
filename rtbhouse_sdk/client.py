@@ -457,8 +457,11 @@ class AsyncClient:
     async def get_advertiser_campaigns(
         self, adv_hash: str, exclude_archived: Optional[bool] = None
     ) -> List[schema.Campaign]:
-        params = _build_advertiser_campaigns_params({"excludeArchived": exclude_archived})
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns", params=params)
+        params = _build_advertiser_campaigns_params(exclude_archived)
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/campaigns",
+            params=params,
+        )
         return [schema.Campaign(**camp) for camp in data]
 
     async def get_billing(
@@ -485,12 +488,12 @@ class AsyncClient:
         adv_hash: str,
         day_from: date,
         day_to: date,
-        limit: Optional[int],
-        count_convention: Optional[schema.CountConvention],
+        limit: Optional[int] = MAX_CURSOR_ROWS,
+        count_convention: Optional[schema.CountConvention] = schema.CountConvention.ATTRIBUTED_POST_CLICK,
         subcampaigns: Optional[List[str]] = None,
         conversion_identifier: Optional[str] = None,
         sort_by: Optional[schema.ConversionSortBy] = None,
-        sort_direction: Optional[schema.ConversionSortBy] = None,
+        sort_direction: Optional[schema.SortDirection] = None,
     ) -> AsyncIterable[schema.Conversion]:
         params = _build_rtb_conversions_params(
             day_from, day_to, limit, count_convention, subcampaigns, conversion_identifier, sort_by, sort_direction
@@ -538,7 +541,7 @@ class AsyncClient:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[schema.DeviceType] = None,
+        device_types: Optional[List[schema.DeviceType]] = None,
         placement: Optional[schema.DpaPlacement] = None,
     ) -> List[schema.Stats]:
         params = _build_summary_stats_params(
@@ -555,7 +558,7 @@ class AsyncClient:
         day_to: date,
         group_by: List[schema.StatsGroupBy],
         metrics: List[schema.StatsMetric],
-        adv_hashes: Optional[List[str]] = None,
+        advertisers: Optional[List[str]] = None,
         count_convention: Optional[schema.CountConvention] = None,
         currency: Optional[str] = None,
         subcampaigns: Optional[List[str]] = None,
@@ -569,7 +572,7 @@ class AsyncClient:
             day_to,
             group_by,
             metrics,
-            adv_hashes,
+            advertisers,
             count_convention,
             currency,
             subcampaigns,
@@ -641,8 +644,8 @@ class AsyncClient:
     ) -> List[schema.Stats]:
         params = _build_rtb_deduplication_stats(day_from, day_to, group_by, subcampaigns)
 
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
-        return [schema.Stats(**st) for st in data]
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
+        return [schema.DeduplicationStats(**st) for st in data]
 
 
 class _HttpxBasicTokenAuth(httpx.Auth):

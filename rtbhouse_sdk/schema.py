@@ -350,6 +350,7 @@ class TopInAppsStats(CamelizedBaseModel):
     app_name: Optional[str]
     value: Optional[float]
 
+
 class DeduplicationStats(CamelizedBaseModel):
     # from GroupBy
     day: Optional[date]

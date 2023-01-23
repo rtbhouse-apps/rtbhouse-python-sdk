@@ -241,3 +241,31 @@ def conversions_without_next_cursor_response(conversions_with_next_cursor_respon
     data = copy.deepcopy(conversions_with_next_cursor_response)
     data["data"]["nextCursor"] = None
     return data
+
+
+@pytest.fixture
+def advertiser_invoice_rate_cards_response() -> Dict[str, Any]:
+    return {
+        "status": "ok",
+        "data": [
+            {
+                "id": "xyz",
+                "version": "2020-01-02T21:35:06.279000+00:00",
+                "cpc": {"visitors": 1.0, "shoppers": 2.0, "buyers": 3.0},
+                "cpm": {"visitors": 4.0, "shoppers": 5.0, "buyers": 6.0},
+                "cpaPostClick": {"visitors": 7.0, "shoppers": 8.0, "buyers": 9.0},
+                "cpaPostView": {"visitors": 10.0, "shoppers": 11.0, "buyers": 12.0},
+                "cpsPostClick": {"visitors": 13.0, "shoppers": 14.0, "buyers": 15.0},
+                "cpsPostView": {"visitors": 16.0, "shoppers": 17.0, "buyers": 18.0},
+                "categoryRateCards": [
+                    {
+                        "categoryId": "123",
+                        "visitorsRateCard": {"cpc": 19.0},
+                        "shoppersRateCard": {"cpc": 20.0},
+                        "buyersRateCard": {"cpc": 21.0},
+                        "newUsersRateCard": {"cpc": 22.0},
+                    }
+                ],
+            }
+        ],
+    }

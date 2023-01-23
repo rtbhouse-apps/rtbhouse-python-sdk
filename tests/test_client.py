@@ -352,6 +352,17 @@ def test_get_rtb_conversions_with_extra_params(
     assert call.request.url.params[to_camel_case(param)] == query_value
 
 
+def test_get_invoice_rate_cards(
+    api: Client, api_mock: respx.MockRouter, adv_hash: str, advertiser_invoice_rate_cards_response: Dict[str, Any]
+) -> None:
+    api_mock.get(f"/advertisers/{adv_hash}/rate-cards").respond(200, json=advertiser_invoice_rate_cards_response)
+
+    invoice_rate_cards = api.get_invoice_rate_cards(adv_hash)
+
+    (invoice_rate_card,) = invoice_rate_cards
+    invoice_rate_card.id == "xyz"
+
+
 def test_get_rtb_stats(
     api: Client,
     api_mock: respx.MockRouter,

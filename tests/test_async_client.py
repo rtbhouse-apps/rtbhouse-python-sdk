@@ -446,7 +446,7 @@ async def test_advertisers_summary_stats(
     day_from: date,
     day_to: date,
 ) -> None:
-    api_mock.get(f"/advertisers-summary-stats").respond(
+    api_mock.get("/advertisers-summary-stats").respond(
         200,
         json={
             "status": "ok",
@@ -494,7 +494,7 @@ async def test_get_advertisers_summary_stats_extra_params(
     value: Any,
     query_value: str,
 ) -> None:
-    api_mock.get(f"/advertisers-summary-stats").respond(
+    api_mock.get("/advertisers-summary-stats").respond(
         200,
         json={"status": "ok", "data": []},
     )

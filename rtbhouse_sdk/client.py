@@ -243,7 +243,7 @@ class Client:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[List[schema.DeviceType]] = None,
+        device_types: Optional[schema.DeviceType] = None,
         placement: Optional[schema.DpaPlacement] = None,
     ) -> List[schema.Stats]:
         params = _build_summary_stats_params(
@@ -265,7 +265,7 @@ class Client:
         currency: Optional[str] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[List[schema.DeviceType]] = None,
+        device_types: Optional[schema.DeviceType] = None,
         placement: Optional[schema.DpaPlacement] = None,
     ) -> List[schema.Stats]:
         params = _build_advertisers_summary_stats_params(
@@ -541,7 +541,7 @@ class AsyncClient:
         count_convention: Optional[schema.CountConvention] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[List[schema.DeviceType]] = None,
+        device_types: Optional[schema.DeviceType] = None,
         placement: Optional[schema.DpaPlacement] = None,
     ) -> List[schema.Stats]:
         params = _build_summary_stats_params(
@@ -563,7 +563,7 @@ class AsyncClient:
         currency: Optional[str] = None,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
-        device_types: Optional[List[schema.DeviceType]] = None,
+        device_types: Optional[schema.DeviceType] = None,
         placement: Optional[schema.DpaPlacement] = None,
     ) -> List[schema.Stats]:
         params = _build_advertisers_summary_stats_params(
@@ -641,7 +641,7 @@ class AsyncClient:
         day_to: date,
         group_by: List[schema.StatsGroupBy],
         subcampaigns: Optional[List[str]] = None,
-    ) -> List[schema.Stats]:
+    ) -> List[schema.DeduplicationStats]:
         params = _build_rtb_deduplication_stats(day_from, day_to, group_by, subcampaigns)
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-deduplication-stats", params)
@@ -736,7 +736,7 @@ def _build_get_offers_params(
     return params
 
 
-def _build_advertiser_campaigns_params(exclude_archived: bool) -> Dict[str, Any]:
+def _build_advertiser_campaigns_params(exclude_archived: Optional[bool]) -> Dict[str, Any]:
     params: Dict[str, Any] = {}
     if exclude_archived is not None:
         params["excludeArchived"] = exclude_archived
@@ -768,7 +768,7 @@ def _build_rtb_conversions_params(
     subcampaigns: Optional[List[str]] = None,
     conversion_identifier: Optional[str] = None,
     sort_by: Optional[schema.ConversionSortBy] = None,
-    sort_direction: Optional[schema.ConversionSortBy] = None,
+    sort_direction: Optional[schema.SortDirection] = None,
 ) -> Dict[str, Any]:
     params = {
         "dayFrom": day_from,
@@ -860,7 +860,7 @@ def _build_advertisers_summary_stats_params(
     currency: Optional[str] = None,
     subcampaigns: Optional[List[str]] = None,
     user_segments: Optional[List[schema.UserSegment]] = None,
-    device_types: Optional[List[schema.DeviceType]] = None,
+    device_types: Optional[schema.DeviceType] = None,
     placement: Optional[schema.DpaPlacement] = None,
 ) -> Dict[str, Any]:
     params = {

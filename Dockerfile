@@ -1,4 +1,4 @@
-FROM python:3.10.8-slim-buster
+FROM python:3.11.1-slim-buster
 
 ARG UNAME=apps
 ARG UID=1000
@@ -11,10 +11,10 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -fr /var/lib/apt/lists/*
 
-RUN python -m pip install --upgrade --no-cache-dir pip==22.2.2
+RUN python -m pip install --upgrade --no-cache-dir pip==23.0
 
 # Install Poetry
-RUN curl -sSl https://install.python-poetry.org | python - --version 1.2.1 \
+RUN curl -sSl https://install.python-poetry.org | python - --version 1.3.2 \
     && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
 
 RUN groupadd -g $GID $UNAME \
@@ -26,6 +26,6 @@ USER $UNAME
 WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
-RUN poetry install --no-root
+RUN poetry install --no-ansi --no-interaction --no-root
 CMD ["poetry", "run", "python", "-m", "pytest","--color=no", \
     "--cov-report=term-missing", "--cov=rtbhouse_sdk", "tests/"]

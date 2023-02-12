@@ -23,14 +23,14 @@ trio = ["trio (>=0.16,<0.22)"]
 
 [[package]]
 name = "astroid"
-version = "2.13.3"
+version = "2.14.2"
 description = "An abstract syntax tree for Python with inference support."
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "astroid-2.13.3-py3-none-any.whl", hash = "sha256:14c1603c41cc61aae731cad1884a073c4645e26f126d13ac8346113c95577f3b"},
-    {file = "astroid-2.13.3.tar.gz", hash = "sha256:6afc22718a48a689ca24a97981ad377ba7fb78c133f40335dfd16772f29bcfb1"},
+    {file = "astroid-2.14.2-py3-none-any.whl", hash = "sha256:0e0e3709d64fbffd3037e4ff403580550f14471fd3eaae9fa11cc9a5c7901153"},
+    {file = "astroid-2.14.2.tar.gz", hash = "sha256:a3cf9f02c53dd259144a7e8f3ccd75d67c9a8c716ef183e0c1f291bc5d7bb3cf"},
 ]
 
 [package.dependencies]
@@ -486,14 +486,14 @@ reports = ["lxml"]
 
 [[package]]
 name = "mypy-extensions"
-version = "0.4.3"
-description = "Experimental type system extensions for programs checked with the mypy typechecker."
+version = "1.0.0"
+description = "Type system extensions for programs checked with the mypy type checker."
 category = "dev"
 optional = false
-python-versions = "*"
+python-versions = ">=3.5"
 files = [
-    {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
-    {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+    {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
+    {file = "mypy_extensions-1.0.0.tar.gz", hash = "sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782"},
 ]
 
 [[package]]
@@ -522,19 +522,19 @@ files = [
 
 [[package]]
 name = "platformdirs"
-version = "2.6.2"
+version = "3.0.0"
 description = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
 category = "dev"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "platformdirs-2.6.2-py3-none-any.whl", hash = "sha256:83c8f6d04389165de7c9b6f0c682439697887bca0aa2f1c87ef1826be3584490"},
-    {file = "platformdirs-2.6.2.tar.gz", hash = "sha256:e1fea1fe471b9ff8332e229df3cb7de4f53eeea4998d3b6bfff542115e998bd2"},
+    {file = "platformdirs-3.0.0-py3-none-any.whl", hash = "sha256:b1d5eb14f221506f50d6604a561f4c5786d9e80355219694a1b244bcd96f4567"},
+    {file = "platformdirs-3.0.0.tar.gz", hash = "sha256:8a1228abb1ef82d788f74139988b137e78692984ec7b08eaa6c65f1723af28f9"},
 ]
 
 [package.extras]
-docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=5.3)", "sphinx-autodoc-typehints (>=1.19.5)"]
-test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
+docs = ["furo (>=2022.12.7)", "proselint (>=0.13)", "sphinx (>=6.1.3)", "sphinx-autodoc-typehints (>=1.22,!=1.23.4)"]
+test = ["appdirs (==1.4.4)", "covdefaults (>=2.2.2)", "pytest (>=7.2.1)", "pytest-cov (>=4)", "pytest-mock (>=3.10)"]
 
 [[package]]
 name = "pluggy"
@@ -631,18 +631,18 @@ files = [
 
 [[package]]
 name = "pylint"
-version = "2.15.10"
+version = "2.16.1"
 description = "python code static checker"
 category = "dev"
 optional = false
 python-versions = ">=3.7.2"
 files = [
-    {file = "pylint-2.15.10-py3-none-any.whl", hash = "sha256:9df0d07e8948a1c3ffa3b6e2d7e6e63d9fb457c5da5b961ed63106594780cc7e"},
-    {file = "pylint-2.15.10.tar.gz", hash = "sha256:b3dc5ef7d33858f297ac0d06cc73862f01e4f2e74025ec3eff347ce0bc60baf5"},
+    {file = "pylint-2.16.1-py3-none-any.whl", hash = "sha256:bad9d7c36037f6043a1e848a43004dfd5ea5ceb05815d713ba56ca4503a9fe37"},
+    {file = "pylint-2.16.1.tar.gz", hash = "sha256:ffe7fa536bb38ba35006a7c8a6d2efbfdd3d95bbf21199cad31f76b1c50aaf30"},
 ]
 
 [package.dependencies]
-astroid = ">=2.12.13,<=2.14.0-dev0"
+astroid = ">=2.14.1,<=2.16.0-dev0"
 colorama = {version = ">=0.4.5", markers = "sys_platform == \"win32\""}
 dill = [
     {version = ">=0.2", markers = "python_version < \"3.11\""},

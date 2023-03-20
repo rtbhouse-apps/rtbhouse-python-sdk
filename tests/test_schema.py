@@ -1,9 +1,8 @@
 """Tests for schema and it's utilities."""
 from itertools import chain
 
-from inflection import underscore
-
 from rtbhouse_sdk.schema import Stats, StatsGroupBy, StatsMetric
+from rtbhouse_sdk.utils import underscore
 
 
 def test_stats_schema_is_up_to_date() -> None:

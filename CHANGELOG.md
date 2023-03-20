@@ -1,3 +1,7 @@
+# v10.1.0
+- Removed [inflection](https://pypi.org/project/inflection/) from the project dependencies
+- Added `camelize` and `underscore` helper functions
+
 # v10.0.0
 - Dropped support for python 3.7 (which is reaching end-of-life), please use python 3.8.1+, v9 branch with python 3.7 compatibility will be updated until 2023-06-27
 - Added support for python 3.11

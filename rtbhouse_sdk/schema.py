@@ -5,8 +5,9 @@ from enum import Enum
 from functools import partial
 from typing import Any, Dict, List, Optional
 
-from inflection import camelize
 from pydantic import BaseModel
+
+from .utils import camelize
 
 to_camel_case = partial(camelize, uppercase_first_letter=False)
 

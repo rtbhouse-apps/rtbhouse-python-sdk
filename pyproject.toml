@@ -53,6 +53,15 @@ profile = "black"
 python_version = "3.8"
 no_warn_unused_ignores = true
 strict = true
+plugins = [
+  "pydantic.mypy"
+]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = false
+warn_untyped_fields = true
 
 [tool.pylint.main]
 py-version = "3.8"

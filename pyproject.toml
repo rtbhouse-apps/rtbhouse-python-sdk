@@ -21,7 +21,7 @@ repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 [tool.poetry.dependencies]
 python = ">=3.8.1, <4.0"
 
-httpx = "^0.23.1"
+httpx = "^0.24.0"
 pydantic = "^1.9.0"
 
 [tool.poetry.group.dev.dependencies]

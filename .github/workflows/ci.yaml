@@ -64,10 +64,10 @@ jobs:
   
   release-package:
     name: "Release package"
-    runs-on: "self-hosted"
+    runs-on: "ubuntu-20.04"
     needs: ["ci"]
     # if: "contains('refs/heads/master refs/heads/main', github.ref)"
-    if: "contains('refs/heads/master refs/heads/main refs/heads/APPS-4412-automatic-release', github.ref)" # TODO: remove
+    if: "contains('refs/heads/master refs/heads/main refs/head/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
     permissions:
       contents: "write"

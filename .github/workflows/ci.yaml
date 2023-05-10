@@ -67,7 +67,7 @@ jobs:
     runs-on: "self-hosted"
     needs: ["ci"]
     # if: "contains('refs/heads/master refs/heads/main', github.ref)"
-    if: "contains('refs/heads/master refs/heads/main refs/head/APPS-4412-automatic-release', github.ref)" # TODO: remove
+    if: "contains('refs/heads/master refs/heads/main refs/heads/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
     permissions:
       contents: "write"

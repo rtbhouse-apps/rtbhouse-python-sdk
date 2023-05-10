@@ -18,8 +18,6 @@ jobs:
         poetry-version: ["1.3.1"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
-      PYTHON_VERSION: "3.11"
-      POETRY_VERSION: "1.3.1"
 
     steps:
       - name: Checkout
@@ -65,13 +63,16 @@ jobs:
   release-package:
     name: "Release package"
     runs-on: "ubuntu-20.04"
-    needs: ["ci"]
+    needs: "ci"
+    env:
+      PYTHON_VERSION: "3.11"
+      POETRY_VERSION: "1.3.1"
     # if: "contains('refs/heads/master refs/heads/main', github.ref)"
     if: "contains('refs/heads/master refs/heads/main refs/head/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
-    permissions:
-      contents: "write"
-      id-token: "write"
+    # permissions:
+    #   contents: "write"
+    #   id-token: "write"
 
     steps:
       # TODO: get secrets to pip repo, github token

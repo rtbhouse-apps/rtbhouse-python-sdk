@@ -77,6 +77,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       
       # TODO: get secrets to pip repo, github token      
       # - name: "Authenticate to Google Cloud"
@@ -128,6 +130,12 @@ jobs:
           ALL_GIT_TAGS=$(git tag)
           ALL_RELEASES=$($SEMVER_BINARY ${ALL_GIT_TAGS})
           LAST_RELEASE=$($SEMVER_BINARY ${ALL_GIT_TAGS} | tail -n1)
+
+          # TODO: remove, debug data
+          git tag
+          echo "ALL_GIT_TAGS: ${ALL_GIT_TAGS}"
+          echo "ALL_RELEASES: ${ALL_RELEASES}"
+          echo "LAST_RELEASE: ${LAST_RELEASE}"
 
           # Current version set in pyproject.toml file
           CURRENT_VERSION=$($SEMVER_BINARY $(poetry version -s))

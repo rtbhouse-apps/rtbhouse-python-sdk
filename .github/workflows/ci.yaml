@@ -127,6 +127,7 @@ jobs:
           # All tags 
           ALL_GIT_TAGS=$(git tag)
           ALL_RELEASES=$($SEMVER_BINARY ${ALL_GIT_TAGS})
+          LAST_RELEASE=$($SEMVER_BINARY ${ALL_GIT_TAGS} | tail -n1)
 
           # Current version set in pyproject.toml file
           CURRENT_VERSION=$($SEMVER_BINARY $(poetry version -s))
@@ -135,20 +136,19 @@ jobs:
               echo "::warning::Package version in pyproject.toml not bumped, will not publish new package"
               echo "publish=0" >> $GITHUB_OUTPUT
           else
+              echo "::info::Package will be released. Last release version: ${LAST_RELEASE}, current version: ${CURRENT_VERSION}"
               echo "publish=1" >> $GITHUB_OUTPUT
           fi
 
       - name: Get version
         id: get-version
         run: |
-          cd pylib
           echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
         if: steps.should-publish-package.outputs.publish == 1
 
       # TODO: enable
       # - name: "Publish final package"
       #   run: |
-      #     cd pylib
       #     poetry publish --build --no-interaction --repository publish-repo
       #   if: steps.should-publish-package.outputs.publish == 1
 

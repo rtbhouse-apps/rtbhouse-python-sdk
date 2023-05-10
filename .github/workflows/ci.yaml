@@ -18,6 +18,8 @@ jobs:
         poetry-version: ["1.3.1"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
+      PYTHON_VERSION: "3.11"
+      POETRY_VERSION: "1.3.1"
 
     steps:
       - name: Checkout
@@ -59,3 +61,105 @@ jobs:
       - name: Test
         run: |
           ./bin/test.sh
+  
+  release-package:
+    name: "Release package"
+    runs-on: "self-hosted"
+    needs: ["ci"]
+    # if: "contains('refs/heads/master refs/heads/main', github.ref)"
+    if: "contains('refs/heads/master refs/heads/main refs/head/APPS-4412-automatic-release', github.ref)" # TODO: remove
+
+    permissions:
+      contents: "write"
+      id-token: "write"
+
+    steps:
+      # TODO: get secrets to pip repo, github token
+      
+      # - name: "Authenticate to Google Cloud"
+      #   id: "gcp-auth"
+      #   uses: "google-github-actions/auth@v1"
+      #   with:
+      #     token_format: "access_token"
+      #     workload_identity_provider: "projects/716804851657/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
+      #     service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
+
+      # - name: "Get secrets"
+      #   id: "secrets"
+      #   uses: "google-github-actions/get-secretmanager-secrets@v1"
+      #   with:
+      #     secrets: |-
+      #       PUBLISH_REPO_CREDENTIALS:projects/rtbhouse-apps/secrets/${{ needs.prepare.outputs.publish-repo-secret }}
+
+      - name: "Setup python ${{ env.PYTHON_VERSION }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: "pip"
+
+      - name: "Setup poetry ${{ env.POETRY_VERSION }}"
+        run: |
+          curl -sSL https://install.python-poetry.org | POETRY_HOME="$HOME/.poetry" python - --version ${{ env.POETRY_VERSION }} --force
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      # - name: "Configure poetry"
+      #   env:
+      #     PUBLISH_REPO_CREDENTIALS: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
+      #   run: |
+      #     export LOGIN=`jq -r .login <<< ${PUBLISH_REPO_CREDENTIALS}`
+      #     export TOKEN=`jq -r .token <<< ${PUBLISH_REPO_CREDENTIALS}`
+      #     PIP_EXTRA_INDEX_URL=$(echo ${{ needs.prepare.outputs.publish-repo-url }} | sed "s/{LOGIN}/${LOGIN}/" | sed "s/{TOKEN}/${TOKEN}/")
+      #     echo ${PIP_EXTRA_INDEX_URL}
+      #     echo "PIP_EXTRA_INDEX_URL=${PIP_EXTRA_INDEX_URL}" >> $GITHUB_ENV
+      #     poetry config virtualenvs.in-project true
+      #     poetry config repositories.publish-repo "${{ needs.prepare.outputs.publish-repo-upload-url }}"
+      #     poetry config http-basic.publish-repo ${LOGIN} ${TOKEN}
+
+      - name: Should publish package
+        id: should-publish-package
+        run: |
+          SEMVER_BINARY="$(which semver)"
+
+          if [ "$SEMVER_BINARY" == "" ];then
+              echo "::info::Install semver cli"
+              npm install -g semver
+              SEMVER_BINARY="$(which semver)"
+          fi
+
+          # All tags 
+          ALL_GIT_TAGS=$(git tag)
+          ALL_RELEASES=$($SEMVER_BINARY ${ALL_GIT_TAGS})
+
+          # Current version set in pyproject.toml file
+          CURRENT_VERSION=$($SEMVER_BINARY $(poetry version -s))
+
+          if [[ $ALL_RELEASES == *"${CURRENT_VERSION}"* ]]; then
+              echo "::warning::Package version in pyproject.toml not bumped, will not publish new package"
+              echo "publish=0" >> $GITHUB_OUTPUT
+          else
+              echo "publish=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: get-version
+        run: |
+          cd pylib
+          echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
+        if: steps.should-publish-package.outputs.publish == 1
+
+      # TODO: enable
+      # - name: "Publish final package"
+      #   run: |
+      #     cd pylib
+      #     poetry publish --build --no-interaction --repository publish-repo
+      #   if: steps.should-publish-package.outputs.publish == 1
+
+      # TODO: enable
+      # - name: Create release
+      #   uses: actions/create-release@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     tag_name: v${{ steps.get-version.outputs.version }}
+      #     release_name: v${{ steps.get-version.outputs.version }}
+      #   if: steps.should-publish-package.outputs.publish == 1

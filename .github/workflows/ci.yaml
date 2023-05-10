@@ -121,13 +121,8 @@ jobs:
       - name: Should publish package
         id: should-publish-package
         run: |
+          npm install -g semver
           SEMVER_BINARY="$(which semver)"
-
-          if [ "$SEMVER_BINARY" == "" ];then
-              echo "::info::Install semver cli"
-              npm install -g semver
-              SEMVER_BINARY="$(which semver)"
-          fi
 
           # All tags 
           ALL_GIT_TAGS=$(git tag)

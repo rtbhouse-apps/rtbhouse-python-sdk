@@ -6,39 +6,16 @@ on:
     types: [labeled]
 
 jobs:
-  set-matrix:
-    runs-on: ubuntu-latest
-    outputs:
-      matrix: "${{ steps.set-matrix.outputs.matrix }}"
-      os: "${{ steps.set-matrix.outputs.os }}"
-      python-version: "${{ steps.set-matrix.outputs.python-version }}"
-      poetry-version: "${{ steps.set-matrix.outputs.poetry-version }}"
-    
-    steps:
-    - id: set-matrix
-      run: |
-        MATRIX_DEFINITION='
-        {
-          "os": ["ubuntu-20.04"],
-          "python-version": ["3.8", "3.9", "3.10", "3.11"],
-          "poetry-version": ["1.3.1"]
-        }'
-        MATRIX_AS_STRING=$(echo ${MATRIX_DEFINITION} | jq -R )
-
-        echo "matrix=$MATRIX_AS_STRING" >> $GITHUB_OUTPUT
-
-        echo "os=$(echo $MATRIX_DEFINITION | jq -r '.os | last')" >> $GITHUB_OUTPUT
-        echo "python-version=$(echo $MATRIX_DEFINITION | jq -r '."python-version" | last')" >> $GITHUB_OUTPUT
-        echo "poetry-version=$(echo $MATRIX_DEFINITION | jq -r '."poetry-version" | last')" >> $GITHUB_OUTPUT
-
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
-    needs: "set-matrix"
     strategy:
       fail-fast: false
-      matrix: ${{fromJson(needs.set-matrix.outputs.matrix)}}
+      matrix:
+        os: [ubuntu-20.04]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        poetry-version: ["1.3.1"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
 

@@ -10,7 +10,6 @@ jobs:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
-    needs: "set-matrix"
     outputs:
       matrix: "${{ matrix }}"
     strategy:

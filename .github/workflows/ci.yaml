@@ -10,8 +10,6 @@ jobs:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
-    outputs:
-      matrix: "${{ matrix }}"
     strategy:
       fail-fast: false
       matrix:
@@ -83,10 +81,6 @@ jobs:
         with:
           fetch-depth: 0
       
-      - name: "Check matrix"
-        run: |
-          echo "${{ needs.ci.outputs.matrix }}"
-
       # TODO: get secrets to pip repo, github token      
       # - name: "Authenticate to Google Cloud"
       #   id: "gcp-auth"

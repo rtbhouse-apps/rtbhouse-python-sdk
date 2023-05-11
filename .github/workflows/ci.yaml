@@ -18,7 +18,11 @@ jobs:
           "poetry-version": ["1.3.1"]
         }'
 
-        echo "matrix=$(echo $MATRIX_DEFINITION | jq -c .)" >> $GITHUB_OUTPUT
+        # TODO: remove, debug
+        echo $MATRIX_DEFINITION | jq -Rsa
+        echo "matrix=$(echo $MATRIX_DEFINITION | jq -Rsa)"
+
+        echo "matrix=$(echo $MATRIX_DEFINITION | jq -Rsa)" >> $GITHUB_OUTPUT
 
         echo "os=$(echo $MATRIX_DEFINITION | jq -r '.os | last')" >> $GITHUB_OUTPUT
         echo "python-version=$(echo $MATRIX_DEFINITION | jq -r '."python-version" | last')" >> $GITHUB_OUTPUT

@@ -6,10 +6,35 @@ on:
     types: [labeled]
 
 jobs:
+  prepare:
+    name: "Prepare"
+    runs-on: "ubuntu-22.04"
+    outputs:
+      sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
+      publish-repo-credentials: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
+
+    steps:
+      - name: "Authenticate to Google Cloud"
+        id: "gcp-auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "projects/rtbhouse-apps/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
+          service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
+
+      - name: "Get secrets"
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v1"
+        with:
+          secrets: |-
+            SDK_TEST_CREDENTIALS:projects/rtbhouse-apps/secrets/SDK_TEST_CREDENTIALS
+            PUBLISH_REPO_CREDENTIALS:projects/rtbhouse-apps/secrets/PUBLISH_REPO_CREDENTIALS
+
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
+    needs: "prepare"
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +76,7 @@ jobs:
 
       - name: Create config
         env:
-          SDK_TEST_CREDENTIALS: ${{ secrets.SDK_TEST_CREDENTIALS }}
+          SDK_TEST_CREDENTIALS: ${{ needs.prepare.outputs.sdk-test-credentials }}
         run: |
           echo "USERNAME = \"$(jq -r .username <<< ${SDK_TEST_CREDENTIALS})\"" > tests/config.py
           echo "PASSWORD = \"$(jq -r .password <<< ${SDK_TEST_CREDENTIALS})\"" >> tests/config.py
@@ -63,7 +88,7 @@ jobs:
   release-package:
     name: "Release package"
     runs-on: "ubuntu-20.04"
-    needs: "ci"
+    needs: ["prepare", "ci"]
     env:
       # TODO: get last value from ci matrix
       PYTHON_VERSION: "3.11"
@@ -80,22 +105,6 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      
-      # TODO: get secrets to pip repo, github token      
-      # - name: "Authenticate to Google Cloud"
-      #   id: "gcp-auth"
-      #   uses: "google-github-actions/auth@v1"
-      #   with:
-      #     token_format: "access_token"
-      #     workload_identity_provider: "projects/716804851657/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
-      #     service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
-
-      # - name: "Get secrets"
-      #   id: "secrets"
-      #   uses: "google-github-actions/get-secretmanager-secrets@v1"
-      #   with:
-      #     secrets: |-
-      #       PUBLISH_REPO_CREDENTIALS:projects/rtbhouse-apps/secrets/${{ needs.prepare.outputs.publish-repo-secret }}
 
       - name: "Setup python ${{ env.PYTHON_VERSION }}"
         uses: "actions/setup-python@v4"
@@ -110,7 +119,7 @@ jobs:
 
       # - name: "Configure poetry"
       #   env:
-      #     PUBLISH_REPO_CREDENTIALS: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
+      #     PUBLISH_REPO_CREDENTIALS: "${{ needs.prepare.outputs.publish-repo-credentials }}"
       #   run: |
       #     export LOGIN=`jq -r .login <<< ${PUBLISH_REPO_CREDENTIALS}`
       #     export TOKEN=`jq -r .token <<< ${PUBLISH_REPO_CREDENTIALS}`

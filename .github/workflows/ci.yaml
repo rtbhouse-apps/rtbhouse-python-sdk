@@ -8,6 +8,12 @@ on:
 jobs:
   set-matrix:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: "${{ steps.set-matrix.outputs.matrix }}"
+      os: "${{ steps.set-matrix.outputs.os }}"
+      python-version: "${{ steps.set-matrix.outputs.python-version }}"
+      poetry-version: "${{ steps.set-matrix.outputs.poetry-version }}"
+    
     steps:
     - id: set-matrix
       run: |

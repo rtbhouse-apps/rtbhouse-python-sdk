@@ -8,7 +8,7 @@ on:
 jobs:
   prepare:
     name: "Prepare"
-    runs-on: "ubuntu-22.04"
+    runs-on: "self-hosted"
     outputs:
       sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
       publish-repo-credentials: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"

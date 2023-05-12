@@ -26,7 +26,7 @@ jobs:
         with:
           token_format: "access_token"
           workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
-          service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
+          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
 
       - name: "Get secrets"
         id: "secrets"

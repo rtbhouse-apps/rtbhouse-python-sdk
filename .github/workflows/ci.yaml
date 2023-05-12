@@ -6,10 +6,39 @@ on:
     types: [labeled]
 
 jobs:
+  prepare:
+    name: "Prepare"
+    runs-on: "ubuntu-22.04"
+    outputs:
+      sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
+
+    permissions:
+      id-token: "write"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: "Authenticate to Google Cloud"
+        id: "gcp-auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          token_format: "access_token"
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
+
+      - name: "Get secrets"
+        id: "secrets"
+        uses: "google-github-actions/get-secretmanager-secrets@v1"
+        with:
+          secrets: |-
+            SDK_TEST_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/SDK_TEST_CREDENTIALS
+
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
+    needs: "prepare"
     strategy:
       fail-fast: false
       matrix:
@@ -51,7 +80,7 @@ jobs:
 
       - name: Create config
         env:
-          SDK_TEST_CREDENTIALS: ${{ secrets.SDK_TEST_CREDENTIALS }}
+          SDK_TEST_CREDENTIALS: ${{ needs.prepare.outputs.sdk-test-credentials }}
         run: |
           echo "USERNAME = \"$(jq -r .username <<< ${SDK_TEST_CREDENTIALS})\"" > tests/config.py
           echo "PASSWORD = \"$(jq -r .password <<< ${SDK_TEST_CREDENTIALS})\"" >> tests/config.py
@@ -59,3 +88,77 @@ jobs:
       - name: Test
         run: |
           ./bin/test.sh
+  
+  release-package:
+    name: "Release package"
+    runs-on: "ubuntu-22.04"
+    needs: ["prepare", "ci"]
+    env:
+      PYTHON_VERSION: "3.11"
+      POETRY_VERSION: "1.3.1"
+    if: "contains('refs/heads/master refs/heads/main', github.ref)"
+
+    permissions:
+      contents: "write"
+      id-token: "write"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: "Setup python ${{ env.PYTHON_VERSION }}"
+        uses: "actions/setup-python@v4"
+        with:
+          python-version: "${{ env.PYTHON_VERSION }}"
+          cache: "pip"
+
+      - name: "Setup poetry ${{ env.POETRY_VERSION }}"
+        run: |
+          curl -sSL https://install.python-poetry.org | POETRY_HOME="$HOME/.poetry" python - --version ${{ env.POETRY_VERSION }} --force
+          echo "$HOME/.poetry/bin" >> $GITHUB_PATH
+
+      - name: Should publish package
+        id: should-publish-package
+        run: |
+          npm install -g semver
+
+          ALL_GIT_TAGS=$(git tag)
+          ALL_RELEASES=$(semver ${ALL_GIT_TAGS})
+          LAST_RELEASE=$(semver ${ALL_GIT_TAGS} | tail -n1)
+
+          # Current version set in pyproject.toml file
+          CURRENT_VERSION=$(semver $(poetry version -s))
+
+          if [[ $ALL_RELEASES == *"${CURRENT_VERSION}"* ]]; then
+              echo "::warning::Package version in pyproject.toml not bumped, will not publish new package"
+              echo "publish=0" >> $GITHUB_OUTPUT
+          else
+              echo "::info::Package will be released. Last release version: ${LAST_RELEASE}, current version: ${CURRENT_VERSION}"
+              echo "publish=1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Get version
+        id: get-version
+        run: |
+          echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
+        if: steps.should-publish-package.outputs.publish == 1
+
+      - name: "Build final package"
+        run: |
+          poetry build
+        if: steps.should-publish-package.outputs.publish == 1
+      
+      - name: "Publish package to PyPI"
+        uses: pypa/gh-action-pypi-publish@release/v1
+        if: steps.should-publish-package.outputs.publish == 1
+
+      - name: "Create release"
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get-version.outputs.version }}
+          release_name: v${{ steps.get-version.outputs.version }}
+        if: steps.should-publish-package.outputs.publish == 1

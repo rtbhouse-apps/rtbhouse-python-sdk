@@ -8,7 +8,7 @@ on:
 jobs:
   prepare:
     name: "Prepare"
-    runs-on: "self-hosted"
+    runs-on: "ubuntu-20.04"
     outputs:
       sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
       publish-repo-credentials: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
@@ -26,7 +26,7 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           token_format: "access_token"
-          workload_identity_provider: "projects/rtbhouse-apps/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
+          workload_identity_provider: "projects/716804851657/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
           service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
 
       - name: "Get secrets"

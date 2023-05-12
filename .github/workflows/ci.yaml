@@ -13,6 +13,10 @@ jobs:
       sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
       publish-repo-credentials: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
 
+    permissions:
+      contents: "read"
+      id-token: "write"
+
     steps:
       - name: "Authenticate to Google Cloud"
         id: "gcp-auth"

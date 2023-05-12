@@ -11,7 +11,6 @@ jobs:
     runs-on: "ubuntu-20.04"
     outputs:
       sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
-      publish-repo-credentials: "${{ steps.secrets.outputs.PUBLISH_REPO_CREDENTIALS }}"
 
     permissions:
       contents: "read"
@@ -35,7 +34,6 @@ jobs:
         with:
           secrets: |-
             SDK_TEST_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/SDK_TEST_CREDENTIALS
-            PUBLISH_REPO_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/PUBLISH_REPO_CREDENTIALS
 
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}

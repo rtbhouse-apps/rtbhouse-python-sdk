@@ -101,6 +101,9 @@ jobs:
     # if: "contains('refs/heads/master refs/heads/main', github.ref)"
     if: "contains('refs/heads/master refs/heads/main refs/heads/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
+    permissions:
+      id-token: "write"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v3

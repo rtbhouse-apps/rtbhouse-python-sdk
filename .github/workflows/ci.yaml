@@ -91,7 +91,7 @@ jobs:
   
   release-package:
     name: "Release package"
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-22.04"
     needs: ["prepare", "ci"]
     env:
       PYTHON_VERSION: "3.11"

@@ -101,10 +101,6 @@ jobs:
     # if: "contains('refs/heads/master refs/heads/main', github.ref)"
     if: "contains('refs/heads/master refs/heads/main refs/heads/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
-    permissions:
-      contents: "write"
-      id-token: "write"
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -121,19 +117,6 @@ jobs:
         run: |
           curl -sSL https://install.python-poetry.org | POETRY_HOME="$HOME/.poetry" python - --version ${{ env.POETRY_VERSION }} --force
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
-
-      # - name: "Configure poetry"
-      #   env:
-      #     PUBLISH_REPO_CREDENTIALS: "${{ needs.prepare.outputs.publish-repo-credentials }}"
-      #   run: |
-      #     export LOGIN=`jq -r .login <<< ${PUBLISH_REPO_CREDENTIALS}`
-      #     export TOKEN=`jq -r .token <<< ${PUBLISH_REPO_CREDENTIALS}`
-      #     PIP_EXTRA_INDEX_URL=$(echo ${{ needs.prepare.outputs.publish-repo-url }} | sed "s/{LOGIN}/${LOGIN}/" | sed "s/{TOKEN}/${TOKEN}/")
-      #     echo ${PIP_EXTRA_INDEX_URL}
-      #     echo "PIP_EXTRA_INDEX_URL=${PIP_EXTRA_INDEX_URL}" >> $GITHUB_ENV
-      #     poetry config virtualenvs.in-project true
-      #     poetry config repositories.publish-repo "${{ needs.prepare.outputs.publish-repo-upload-url }}"
-      #     poetry config http-basic.publish-repo ${LOGIN} ${TOKEN}
 
       - name: Should publish package
         id: should-publish-package
@@ -164,7 +147,7 @@ jobs:
       # TODO: enable
       # - name: "Publish final package"
       #   run: |
-      #     poetry publish --build --no-interaction --repository publish-repo
+      #     poetry publish --build --no-interaction
       #   if: steps.should-publish-package.outputs.publish == 1
 
       # TODO: enable

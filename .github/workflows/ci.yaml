@@ -26,7 +26,7 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           token_format: "access_token"
-          workload_identity_provider: "projects/716804851657/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
+          workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NAME }}/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
           service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
 
       - name: "Get secrets"
@@ -34,8 +34,8 @@ jobs:
         uses: "google-github-actions/get-secretmanager-secrets@v1"
         with:
           secrets: |-
-            SDK_TEST_CREDENTIALS:projects/rtbhouse-apps/secrets/SDK_TEST_CREDENTIALS
-            PUBLISH_REPO_CREDENTIALS:projects/rtbhouse-apps/secrets/PUBLISH_REPO_CREDENTIALS
+            SDK_TEST_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/SDK_TEST_CREDENTIALS
+            PUBLISH_REPO_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/PUBLISH_REPO_CREDENTIALS
 
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}

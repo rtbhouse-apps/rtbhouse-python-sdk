@@ -102,6 +102,7 @@ jobs:
     if: "contains('refs/heads/master refs/heads/main refs/heads/APPS-4412-automatic-release', github.ref)" # TODO: remove
 
     permissions:
+      contents: "write"
       id-token: "write"
 
     steps:
@@ -152,9 +153,9 @@ jobs:
           poetry build
         if: steps.should-publish-package.outputs.publish == 1
       
-      - name: "Publish package to PyPI"
-        uses: pypa/gh-action-pypi-publish@release/v1
-        if: steps.should-publish-package.outputs.publish == 1
+      # - name: "Publish package to PyPI"
+      #   uses: pypa/gh-action-pypi-publish@release/v1
+      #   if: steps.should-publish-package.outputs.publish == 1
 
       - name: "Create release"
         uses: actions/create-release@v1

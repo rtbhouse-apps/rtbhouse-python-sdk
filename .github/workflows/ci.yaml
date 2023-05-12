@@ -144,18 +144,16 @@ jobs:
           echo "version=$(poetry version -s)" >> $GITHUB_OUTPUT
         if: steps.should-publish-package.outputs.publish == 1
 
-      # TODO: enable
-      # - name: "Publish final package"
-      #   run: |
-      #     poetry publish --build --no-interaction
-      #   if: steps.should-publish-package.outputs.publish == 1
+      - name: "Publish final package"
+        run: |
+          poetry publish --build --no-interaction
+        if: steps.should-publish-package.outputs.publish == 1
 
-      # TODO: enable
-      # - name: Create release
-      #   uses: actions/create-release@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   with:
-      #     tag_name: v${{ steps.get-version.outputs.version }}
-      #     release_name: v${{ steps.get-version.outputs.version }}
-      #   if: steps.should-publish-package.outputs.publish == 1
+      - name: Create release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.get-version.outputs.version }}
+          release_name: v${{ steps.get-version.outputs.version }}
+        if: steps.should-publish-package.outputs.publish == 1

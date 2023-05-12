@@ -13,7 +13,6 @@ jobs:
       sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
 
     permissions:
-      contents: "read"
       id-token: "write"
 
     steps:

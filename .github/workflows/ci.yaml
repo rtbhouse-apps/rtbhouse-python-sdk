@@ -26,7 +26,7 @@ jobs:
         uses: "google-github-actions/auth@v1"
         with:
           token_format: "access_token"
-          workload_identity_provider: "projects/${{ secrets.GCP_PROJECT_NAME }}/locations/global/workloadIdentityPools/github-actions-identity-pool/providers/github-identity-pool-provider"
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
           service_account: "github-actions@rtbhouse-apps.iam.gserviceaccount.com"
 
       - name: "Get secrets"

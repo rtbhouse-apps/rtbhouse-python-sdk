@@ -157,7 +157,6 @@ jobs:
       - name: "Create release"
         uses: softprops/action-gh-release@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ steps.get-version.outputs.version }}
           generate_release_notes: true
         if: steps.should-publish-package.outputs.publish == 1

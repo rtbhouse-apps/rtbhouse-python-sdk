@@ -5,6 +5,9 @@ on:
   pull_request_target:
     types: [labeled]
 
+env:
+  POETRY_VERSION: "1.5.1"
+
 jobs:
   prepare:
     name: "Prepare"
@@ -44,7 +47,6 @@ jobs:
       matrix:
         os: [ubuntu-20.04]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
-        poetry-version: ["1.5.1"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
 
@@ -57,9 +59,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup poetry ${{ matrix.poetry-version }}
+      - name: Setup poetry ${{ env.POETRY_VERSION }}
         run: |
-          curl -sSl https://install.python-poetry.org | python - --version ${{ matrix.poetry-version }}
+          curl -sSl https://install.python-poetry.org | python - --version ${{ env.POETRY_VERSION }}
           ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
@@ -95,8 +97,7 @@ jobs:
     needs: ["prepare", "ci"]
     env:
       PYTHON_VERSION: "3.11"
-      POETRY_VERSION: "1.3.1"
-    if: "contains('refs/heads/master refs/heads/main', github.ref)"
+    if: contains('refs/heads/master refs/heads/main', github.ref)
 
     permissions:
       contents: "write"

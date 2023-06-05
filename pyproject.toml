@@ -19,6 +19,10 @@ classifiers = [
 ]
 repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 
+[[tool.poetry.source]]
+name = "PyPI"
+priority = "primary"
+
 [tool.poetry.dependencies]
 python = ">=3.8.1, <4.0"
 
@@ -54,9 +58,7 @@ profile = "black"
 python_version = "3.8"
 no_warn_unused_ignores = true
 strict = true
-plugins = [
-  "pydantic.mypy"
-]
+plugins = ["pydantic.mypy"]
 
 [tool.pydantic-mypy]
 init_forbid_extra = true

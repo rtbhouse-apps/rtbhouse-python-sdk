@@ -207,7 +207,7 @@ class Conversion(CamelizedBaseModel):
 
 class Stats(CamelizedBaseModel):
     # from GroupBy
-    hour: Optional[str]
+    hour: Optional[int]
     day: Optional[date]
     week: Optional[str]
     month: Optional[str]

@@ -1,4 +1,4 @@
-FROM python:3.11.3-slim-buster
+FROM python:3.11.4-slim-buster
 
 ARG UNAME=apps
 ARG UID=1000

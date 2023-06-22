@@ -190,7 +190,7 @@ async def test_get_rtb_stats(
         adv_hash,
         day_from,
         day_to,
-        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY],
+        [StatsGroupBy.ADVERTISER, StatsGroupBy.DAY, StatsGroupBy.HOUR],
         [StatsMetric.CAMPAIGN_COST, StatsMetric.CR],
     )
 
@@ -198,7 +198,7 @@ async def test_get_rtb_stats(
     assert dict(call.request.url.params) == {
         "dayFrom": "2020-09-01",
         "dayTo": "2020-09-01",
-        "groupBy": "advertiser-day",
+        "groupBy": "advertiser-day-hour",
         "metrics": "campaignCost-cr",
     }
     assert stats.advertiser == "xyz"

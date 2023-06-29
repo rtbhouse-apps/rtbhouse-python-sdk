@@ -209,7 +209,7 @@ class Conversion(CamelizedBaseModel):
     conversion_class: Optional[str] = None
     conversion_value: float
     commission_value: float
-    cookie_hash: str
+    cookie_hash: Optional[str]
     conversion_time: datetime
     last_click_time: datetime
     last_impression_time: datetime

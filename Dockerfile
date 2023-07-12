@@ -14,7 +14,7 @@ RUN apt-get update \
 RUN python -m pip install --upgrade --no-cache-dir pip==23.0
 
 # Install Poetry
-RUN curl -sSl https://install.python-poetry.org | python - --version 1.3.2 \
+RUN curl -sSl https://install.python-poetry.org | python - --version 1.5.1 \
     && ln -s ${POETRY_HOME}/bin/poetry /usr/local/bin/poetry
 
 RUN groupadd -g $GID $UNAME \

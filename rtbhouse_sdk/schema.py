@@ -46,6 +46,7 @@ class DeviceType(str, Enum):
 class StatsGroupBy(str, Enum):
     """Holds possible values of group by parameter."""
 
+    HOUR = "hour"
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
@@ -206,6 +207,7 @@ class Conversion(CamelizedBaseModel):
 
 class Stats(CamelizedBaseModel):
     # from GroupBy
+    hour: Optional[int]
     day: Optional[date]
     week: Optional[str]
     month: Optional[str]

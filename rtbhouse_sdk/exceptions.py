@@ -49,7 +49,7 @@ class ApiRateLimitException(ApiRequestException):
 
 
 def _parse_resource_usage_header(header: Optional[str]) -> Dict[str, Dict[str, Dict[str, float]]]:
-    """parse string like WORKER_TIME-3600=11.7/10000000;DB_QUERY_TIME-21600=4.62/2000 into dict"""
+    """parse string like WORKER_TIME-3600=11.7/10000000;BQ_TB_BILLED-21600=4.62/2000 into dict"""
     if not header:
         return {}
     result: Dict[str, Dict[str, Dict[str, float]]] = {}

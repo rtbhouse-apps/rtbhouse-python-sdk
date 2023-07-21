@@ -211,8 +211,8 @@ class Conversion(CamelizedBaseModel):
     commission_value: float
     cookie_hash: Optional[str]
     conversion_time: datetime
-    last_click_time: datetime
-    last_impression_time: datetime
+    last_click_time: Optional[datetime]
+    last_impression_time: Optional[datetime]
 
 
 class Stats(CamelizedBaseModel):

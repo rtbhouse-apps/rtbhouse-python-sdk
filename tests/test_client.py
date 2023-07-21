@@ -66,8 +66,8 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(
     header = ";".join(
         [
             "WORKER_TIME-3600=11.78/10000000",
-            "DB_QUERY_TIME-3600=4.62/500",
-            "DB_QUERY_TIME-86400=17.995/5000",
+            "BQ_TB_BILLED-3600=4.62/500",
+            "BQ_TB_BILLED-86400=17.995/5000",
         ]
     )
     api_mock.get("/example-endpoint").respond(429, headers={"X-Resource-Usage": header})
@@ -77,8 +77,8 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(
 
     data = cm.value.limits
     assert data["WORKER_TIME"]["3600"]["10000000"] == 11.78
-    assert data["DB_QUERY_TIME"]["3600"]["500"] == 4.62
-    assert data["DB_QUERY_TIME"]["86400"]["5000"] == 17.995
+    assert data["BQ_TB_BILLED"]["3600"]["500"] == 4.62
+    assert data["BQ_TB_BILLED"]["86400"]["5000"] == 17.995
 
 
 def test_get_user_info(

@@ -102,5 +102,5 @@ addopts = "--cov=rtbhouse_sdk/ --cov-report=term"
 asyncio_mode = "auto"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

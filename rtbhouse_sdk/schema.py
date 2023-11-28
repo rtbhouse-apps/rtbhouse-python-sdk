@@ -7,7 +7,12 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
+from .pydantic_compatibility import PYDANTIC_V1
 from .utils import camelize
+
+if not PYDANTIC_V1:
+    from pydantic import ConfigDict
+
 
 to_camel_case = partial(camelize, uppercase_first_letter=False)
 
@@ -93,8 +98,13 @@ class SubcampaignsFilter(str, Enum):
 
 
 class CamelizedBaseModel(BaseModel):
-    class Config:
-        alias_generator = to_camel_case
+    if PYDANTIC_V1:
+
+        class Config:
+            alias_generator = to_camel_case
+
+    else:
+        model_config = ConfigDict(alias_generator=to_camel_case)  # type: ignore
 
 
 class UserInfo(CamelizedBaseModel):
@@ -120,17 +130,17 @@ class Campaign(CamelizedBaseModel):
     name: str
     creative_ids: List[int]
     status: str
-    updated_at: Optional[datetime]
-    rateCardId: str
+    updated_at: Optional[datetime] = None
+    rate_card_id: str
     is_editable: bool
-    advertiser_limits: Optional[Dict[str, Optional[str]]]
+    advertiser_limits: Optional[Dict[str, Optional[int]]] = None
 
 
 class InvoiceData(BaseModel):
     vat_number: str
     company_name: str
     street1: str
-    street2: Optional[str]
+    street2: Optional[str] = None
     postal_code: str
     city: str
     country: str
@@ -161,7 +171,7 @@ class Offer(CamelizedBaseModel):
     name: str
     price: float
     category_name: str
-    customProperties: Dict[str, str]
+    custom_properties: Dict[str, str]
     updated_at: str
     status: str
 
@@ -196,7 +206,7 @@ class Creative(CamelizedBaseModel):
 class Conversion(CamelizedBaseModel):
     conversion_identifier: str
     conversion_hash: str
-    conversion_class: Optional[str]
+    conversion_class: Optional[str] = None
     conversion_value: float
     commission_value: float
     cookie_hash: str
@@ -207,38 +217,38 @@ class Conversion(CamelizedBaseModel):
 
 class Stats(CamelizedBaseModel):
     # from GroupBy
-    hour: Optional[int]
-    day: Optional[date]
-    week: Optional[str]
-    month: Optional[str]
-    year: Optional[str]
-    advertiser: Optional[str]
-    subcampaign: Optional[str]
-    subcampaign_hash: Optional[str]
-    user_segment: Optional[str]
-    device_type: Optional[str]
-    creative: Optional[str]
-    category: Optional[str]
-    category_name: Optional[str]
-    country: Optional[str]
-    placement: Optional[str]
+    hour: Optional[int] = None
+    day: Optional[date] = None
+    week: Optional[str] = None
+    month: Optional[str] = None
+    year: Optional[str] = None
+    advertiser: Optional[str] = None
+    subcampaign: Optional[str] = None
+    subcampaign_hash: Optional[str] = None
+    user_segment: Optional[str] = None
+    device_type: Optional[str] = None
+    creative: Optional[str] = None
+    category: Optional[str] = None
+    category_name: Optional[str] = None
+    country: Optional[str] = None
+    placement: Optional[str] = None
 
     # from Metric
-    campaign_cost: Optional[float]
-    imps_count: Optional[int]
-    ecpm: Optional[float]
-    clicks_count: Optional[int]
-    ecpc: Optional[float]
-    ctr: Optional[float]
-    conversions_count: Optional[int]
-    ecpa: Optional[float]
-    cr: Optional[float]
-    conversions_value: Optional[float]
-    roas: Optional[float]
-    ecps: Optional[float]
-    video_complete_views: Optional[int]
-    ecpv: Optional[float]
-    vcr: Optional[float]
-    viewability: Optional[float]
-    user_frequency: Optional[float]
-    user_reach: Optional[float]
+    campaign_cost: Optional[float] = None
+    imps_count: Optional[int] = None
+    ecpm: Optional[float] = None
+    clicks_count: Optional[int] = None
+    ecpc: Optional[float] = None
+    ctr: Optional[float] = None
+    conversions_count: Optional[int] = None
+    ecpa: Optional[float] = None
+    cr: Optional[float] = None
+    conversions_value: Optional[float] = None
+    roas: Optional[float] = None
+    ecps: Optional[float] = None
+    video_complete_views: Optional[int] = None
+    ecpv: Optional[float] = None
+    vcr: Optional[float] = None
+    viewability: Optional[float] = None
+    user_frequency: Optional[float] = None
+    user_reach: Optional[float] = None

@@ -26,8 +26,8 @@ priority = "primary"
 [tool.poetry.dependencies]
 python = ">=3.8.1, <4.0"
 
-httpx = "^0.25.0"
-pydantic = "^1.9.0"
+httpx = "^0.25.2"
+pydantic = ">=1.9, <3.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.0.0"

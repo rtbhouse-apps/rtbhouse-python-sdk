@@ -130,7 +130,7 @@ class Campaign(CamelizedBaseModel):
     name: str
     creative_ids: List[int]
     status: str
-    updated_at: Optional[datetime] = None
+    updated_at: Optional[datetime]
     rate_card_id: str
     is_editable: bool
     advertiser_limits: Optional[Dict[str, Optional[int]]] = None
@@ -206,13 +206,13 @@ class Creative(CamelizedBaseModel):
 class Conversion(CamelizedBaseModel):
     conversion_identifier: str
     conversion_hash: str
-    conversion_class: Optional[str] = None
+    conversion_class: Optional[str]
     conversion_value: float
     commission_value: float
-    cookie_hash: Optional[str] = None
+    cookie_hash: Optional[str]
     conversion_time: datetime
-    last_click_time: Optional[datetime] = None
-    last_impression_time: Optional[datetime] = None
+    last_click_time: Optional[datetime]
+    last_impression_time: Optional[datetime]
 
 
 class Stats(CamelizedBaseModel):

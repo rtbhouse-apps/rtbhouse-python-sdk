@@ -7,8 +7,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
-from .pydantic_compatibility import PYDANTIC_V1
-from .utils import camelize
+from ._utils import PYDANTIC_V1, camelize
 
 if not PYDANTIC_V1:
     from pydantic import ConfigDict

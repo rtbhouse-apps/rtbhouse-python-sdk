@@ -1,7 +1,7 @@
 """Tests for utilities"""
 import pytest
 
-from rtbhouse_sdk.utils import camelize, underscore
+from rtbhouse_sdk._utils import camelize, underscore
 
 
 @pytest.mark.parametrize(

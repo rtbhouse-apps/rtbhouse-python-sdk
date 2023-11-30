@@ -1,6 +1,10 @@
 """Utils used in SDK."""
 import re
 
+from pydantic.version import VERSION as PYDANTIC_VERSION
+
+PYDANTIC_V1 = PYDANTIC_VERSION[0] == "1"
+
 
 def camelize(word: str, uppercase_first_letter: bool = True) -> str:
     """

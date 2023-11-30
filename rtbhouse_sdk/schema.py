@@ -14,7 +14,10 @@ if not PYDANTIC_V1:
     from pydantic import ConfigDict
 
 
-to_camel_case = partial(camelize, uppercase_first_letter=False)
+to_camel_case = partial(
+    camelize,
+    uppercase_first_letter=False,
+)
 
 
 class CountConvention(str, Enum):
@@ -104,7 +107,9 @@ class CamelizedBaseModel(BaseModel):
             alias_generator = to_camel_case
 
     else:
-        model_config = ConfigDict(alias_generator=to_camel_case)  # type: ignore
+        model_config = ConfigDict(  # type: ignore
+            alias_generator=to_camel_case,
+        )
 
 
 class UserInfo(CamelizedBaseModel):

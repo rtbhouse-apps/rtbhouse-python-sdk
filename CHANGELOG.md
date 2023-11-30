@@ -1,6 +1,7 @@
 # v11.0.0
 - Added support for Pydantic v2
 - [breaking change] `cookie_hash`, `last_click_time` and `last_impression_time` fields in `Conversion` schema are now nullable
+- [breaking change] fixed naming convention compliance for fields in schemas: `rateCardId` (`UserInfo`) is now `rate_card_id` and `customProperties` (`Offer`) is now `custom_properties`
 
 # v10.1.0
 - Removed [inflection](https://pypi.org/project/inflection/) from the project dependencies

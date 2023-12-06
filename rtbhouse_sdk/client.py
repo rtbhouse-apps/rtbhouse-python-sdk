@@ -202,12 +202,21 @@ class Client:
         group_by: List[schema.StatsGroupBy],
         metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
+        utc_offset_hours: int = 0,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[schema.Stats]:
         params = _build_rtb_stats_params(
-            day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
+            day_from,
+            day_to,
+            group_by,
+            metrics,
+            count_convention,
+            utc_offset_hours,
+            subcampaigns,
+            user_segments,
+            device_types,
         )
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
@@ -221,9 +230,12 @@ class Client:
         group_by: List[schema.StatsGroupBy],
         metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
+        utc_offset_hours: int = 0,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = _build_summary_stats_params(
+            day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
+        )
 
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
@@ -377,12 +389,21 @@ class AsyncClient:
         group_by: List[schema.StatsGroupBy],
         metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
+        utc_offset_hours: int = 0,
         subcampaigns: Optional[List[str]] = None,
         user_segments: Optional[List[schema.UserSegment]] = None,
         device_types: Optional[List[schema.DeviceType]] = None,
     ) -> List[schema.Stats]:
         params = _build_rtb_stats_params(
-            day_from, day_to, group_by, metrics, count_convention, subcampaigns, user_segments, device_types
+            day_from,
+            day_to,
+            group_by,
+            metrics,
+            count_convention,
+            utc_offset_hours,
+            subcampaigns,
+            user_segments,
+            device_types,
         )
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
@@ -396,9 +417,12 @@ class AsyncClient:
         group_by: List[schema.StatsGroupBy],
         metrics: List[schema.StatsMetric],
         count_convention: Optional[schema.CountConvention] = None,
+        utc_offset_hours: int = 0,
         subcampaigns: Optional[List[str]] = None,
     ) -> List[schema.Stats]:
-        params = _build_summary_stats_params(day_from, day_to, group_by, metrics, count_convention, subcampaigns)
+        params = _build_summary_stats_params(
+            day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
+        )
 
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
@@ -495,11 +519,12 @@ def _build_rtb_stats_params(
     group_by: List[schema.StatsGroupBy],
     metrics: List[schema.StatsMetric],
     count_convention: Optional[schema.CountConvention] = None,
+    utc_offset_hours: int = 0,
     subcampaigns: Optional[List[str]] = None,
     user_segments: Optional[List[schema.UserSegment]] = None,
     device_types: Optional[List[schema.DeviceType]] = None,
 ) -> Dict[str, Any]:
-    params = {
+    params: Dict[str, Any] = {
         "dayFrom": day_from,
         "dayTo": day_to,
         "groupBy": "-".join(gb.value for gb in group_by),
@@ -507,6 +532,8 @@ def _build_rtb_stats_params(
     }
     if count_convention is not None:
         params["countConvention"] = count_convention.value
+    if utc_offset_hours != 0:
+        params["utcOffsetHours"] = utc_offset_hours
     if subcampaigns is not None:
         params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
     if user_segments is not None:
@@ -523,9 +550,10 @@ def _build_summary_stats_params(
     group_by: List[schema.StatsGroupBy],
     metrics: List[schema.StatsMetric],
     count_convention: Optional[schema.CountConvention] = None,
+    utc_offset_hours: int = 0,
     subcampaigns: Optional[List[str]] = None,
 ) -> Dict[str, Any]:
-    params = {
+    params: Dict[str, Any] = {
         "dayFrom": day_from,
         "dayTo": day_to,
         "groupBy": "-".join(gb.value for gb in group_by),
@@ -533,6 +561,8 @@ def _build_summary_stats_params(
     }
     if count_convention is not None:
         params["countConvention"] = count_convention.value
+    if utc_offset_hours != 0:
+        params["utcOffsetHours"] = utc_offset_hours
     if subcampaigns is not None:
         params["subcampaigns"] = "-".join(str(sub) for sub in subcampaigns)
 

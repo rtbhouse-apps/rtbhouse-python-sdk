@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rtbhouse-sdk"
-version = "11.0.0"
+version = "11.1.0"
 description = "RTB House SDK"
 authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
 license = "BSD License"
@@ -93,7 +93,8 @@ disable = """
     missing-class-docstring,
     missing-function-docstring,
     suppressed-message,
-    use-implicit-booleaness-not-comparison
+    use-implicit-booleaness-not-comparison-to-zero,
+    use-implicit-booleaness-not-comparison,
 """
 extension-pkg-whitelist = "pydantic"
 

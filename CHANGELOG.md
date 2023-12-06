@@ -1,3 +1,6 @@
+# v11.1.0
+- Added `utc_offset_hours` parameter for `get_rtb_stats` and `get_summary_stats`
+
 # v11.0.0
 - Added support for Pydantic v2
 - [breaking change] `cookie_hash`, `last_click_time` and `last_impression_time` fields in `Conversion` schema are now nullable

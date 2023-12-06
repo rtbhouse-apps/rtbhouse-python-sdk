@@ -1,4 +1,4 @@
-# 11.1.0
+# v11.1.0
 - Added `utc_offset_hours` parameter for `get_rtb_stats` and `get_summary_stats`
 
 # v11.0.0

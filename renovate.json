@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "local>rtbhouse-apps/renovate-config-public"
+    "local>rtbhouse-apps/renovate-config",
+    "local>rtbhouse-apps/renovate-config:pylib"
   ]
 }

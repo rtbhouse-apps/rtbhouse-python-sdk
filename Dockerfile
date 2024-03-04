@@ -26,7 +26,6 @@ USER $UNAME
 WORKDIR $WORKDIR
 
 COPY --chown=apps ./ $WORKDIR
-RUN poetry check --lock
 RUN poetry install --no-ansi --no-interaction --no-root
 CMD ["poetry", "run", "python", "-m", "pytest","--color=no", \
     "--cov-report=term-missing", "--cov=rtbhouse_sdk", "tests/"]

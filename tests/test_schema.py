@@ -1,4 +1,5 @@
 """Tests for schema and it's utilities."""
+
 from itertools import chain
 
 from rtbhouse_sdk._utils import underscore

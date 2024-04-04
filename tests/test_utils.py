@@ -1,4 +1,5 @@
 """Tests for utilities"""
+
 import pytest
 
 from rtbhouse_sdk._utils import camelize, underscore

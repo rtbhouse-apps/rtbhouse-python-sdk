@@ -1,4 +1,5 @@
 """Common fixtures."""
+
 import copy
 from datetime import date
 from typing import Any, Dict, Iterator

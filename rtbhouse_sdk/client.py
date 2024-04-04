@@ -1,4 +1,5 @@
 """Contains definitions of standard (sync) client as well as async client."""
+
 # pylint: disable=too-many-arguments
 import dataclasses
 import warnings

@@ -1,4 +1,5 @@
 """Tests for async client."""
+
 # pylint: disable=too-many-arguments
 from datetime import date
 from typing import Any, AsyncIterator, Dict

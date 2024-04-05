@@ -1,4 +1,5 @@
 """Definitions of exceptions used in SDK."""
+
 import dataclasses
 from typing import Any, Dict, Optional
 

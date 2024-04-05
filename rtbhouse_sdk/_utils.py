@@ -1,4 +1,5 @@
 """Utils used in SDK."""
+
 import re
 
 from pydantic.version import VERSION as PYDANTIC_VERSION

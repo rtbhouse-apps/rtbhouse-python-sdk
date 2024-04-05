@@ -1,4 +1,5 @@
 """Tests for auth methods."""
+
 from typing import Union
 
 import pytest

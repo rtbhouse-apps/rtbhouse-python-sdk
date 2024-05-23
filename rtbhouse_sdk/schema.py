@@ -107,7 +107,7 @@ class CamelizedBaseModel(BaseModel):
             alias_generator = to_camel_case
 
     else:
-        model_config = ConfigDict(  # type: ignore
+        model_config = ConfigDict(  # type: ignore  # pylint: disable=possibly-used-before-assignment
             alias_generator=to_camel_case,
         )
 

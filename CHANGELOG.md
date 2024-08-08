@@ -1,3 +1,6 @@
+# v12.0.0
+- [breaking change] Stats (`schema.Stats`, returned from `get_rtb_stats` and `get_summary_stats`) metrics: `imps_count`, `clicks_count`, `conversions_count`, `video_complete_views` are now represented as float type, to reflect actual api responses. Fractional metrics may appear in certain scenarios, eg. for custom grouping and/or as a result of manual adjustment.
+
 # v11.1.0
 - Added `utc_offset_hours` parameter for `get_rtb_stats` and `get_summary_stats`
 

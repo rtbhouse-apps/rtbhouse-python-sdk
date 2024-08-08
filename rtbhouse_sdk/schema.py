@@ -240,18 +240,18 @@ class Stats(CamelizedBaseModel):
 
     # from Metric
     campaign_cost: Optional[float] = None
-    imps_count: Optional[int] = None
+    imps_count: Optional[float] = None
     ecpm: Optional[float] = None
-    clicks_count: Optional[int] = None
+    clicks_count: Optional[float] = None
     ecpc: Optional[float] = None
     ctr: Optional[float] = None
-    conversions_count: Optional[int] = None
+    conversions_count: Optional[float] = None
     ecpa: Optional[float] = None
     cr: Optional[float] = None
     conversions_value: Optional[float] = None
     roas: Optional[float] = None
     ecps: Optional[float] = None
-    video_complete_views: Optional[int] = None
+    video_complete_views: Optional[float] = None
     ecpv: Optional[float] = None
     vcr: Optional[float] = None
     viewability: Optional[float] = None

@@ -9,39 +9,10 @@ env:
   POETRY_VERSION: "1.8.2"
 
 jobs:
-  prepare:
-    name: "Prepare"
-    runs-on: "ubuntu-22.04"
-    outputs:
-      sdk-test-credentials: "${{ steps.secrets.outputs.SDK_TEST_CREDENTIALS }}"
-
-    permissions:
-      id-token: "write"
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: "Authenticate to Google Cloud"
-        id: "gcp-auth"
-        uses: "google-github-actions/auth@v2"
-        with:
-          token_format: "access_token"
-          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
-          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
-
-      - name: "Get secrets"
-        id: "secrets"
-        uses: "google-github-actions/get-secretmanager-secrets@v2"
-        with:
-          secrets: |-
-            SDK_TEST_CREDENTIALS:projects/${{ secrets.GCP_PROJECT_NAME }}/secrets/SDK_TEST_CREDENTIALS
-
   ci:
     name: CI ${{ matrix.os }} / Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     if: github.event_name == 'push' || contains(github.event.pull_request.labels.*.name, 'pr approved')
-    needs: "prepare"
     strategy:
       fail-fast: false
       matrix:
@@ -80,13 +51,6 @@ jobs:
         run: |
           ./bin/lint.sh
 
-      - name: Create config
-        env:
-          SDK_TEST_CREDENTIALS: ${{ needs.prepare.outputs.sdk-test-credentials }}
-        run: |
-          echo "USERNAME = \"$(jq -r .username <<< ${SDK_TEST_CREDENTIALS})\"" > tests/config.py
-          echo "PASSWORD = \"$(jq -r .password <<< ${SDK_TEST_CREDENTIALS})\"" >> tests/config.py
-
       - name: Test
         run: |
           ./bin/test.sh
@@ -94,7 +58,7 @@ jobs:
   release-package:
     name: "Release package"
     runs-on: "ubuntu-22.04"
-    needs: ["prepare", "ci"]
+    needs: ["ci"]
     env:
       PYTHON_VERSION: "3.11"
     if: contains('refs/heads/master refs/heads/main', github.ref)

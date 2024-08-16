@@ -6,17 +6,7 @@ import warnings
 from datetime import date, timedelta
 from json import JSONDecodeError
 from types import TracebackType
-from typing import (
-    Any,
-    AsyncIterable,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Type,
-    Union,
-)
+from typing import Any, AsyncIterable, Dict, Generator, Iterable, List, Optional, Type, Union
 
 import httpx
 

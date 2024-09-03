@@ -1,3 +1,9 @@
+# v13.0.0
+- [breaking change] current `viewability` metric has been renamed to `ssp_viewability`. We are leaving compatibility layer in the api until 2024-12-31.
+- added audio related metrics: `audio_complete_listens`, `ecpl`, `acr`.
+- added viewability related metrics: `viewability_measurability`, `viewability_viewability`, `evcpm`.
+- added visits related metrics: `visits_count`, `cpvisit`.
+
 # v12.0.0
 - [breaking change] Stats (`schema.Stats`, returned from `get_rtb_stats` and `get_summary_stats`) metrics: `imps_count`, `clicks_count`, `conversions_count`, `video_complete_views` are now represented as float type, to reflect actual api responses. Fractional metrics may appear in certain scenarios, eg. for custom grouping and/or as a result of manual adjustment.
 

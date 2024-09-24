@@ -88,7 +88,15 @@ class StatsMetric(str, Enum):
     VIDEO_COMPLETE_VIEWS = "videoCompleteViews"
     ECPV = "ecpv"
     VCR = "vcr"
-    VIEWABILITY = "viewability"
+    AUDIO_COMPLETE_LISTENS = "audioCompleteListens"
+    ECPL = "ecpl"
+    ACR = "acr"
+    VIEWABILITY_MEASURABILITY = "viewabilityMeasurability"
+    VIEWABILITY_VIEWABILITY = "viewabilityViewability"
+    EVCPM = "evcpm"
+    SSP_VIEWABILITY = "sspViewability"
+    VISITS_COUNT = "visitsCount"
+    CPVISIT = "cpvisit"
     USER_FREQUENCY = "userFrequency"
     USER_REACH = "userReach"
 
@@ -254,6 +262,14 @@ class Stats(CamelizedBaseModel):
     video_complete_views: Optional[float] = None
     ecpv: Optional[float] = None
     vcr: Optional[float] = None
-    viewability: Optional[float] = None
+    audio_complete_listens: Optional[float] = None
+    ecpl: Optional[float] = None
+    acr: Optional[float] = None
+    viewability_measurability: Optional[float] = None
+    viewability_viewability: Optional[float] = None
+    evcpm: Optional[float] = None
+    ssp_viewability: Optional[float] = None
+    visits_count: Optional[float] = None
+    cpvisit: Optional[float] = None
     user_frequency: Optional[float] = None
     user_reach: Optional[float] = None

@@ -57,7 +57,7 @@ jobs:
 
   release-package:
     name: "Release package"
-    runs-on: "ubuntu-22.04"
+    runs-on: "ubuntu-24.04"
     needs: ["ci"]
     env:
       PYTHON_VERSION: "3.11"
@@ -120,7 +120,7 @@ jobs:
         if: steps.should-publish-package.outputs.publish == 1
 
       - name: "Create release"
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.get-version.outputs.version }}
           generate_release_notes: true

@@ -4,7 +4,7 @@
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel
 
@@ -115,7 +115,7 @@ class CamelizedBaseModel(BaseModel):
             alias_generator = to_camel_case
 
     else:
-        model_config = ConfigDict(  # type: ignore  # pylint: disable=possibly-used-before-assignment
+        model_config = ConfigDict(  # pylint: disable=possibly-used-before-assignment  # pyright: ignore
             alias_generator=to_camel_case,
         )
 
@@ -125,7 +125,7 @@ class UserInfo(CamelizedBaseModel):
     login: str
     email: str
     is_client_user: bool
-    permissions: List[str]
+    permissions: list[str]
 
 
 class Advertiser(CamelizedBaseModel):
@@ -135,18 +135,18 @@ class Advertiser(CamelizedBaseModel):
     currency: str
     url: str
     created_at: datetime
-    properties: Dict[str, Any]
+    properties: dict[str, Any]
 
 
 class Campaign(CamelizedBaseModel):
     hash: str
     name: str
-    creative_ids: List[int]
+    creative_ids: list[int]
     status: str
     updated_at: Optional[datetime]
     rate_card_id: str
     is_editable: bool
-    advertiser_limits: Optional[Dict[str, Optional[int]]] = None
+    advertiser_limits: Optional[dict[str, Optional[int]]] = None
 
 
 class InvoiceData(BaseModel):
@@ -180,11 +180,11 @@ class Offer(CamelizedBaseModel):
     full_name: str
     identifier: str
     id: str
-    images: List[Image]
+    images: list[Image]
     name: str
     price: float
     category_name: str
-    custom_properties: Dict[str, str]
+    custom_properties: dict[str, str]
     updated_at: str
     status: str
 
@@ -201,7 +201,7 @@ class Bill(CamelizedBaseModel):
 
 class Billing(CamelizedBaseModel):
     initial_balance: float
-    bills: List[Bill]
+    bills: list[Bill]
 
 
 class CreativePreview(CamelizedBaseModel):
@@ -213,7 +213,7 @@ class CreativePreview(CamelizedBaseModel):
 
 class Creative(CamelizedBaseModel):
     hash: str
-    previews: List[CreativePreview]
+    previews: list[CreativePreview]
 
 
 class Conversion(CamelizedBaseModel):

@@ -1,8 +1,9 @@
 """Tests for async client."""
 
 # pylint: disable=too-many-arguments
+from collections.abc import AsyncIterator
 from datetime import date
-from typing import Any, AsyncIterator, Dict
+from typing import Any
 
 import pytest
 import respx
@@ -31,7 +32,7 @@ async def test_client_as_context_manager() -> None:
 async def test_get_user_info(
     api: AsyncClient,
     api_mock: respx.MockRouter,
-    user_info_response: Dict[str, Any],
+    user_info_response: dict[str, Any],
 ) -> None:
     api_mock.get("/user/info").respond(200, json=user_info_response)
 
@@ -43,7 +44,7 @@ async def test_get_user_info(
 async def test_get_advertisers(
     api: AsyncClient,
     api_mock: respx.MockRouter,
-    advertisers_response: Dict[str, Any],
+    advertisers_response: dict[str, Any],
 ) -> None:
     api_mock.get("/advertisers").respond(200, json=advertisers_response)
 
@@ -56,7 +57,7 @@ async def test_get_advertiser(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    advertiser_response: Dict[str, Any],
+    advertiser_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
@@ -69,7 +70,7 @@ async def test_get_invoicing_data(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    invoice_data_response: Dict[str, Any],
+    invoice_data_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
@@ -82,7 +83,7 @@ async def test_get_offer_categories(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    offer_categories_response: Dict[str, Any],
+    offer_categories_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offer-categories").respond(200, json=offer_categories_response)
 
@@ -95,7 +96,7 @@ async def test_get_offers(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    offers_response: Dict[str, Any],
+    offers_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
@@ -109,7 +110,7 @@ async def test_get_advertiser_campaigns(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    advertiser_campaigns_response: Dict[str, Any],
+    advertiser_campaigns_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
@@ -124,7 +125,7 @@ async def test_get_billing(
     adv_hash: str,
     day_from: date,
     day_to: date,
-    billing_response: Dict[str, Any],
+    billing_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
 
@@ -139,7 +140,7 @@ async def test_get_rtb_creatives(
     api: AsyncClient,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    rtb_creatives_response: Dict[str, Any],
+    rtb_creatives_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
@@ -157,8 +158,8 @@ async def test_get_rtb_conversions(
     adv_hash: str,
     day_from: date,
     day_to: date,
-    conversions_with_next_cursor_response: Dict[str, Any],
-    conversions_without_next_cursor_response: Dict[str, Any],
+    conversions_with_next_cursor_response: dict[str, Any],
+    conversions_without_next_cursor_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/conversions").mock(
         side_effect=[

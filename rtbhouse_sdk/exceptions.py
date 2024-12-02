@@ -1,14 +1,14 @@
 """Definitions of exceptions used in SDK."""
 
 import dataclasses
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 @dataclasses.dataclass
 class ErrorDetails:
     app_code: str
     message: str
-    errors: Optional[Dict[str, Any]]
+    errors: Optional[dict[str, Any]]
 
 
 class ApiException(Exception):
@@ -37,7 +37,7 @@ class ApiRequestException(ApiException):
 class ApiRateLimitException(ApiRequestException):
     """Indicates that rate limit was exceeded."""
 
-    limits: Dict[str, Dict[str, Dict[str, float]]]
+    limits: dict[str, dict[str, dict[str, float]]]
 
     def __init__(
         self,
@@ -49,11 +49,11 @@ class ApiRateLimitException(ApiRequestException):
         self.limits = _parse_resource_usage_header(usage_header)
 
 
-def _parse_resource_usage_header(header: Optional[str]) -> Dict[str, Dict[str, Dict[str, float]]]:
+def _parse_resource_usage_header(header: Optional[str]) -> dict[str, dict[str, dict[str, float]]]:
     """parse string like WORKER_TIME-3600=11.7/10000000;BQ_TB_BILLED-21600=4.62/2000 into dict"""
     if not header:
         return {}
-    result: Dict[str, Dict[str, Dict[str, float]]] = {}
+    result: dict[str, dict[str, dict[str, float]]] = {}
     try:
         for line in header.split(";"):
             right, left = line.split("=")

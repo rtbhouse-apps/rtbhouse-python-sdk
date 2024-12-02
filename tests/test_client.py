@@ -1,8 +1,9 @@
 """Tests for client."""
 
 # pylint: disable=too-many-arguments
+from collections.abc import Iterator
 from datetime import date
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Optional
 
 import pytest
 import respx
@@ -85,7 +86,7 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(
 def test_get_user_info(
     api: Client,
     api_mock: respx.MockRouter,
-    user_info_response: Dict[str, Any],
+    user_info_response: dict[str, Any],
 ) -> None:
     api_mock.get("/user/info").respond(200, json=user_info_response)
 
@@ -97,7 +98,7 @@ def test_get_user_info(
 def test_get_advertisers(
     api: Client,
     api_mock: respx.MockRouter,
-    advertisers_response: Dict[str, Any],
+    advertisers_response: dict[str, Any],
 ) -> None:
     api_mock.get("/advertisers").respond(200, json=advertisers_response)
 
@@ -110,7 +111,7 @@ def test_get_advertiser(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    advertiser_response: Dict[str, Any],
+    advertiser_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}").respond(200, json=advertiser_response)
 
@@ -123,7 +124,7 @@ def test_get_invoicing_data(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    invoice_data_response: Dict[str, Any],
+    invoice_data_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/client").respond(200, json=invoice_data_response)
 
@@ -136,7 +137,7 @@ def test_get_offer_categories(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    offer_categories_response: Dict[str, Any],
+    offer_categories_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offer-categories").respond(200, json=offer_categories_response)
 
@@ -149,7 +150,7 @@ def test_get_offers(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    offers_response: Dict[str, Any],
+    offers_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/offers").respond(200, json=offers_response)
 
@@ -163,7 +164,7 @@ def test_get_advertiser_campaigns(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    advertiser_campaigns_response: Dict[str, Any],
+    advertiser_campaigns_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/campaigns").respond(200, json=advertiser_campaigns_response)
 
@@ -178,7 +179,7 @@ def test_get_billing(
     adv_hash: str,
     day_from: date,
     day_to: date,
-    billing_response: Dict[str, Any],
+    billing_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/billing").respond(200, json=billing_response)
 
@@ -193,7 +194,7 @@ def test_get_rtb_creatives(
     api: Client,
     api_mock: respx.MockRouter,
     adv_hash: str,
-    rtb_creatives_response: Dict[str, Any],
+    rtb_creatives_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json=rtb_creatives_response)
 
@@ -239,7 +240,7 @@ def test_get_rtb_creatives_with_extra_params(
     adv_hash: str,
     subcampaigns: SubcampaignsFilter,
     active_only: Optional[bool],
-    params: Dict[str, str],
+    params: dict[str, str],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json={"status": "ok", "data": []})
 
@@ -255,8 +256,8 @@ def test_get_rtb_conversions(
     adv_hash: str,
     day_from: date,
     day_to: date,
-    conversions_with_next_cursor_response: Dict[str, Any],
-    conversions_without_next_cursor_response: Dict[str, Any],
+    conversions_with_next_cursor_response: dict[str, Any],
+    conversions_without_next_cursor_response: dict[str, Any],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/conversions").mock(
         side_effect=[

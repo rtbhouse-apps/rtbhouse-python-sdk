@@ -1,8 +1,9 @@
 """Common fixtures."""
 
 import copy
+from collections.abc import Iterator
 from datetime import date
-from typing import Any, Dict, Iterator
+from typing import Any
 
 import pytest
 import respx
@@ -33,7 +34,7 @@ def api_mock() -> Iterator[respx.MockRouter]:
 
 
 @pytest.fixture
-def user_info_response() -> Dict[str, Any]:
+def user_info_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": {
@@ -50,7 +51,7 @@ def user_info_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def advertisers_response() -> Dict[str, Any]:
+def advertisers_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": [
@@ -69,7 +70,7 @@ def advertisers_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def advertiser_response() -> Dict[str, Any]:
+def advertiser_response() -> dict[str, Any]:
     return {
         "data": {
             "hash": "hash",
@@ -87,7 +88,7 @@ def advertiser_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def invoice_data_response() -> Dict[str, Any]:
+def invoice_data_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": {
@@ -105,7 +106,7 @@ def invoice_data_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def offer_categories_response() -> Dict[str, Any]:
+def offer_categories_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": [
@@ -120,7 +121,7 @@ def offer_categories_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def offers_response() -> Dict[str, Any]:
+def offers_response() -> dict[str, Any]:
     return {
         "data": [
             {
@@ -149,7 +150,7 @@ def offers_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def advertiser_campaigns_response() -> Dict[str, Any]:
+def advertiser_campaigns_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": [
@@ -168,7 +169,7 @@ def advertiser_campaigns_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def billing_response() -> Dict[str, Any]:
+def billing_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": {
@@ -189,7 +190,7 @@ def billing_response() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def rtb_creatives_response() -> Dict[str, Any]:
+def rtb_creatives_response() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": [
@@ -210,7 +211,7 @@ def rtb_creatives_response() -> Dict[str, Any]:
 
 
 @pytest.fixture(name="conversions_with_next_cursor_response")
-def conversions_with_next_cursor_response_fixture() -> Dict[str, Any]:
+def conversions_with_next_cursor_response_fixture() -> dict[str, Any]:
     return {
         "status": "ok",
         "data": {
@@ -235,7 +236,7 @@ def conversions_with_next_cursor_response_fixture() -> Dict[str, Any]:
 
 
 @pytest.fixture
-def conversions_without_next_cursor_response(conversions_with_next_cursor_response: Dict[str, Any]) -> Dict[str, Any]:
+def conversions_without_next_cursor_response(conversions_with_next_cursor_response: dict[str, Any]) -> dict[str, Any]:
     data = copy.deepcopy(conversions_with_next_cursor_response)
     data["data"]["nextCursor"] = None
     return data

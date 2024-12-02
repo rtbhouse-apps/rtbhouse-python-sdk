@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rtbhouse-sdk"
-version = "13.0.0"
+version = "14.0.0"
 description = "RTB House SDK"
 authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
 license = "BSD License"
@@ -12,10 +12,11 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 
@@ -24,7 +25,7 @@ name = "PyPI"
 priority = "primary"
 
 [tool.poetry.dependencies]
-python = ">=3.8.1, <4.0"
+python = ">=3.9, <4.0"
 
 httpx = "^0.27.0"
 pydantic = ">=1.9, <3.0"
@@ -44,7 +45,7 @@ respx = "^0.21.0"
 
 [tool.black]
 line-length = 120
-target-version = ["py38", "py39", "py310", "py311"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 
 [tool.coverage.run]
 branch = true
@@ -58,8 +59,7 @@ line_length = 120
 profile = "black"
 
 [tool.mypy]
-python_version = "3.8"
-no_warn_unused_ignores = true
+python_version = "3.9"
 strict = true
 plugins = ["pydantic.mypy"]
 
@@ -70,7 +70,7 @@ warn_required_dynamic_aliases = false
 warn_untyped_fields = true
 
 [tool.pylint.main]
-py-version = "3.8"
+py-version = "3.9"
 load-plugins = """
     pylint.extensions.check_elif,
     pylint.extensions.confusing_elif,
@@ -96,6 +96,7 @@ disable = """
     missing-class-docstring,
     missing-function-docstring,
     suppressed-message,
+    too-many-positional-arguments,
     use-implicit-booleaness-not-comparison-to-zero,
     use-implicit-booleaness-not-comparison,
 """

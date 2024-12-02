@@ -1,3 +1,7 @@
+# v14.0.0
+- [breaking change] dropped support for python 3.8 (which is end-of-life), please use python 3.9+
+- added support for python 3.12 and 3.13
+
 # v13.0.0
 - [breaking change] current `viewability` metric has been renamed to `ssp_viewability`. We are leaving compatibility layer in the api until 2024-12-31.
 - added audio related metrics: `audio_complete_listens`, `ecpl`, `acr`.

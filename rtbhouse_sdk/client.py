@@ -145,8 +145,8 @@ class Client:
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
-    def get_advertiser_campaigns(self, adv_hash: str) -> list[schema.Campaign]:
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns")
+    def get_advertiser_campaigns(self, adv_hash: str, exclude_archived: bool = False) -> list[schema.Campaign]:
+        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns", {"excludeArchived": exclude_archived})
         return [schema.Campaign(**camp) for camp in data]
 
     def get_billing(
@@ -332,8 +332,10 @@ class AsyncClient:
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/offers")
         return [schema.Offer(**offer) for offer in data]
 
-    async def get_advertiser_campaigns(self, adv_hash: str) -> list[schema.Campaign]:
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns")
+    async def get_advertiser_campaigns(self, adv_hash: str, exclude_archived: bool = False) -> list[schema.Campaign]:
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/campaigns", {"excludeArchived": exclude_archived}
+        )
         return [schema.Campaign(**camp) for camp in data]
 
     async def get_billing(

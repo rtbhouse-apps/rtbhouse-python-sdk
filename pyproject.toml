@@ -39,7 +39,7 @@ isort = "^6.0.0"
 mypy = "^1.0"
 pylint = "^3.0.0"
 pytest = "^8.0.0"
-pytest-asyncio = "^0.25.0"
+pytest-asyncio = "^0.26.0"
 pytest-cov = "^6.0.0"
 respx = "^0.22.0"
 
@@ -105,6 +105,8 @@ extension-pkg-whitelist = "pydantic"
 [tool.pytest.ini_options]
 addopts = "--cov=rtbhouse_sdk/ --cov-report=term"
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [build-system]
 requires = ["poetry-core"]

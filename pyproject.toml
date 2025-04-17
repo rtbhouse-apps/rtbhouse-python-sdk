@@ -105,6 +105,8 @@ extension-pkg-whitelist = "pydantic"
 [tool.pytest.ini_options]
 addopts = "--cov=rtbhouse_sdk/ --cov-report=term"
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [build-system]
 requires = ["poetry-core"]

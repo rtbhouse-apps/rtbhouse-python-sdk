@@ -203,7 +203,7 @@ def test_get_rtb_creatives(
     (call,) = api_mock.calls
     assert dict(call.request.url.params) == {}
     assert rtb_creative.hash == "hash"
-    assert len(rtb_creative.previews) == 1
+    assert len(rtb_creative.previews) == 2
 
 
 @pytest.mark.parametrize(

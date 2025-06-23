@@ -207,7 +207,7 @@ class Billing(CamelizedBaseModel):
 class CreativePreview(CamelizedBaseModel):
     width: int
     height: int
-    offers_number: int
+    offers_number: Optional[int]
     preview_url: str
 
 

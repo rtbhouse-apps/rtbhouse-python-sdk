@@ -203,7 +203,13 @@ def rtb_creatives_response() -> dict[str, Any]:
                         "height": 200,
                         "offersNumber": 4,
                         "previewUrl": "url",
-                    }
+                    },
+                    {
+                        "width": 300,
+                        "height": 200,
+                        "offersNumber": None,
+                        "previewUrl": "url",
+                    },
                 ],
             }
         ],

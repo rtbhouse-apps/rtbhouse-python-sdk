@@ -7,7 +7,7 @@ from collections.abc import AsyncIterable, Generator, Iterable
 from datetime import date, timedelta
 from json import JSONDecodeError
 from types import TracebackType
-from typing import Any, Optional, Union
+from typing import Any
 
 import httpx
 
@@ -61,7 +61,7 @@ class Client:
 
     def __init__(
         self,
-        auth: Union[BasicAuth, BasicTokenAuth],
+        auth: BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ):
         self._httpx_client = httpx.Client(
@@ -86,7 +86,7 @@ class Client:
     ) -> None:
         self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
-    def _get(self, path: str, params: Optional[dict[str, Any]] = None) -> Any:
+    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         response = self._httpx_client.get(path, params=params)
         _validate_response(response)
         try:
@@ -95,13 +95,13 @@ class Client:
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
-    def _get_dict(self, path: str, params: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         data = self._get(path, params)
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
 
-    def _get_list_of_dicts(self, path: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
+    def _get_list_of_dicts(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         data = self._get(path, params)
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
             raise ValueError("Result is not a list of dicts")
@@ -161,8 +161,8 @@ class Client:
     def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, list[str], schema.SubcampaignsFilter] = None,
-        active_only: Optional[bool] = None,
+        subcampaigns: list[str] | schema.SubcampaignsFilter | None = None,
+        active_only: bool | None = None,
     ) -> list[schema.Creative]:
         params = _build_rtb_creatives_params(subcampaigns, active_only)
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
@@ -193,11 +193,11 @@ class Client:
         day_to: date,
         group_by: list[schema.StatsGroupBy],
         metrics: list[schema.StatsMetric],
-        count_convention: Optional[schema.CountConvention] = None,
+        count_convention: schema.CountConvention | None = None,
         utc_offset_hours: int = 0,
-        subcampaigns: Optional[list[str]] = None,
-        user_segments: Optional[list[schema.UserSegment]] = None,
-        device_types: Optional[list[schema.DeviceType]] = None,
+        subcampaigns: list[str] | None = None,
+        user_segments: list[schema.UserSegment] | None = None,
+        device_types: list[schema.DeviceType] | None = None,
     ) -> list[schema.Stats]:
         params = _build_rtb_stats_params(
             day_from,
@@ -221,9 +221,9 @@ class Client:
         day_to: date,
         group_by: list[schema.StatsGroupBy],
         metrics: list[schema.StatsMetric],
-        count_convention: Optional[schema.CountConvention] = None,
+        count_convention: schema.CountConvention | None = None,
         utc_offset_hours: int = 0,
-        subcampaigns: Optional[list[str]] = None,
+        subcampaigns: list[str] | None = None,
     ) -> list[schema.Stats]:
         params = _build_summary_stats_params(
             day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
@@ -247,7 +247,7 @@ class AsyncClient:
 
     def __init__(
         self,
-        auth: Union[BasicAuth, BasicTokenAuth],
+        auth: BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         self._httpx_client = httpx.AsyncClient(
@@ -272,7 +272,7 @@ class AsyncClient:
     ) -> None:
         await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
-    async def _get(self, path: str, params: Optional[dict[str, Any]] = None) -> Any:
+    async def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         response = await self._httpx_client.get(path, params=params)
         _validate_response(response)
         try:
@@ -281,13 +281,13 @@ class AsyncClient:
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
-    async def _get_dict(self, path: str, params: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    async def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         data = await self._get(path, params)
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
 
-    async def _get_list_of_dicts(self, path: str, params: Optional[dict[str, Any]] = None) -> list[dict[str, Any]]:
+    async def _get_list_of_dicts(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
         data = await self._get(path, params)
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
             raise ValueError("Result is not of a list of dicts")
@@ -350,8 +350,8 @@ class AsyncClient:
     async def get_rtb_creatives(
         self,
         adv_hash: str,
-        subcampaigns: Union[None, list[str], schema.SubcampaignsFilter] = None,
-        active_only: Optional[bool] = None,
+        subcampaigns: list[str] | schema.SubcampaignsFilter | None = None,
+        active_only: bool | None = None,
     ) -> list[schema.Creative]:
         params = _build_rtb_creatives_params(subcampaigns, active_only)
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
@@ -382,11 +382,11 @@ class AsyncClient:
         day_to: date,
         group_by: list[schema.StatsGroupBy],
         metrics: list[schema.StatsMetric],
-        count_convention: Optional[schema.CountConvention] = None,
+        count_convention: schema.CountConvention | None = None,
         utc_offset_hours: int = 0,
-        subcampaigns: Optional[list[str]] = None,
-        user_segments: Optional[list[schema.UserSegment]] = None,
-        device_types: Optional[list[schema.DeviceType]] = None,
+        subcampaigns: list[str] | None = None,
+        user_segments: list[schema.UserSegment] | None = None,
+        device_types: list[schema.DeviceType] | None = None,
     ) -> list[schema.Stats]:
         params = _build_rtb_stats_params(
             day_from,
@@ -410,9 +410,9 @@ class AsyncClient:
         day_to: date,
         group_by: list[schema.StatsGroupBy],
         metrics: list[schema.StatsMetric],
-        count_convention: Optional[schema.CountConvention] = None,
+        count_convention: schema.CountConvention | None = None,
         utc_offset_hours: int = 0,
-        subcampaigns: Optional[list[str]] = None,
+        subcampaigns: list[str] | None = None,
     ) -> list[schema.Stats]:
         params = _build_summary_stats_params(
             day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
@@ -443,7 +443,7 @@ def _build_headers() -> dict[str, str]:
     }
 
 
-def _choose_auth_backend(auth: Union[BasicAuth, BasicTokenAuth]) -> httpx.Auth:
+def _choose_auth_backend(auth: BasicAuth | BasicTokenAuth) -> httpx.Auth:
     if isinstance(auth, BasicAuth):
         return httpx.BasicAuth(auth.username, auth.password)
     if isinstance(auth, BasicTokenAuth):
@@ -492,8 +492,8 @@ def _validate_response(response: httpx.Response) -> None:
 
 
 def _build_rtb_creatives_params(
-    subcampaigns: Union[None, list[str], schema.SubcampaignsFilter] = None,
-    active_only: Optional[bool] = None,
+    subcampaigns: list[str] | schema.SubcampaignsFilter | None = None,
+    active_only: bool | None = None,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {}
     if subcampaigns:
@@ -512,11 +512,11 @@ def _build_rtb_stats_params(
     day_to: date,
     group_by: list[schema.StatsGroupBy],
     metrics: list[schema.StatsMetric],
-    count_convention: Optional[schema.CountConvention] = None,
+    count_convention: schema.CountConvention | None = None,
     utc_offset_hours: int = 0,
-    subcampaigns: Optional[list[str]] = None,
-    user_segments: Optional[list[schema.UserSegment]] = None,
-    device_types: Optional[list[schema.DeviceType]] = None,
+    subcampaigns: list[str] | None = None,
+    user_segments: list[schema.UserSegment] | None = None,
+    device_types: list[schema.DeviceType] | None = None,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {
         "dayFrom": day_from,
@@ -543,9 +543,9 @@ def _build_summary_stats_params(
     day_to: date,
     group_by: list[schema.StatsGroupBy],
     metrics: list[schema.StatsMetric],
-    count_convention: Optional[schema.CountConvention] = None,
+    count_convention: schema.CountConvention | None = None,
     utc_offset_hours: int = 0,
-    subcampaigns: Optional[list[str]] = None,
+    subcampaigns: list[str] | None = None,
 ) -> dict[str, Any]:
     params: dict[str, Any] = {
         "dayFrom": day_from,

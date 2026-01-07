@@ -3,7 +3,7 @@
 # pylint: disable=too-many-arguments
 from collections.abc import Iterator
 from datetime import date
-from typing import Any, Optional
+from typing import Any
 
 import pytest
 import respx
@@ -239,7 +239,7 @@ def test_get_rtb_creatives_with_extra_params(
     api_mock: respx.MockRouter,
     adv_hash: str,
     subcampaigns: SubcampaignsFilter,
-    active_only: Optional[bool],
+    active_only: bool | None,
     params: dict[str, str],
 ) -> None:
     api_mock.get(f"/advertisers/{adv_hash}/rtb-creatives").respond(200, json={"status": "ok", "data": []})

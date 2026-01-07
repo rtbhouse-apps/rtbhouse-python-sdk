@@ -1,7 +1,5 @@
 """Tests for auth methods."""
 
-from typing import Union
-
 import pytest
 import respx
 
@@ -15,7 +13,7 @@ from rtbhouse_sdk.client import BasicAuth, BasicTokenAuth, Client
         BasicTokenAuth("token"),
     ),
 )
-def test_auth_backend_is_supported(auth_backend: Union[BasicAuth, BasicTokenAuth]) -> None:
+def test_auth_backend_is_supported(auth_backend: BasicAuth | BasicTokenAuth) -> None:
     Client(auth=auth_backend)
 
 

@@ -4,7 +4,7 @@
 from datetime import date, datetime
 from enum import Enum
 from functools import partial
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -143,17 +143,17 @@ class Campaign(CamelizedBaseModel):
     name: str
     creative_ids: list[int]
     status: str
-    updated_at: Optional[datetime]
+    updated_at: datetime | None
     rate_card_id: str
     is_editable: bool
-    advertiser_limits: Optional[dict[str, Optional[int]]] = None
+    advertiser_limits: dict[str, int | None] | None = None
 
 
 class InvoiceData(BaseModel):
     vat_number: str
     company_name: str
     street1: str
-    street2: Optional[str] = None
+    street2: str | None = None
     postal_code: str
     city: str
     country: str
@@ -207,7 +207,7 @@ class Billing(CamelizedBaseModel):
 class CreativePreview(CamelizedBaseModel):
     width: int
     height: int
-    offers_number: Optional[int]
+    offers_number: int | None
     preview_url: str
 
 
@@ -219,57 +219,56 @@ class Creative(CamelizedBaseModel):
 class Conversion(CamelizedBaseModel):
     conversion_identifier: str
     conversion_hash: str
-    conversion_class: Optional[str]
+    conversion_class: str | None
     conversion_value: float
     commission_value: float
-    cookie_hash: Optional[str]
+    cookie_hash: str | None
     conversion_time: datetime
-    last_click_time: Optional[datetime]
-    last_impression_time: Optional[datetime]
+    last_click_time: datetime | None
+    last_impression_time: datetime | None
 
 
 class Stats(CamelizedBaseModel):
     # from GroupBy
-    hour: Optional[int] = None
-    day: Optional[date] = None
-    week: Optional[str] = None
-    month: Optional[str] = None
-    year: Optional[str] = None
-    advertiser: Optional[str] = None
-    subcampaign: Optional[str] = None
-    subcampaign_hash: Optional[str] = None
-    user_segment: Optional[str] = None
-    device_type: Optional[str] = None
-    creative: Optional[str] = None
-    category: Optional[str] = None
-    category_name: Optional[str] = None
-    country: Optional[str] = None
-    placement: Optional[str] = None
-
+    hour: int | None = None
+    day: date | None = None
+    week: str | None = None
+    month: str | None = None
+    year: str | None = None
+    advertiser: str | None = None
+    subcampaign: str | None = None
+    subcampaign_hash: str | None = None
+    user_segment: str | None = None
+    device_type: str | None = None
+    creative: str | None = None
+    category: str | None = None
+    category_name: str | None = None
+    country: str | None = None
+    placement: str | None = None
     # from Metric
-    campaign_cost: Optional[float] = None
-    imps_count: Optional[float] = None
-    ecpm: Optional[float] = None
-    clicks_count: Optional[float] = None
-    ecpc: Optional[float] = None
-    ctr: Optional[float] = None
-    conversions_count: Optional[float] = None
-    ecpa: Optional[float] = None
-    cr: Optional[float] = None
-    conversions_value: Optional[float] = None
-    roas: Optional[float] = None
-    ecps: Optional[float] = None
-    video_complete_views: Optional[float] = None
-    ecpv: Optional[float] = None
-    vcr: Optional[float] = None
-    audio_complete_listens: Optional[float] = None
-    ecpl: Optional[float] = None
-    acr: Optional[float] = None
-    viewability_measurability: Optional[float] = None
-    viewability_viewability: Optional[float] = None
-    evcpm: Optional[float] = None
-    ssp_viewability: Optional[float] = None
-    visits_count: Optional[float] = None
-    cpvisit: Optional[float] = None
-    user_frequency: Optional[float] = None
-    user_reach: Optional[float] = None
+    campaign_cost: float | None = None
+    imps_count: float | None = None
+    ecpm: float | None = None
+    clicks_count: float | None = None
+    ecpc: float | None = None
+    ctr: float | None = None
+    conversions_count: float | None = None
+    ecpa: float | None = None
+    cr: float | None = None
+    conversions_value: float | None = None
+    roas: float | None = None
+    ecps: float | None = None
+    video_complete_views: float | None = None
+    ecpv: float | None = None
+    vcr: float | None = None
+    audio_complete_listens: float | None = None
+    ecpl: float | None = None
+    acr: float | None = None
+    viewability_measurability: float | None = None
+    viewability_viewability: float | None = None
+    evcpm: float | None = None
+    ssp_viewability: float | None = None
+    visits_count: float | None = None
+    cpvisit: float | None = None
+    user_frequency: float | None = None
+    user_reach: float | None = None

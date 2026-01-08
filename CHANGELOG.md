@@ -1,3 +1,6 @@
+# v15.0.0
+- [breaking change] dropped support for python 3.9 (which is end-of-life), please use python 3.10+
+
 # v14.0.0
 - [breaking change] dropped support for python 3.8 (which is end-of-life), please use python 3.9+
 - added support for python 3.12 and 3.13

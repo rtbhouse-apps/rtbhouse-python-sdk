@@ -3,7 +3,8 @@
 # pylint: disable=too-many-arguments
 import dataclasses
 import warnings
-from collections.abc import AsyncIterable, Generator, Iterable
+from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator, AsyncIterable, Awaitable, Callable, Generator, Iterable
 from datetime import date, timedelta
 from json import JSONDecodeError
 from types import TracebackType
@@ -26,6 +27,16 @@ API_VERSION = "v5"
 
 DEFAULT_TIMEOUT = timedelta(seconds=60.0)
 MAX_CURSOR_ROWS = 10000
+
+
+@dataclasses.dataclass
+class ApiTokenAuth:
+    token: str
+
+
+@dataclasses.dataclass
+class DynamicApiTokenAuth:
+    manager: "ApiTokenProvider"
 
 
 @dataclasses.dataclass
@@ -61,7 +72,7 @@ class Client:
 
     def __init__(
         self,
-        auth: BasicAuth | BasicTokenAuth,
+        auth: ApiTokenAuth | DynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ):
         self._httpx_client = httpx.Client(
@@ -95,8 +106,29 @@ class Client:
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
+    def _post(self, path: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> Any:
+        response = self._httpx_client.post(
+            path,
+            json=data,
+            params=params,
+        )
+        _validate_response(response)
+        try:
+            resp_json = response.json()
+            return resp_json["data"]
+        except (ValueError, KeyError) as exc:
+            raise ApiException("Invalid response format") from exc
+
     def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         data = self._get(path, params)
+        if not isinstance(data, dict):
+            raise ValueError("Result is not a dict")
+        return data
+
+    def _post_dict(
+        self, path: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        data = self._post(path, data, params)
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
@@ -233,6 +265,11 @@ class Client:
         return [schema.Stats(**st) for st in data]
 
 
+@dataclasses.dataclass
+class AsyncDynamicApiTokenAuth:
+    manager: "AsyncApiTokenProvider"
+
+
 class AsyncClient:
     """
     An asynchronous API client.
@@ -247,7 +284,7 @@ class AsyncClient:
 
     def __init__(
         self,
-        auth: BasicAuth | BasicTokenAuth,
+        auth: ApiTokenAuth | AsyncDynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         self._httpx_client = httpx.AsyncClient(
@@ -274,6 +311,15 @@ class AsyncClient:
 
     async def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
         response = await self._httpx_client.get(path, params=params)
+        _validate_response(response)
+        try:
+            resp_json = response.json()
+            return resp_json["data"]
+        except (ValueError, KeyError) as exc:
+            raise ApiException("Invalid response format") from exc
+
+    async def _post(self, path: str, data: dict[str, Any], params: dict[str, Any] | None = None) -> Any:
+        response = await self._httpx_client.post(path, json=data, params=params)
         _validate_response(response)
         try:
             resp_json = response.json()
@@ -422,6 +468,41 @@ class AsyncClient:
         return [schema.Stats(**st) for st in data]
 
 
+class _HttpxApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    def __init__(self, token: str) -> None:
+        self._token = token
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        request.headers["Authorization"] = f"Bearer {self._token}"
+        yield request
+
+
+class _HttpxProviderApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    def __init__(self, token_provider: Callable[[], str]) -> None:
+        self._token_provider = token_provider
+
+    def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        token = self._token_provider()
+        request.headers["Authorization"] = f"Bearer {token}"
+        yield request
+
+
+class _AsyncHttpxProviderApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    def __init__(self, token_provider: Callable[[], Awaitable[str]]) -> None:
+        self._token_provider = token_provider
+
+    async def async_auth_flow(self, request: httpx.Request) -> AsyncGenerator[httpx.Request, httpx.Response]:
+        token = await self._token_provider()
+        request.headers["Authorization"] = f"Bearer {token}"
+        yield request
+
+
 class _HttpxBasicTokenAuth(httpx.Auth):
     """Basic token auth backend."""
 
@@ -431,6 +512,18 @@ class _HttpxBasicTokenAuth(httpx.Auth):
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
         request.headers["Authorization"] = f"Token {self._token}"
         yield request
+
+
+class ApiTokenProvider(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    def get_token(self) -> str:
+        pass
+
+
+class AsyncApiTokenProvider(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    async def get_token(self) -> str:
+        pass
 
 
 def build_base_url() -> str:
@@ -443,12 +536,22 @@ def _build_headers() -> dict[str, str]:
     }
 
 
-def _choose_auth_backend(auth: BasicAuth | BasicTokenAuth) -> httpx.Auth:
-    if isinstance(auth, BasicAuth):
-        return httpx.BasicAuth(auth.username, auth.password)
-    if isinstance(auth, BasicTokenAuth):
-        return _HttpxBasicTokenAuth(auth.token)
-    raise ValueError("Unknown auth method")
+def _choose_auth_backend(
+    auth: ApiTokenAuth | DynamicApiTokenAuth | AsyncDynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
+) -> httpx.Auth:
+    match auth:
+        case ApiTokenAuth(token=token):
+            return _HttpxApiTokenAuth(token)
+        case DynamicApiTokenAuth(manager=manager):
+            return _HttpxProviderApiTokenAuth(manager.get_token)
+        case AsyncDynamicApiTokenAuth(manager=manager):
+            return _AsyncHttpxProviderApiTokenAuth(manager.get_token)
+        case BasicAuth(username=username, password=password):
+            return httpx.BasicAuth(username, password)
+        case BasicTokenAuth(token=token):
+            return _HttpxBasicTokenAuth(token)
+        case _:
+            raise ValueError("Unknown auth method")
 
 
 def _validate_response(response: httpx.Response) -> None:

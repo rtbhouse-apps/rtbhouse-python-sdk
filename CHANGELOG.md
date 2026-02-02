@@ -1,3 +1,29 @@
+# v16.0.0
+- Added `ApiTokenAuth` for authenticating with a API token.
+- Added `DynamicApiTokenAuth` / `AsyncDynamicApiTokenAuth` for authenticating with API tokens with automatic rotation (sync + async).
+- Added API token storage implementations: in-memory and JSON file (sync + async). 
+
+Examples:
+```python
+from rtbhouse_sdk.client import ApiTokenAuth, Client
+
+auth = ApiTokenAuth(token="your_api_token")
+api = Client(auth=auth)
+
+info = api.get_user_info()
+api.close()
+```
+or in async
+```python
+from rtbhouse_sdk.client import ApiTokenAuth, AsyncClient
+
+auth = ApiTokenAuth(token="your_api_token")
+api = AsyncClient(auth=auth)
+
+info = await api.get_user_info()
+api.close()
+```
+
 # v15.0.0
 - [breaking change] dropped support for python 3.9 (which is end-of-life), please use python 3.10+
 

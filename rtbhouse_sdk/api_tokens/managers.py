@@ -14,6 +14,8 @@ from rtbhouse_sdk.client import ApiTokenProvider, AsyncApiTokenProvider
 
 ROTATION_WINDOW = timedelta(days=4)
 
+DEFAULT_TOKEN_CONFIGURE_ENV_VAR = "RTBH_API_TOKEN"
+
 EXPIRED_MSG = "API token expired. Please manually create a new one and configure it by calling the configure() method."
 
 
@@ -57,18 +59,17 @@ class ApiTokenManager(ApiTokenProvider):
 
     def configure_from_env(
         self,
-        env_var: str = "RTBH_API_TOKEN",
+        env_var: str = DEFAULT_TOKEN_CONFIGURE_ENV_VAR,
         overwrite: bool = False,
-    ) -> bool:
+    ) -> None:
         token = os.getenv(env_var)
         if token is None:
-            return False
+            raise ValueError(f"Environment variable '{env_var}' is not set")
 
         if not overwrite and self.is_configured():
-            return False
+            return
 
         self.configure(token)
-        return True
 
     def is_configured(self) -> bool:
         try:
@@ -81,9 +82,9 @@ class ApiTokenManager(ApiTokenProvider):
         api_token = self._storage.load()
         now = utcnow()
 
-        self._raise_if_expired(api_token, now)
+        _raise_if_expired(api_token, now, self._expiration_margin)
 
-        if not self._in_rotation_window(api_token, now):
+        if not _in_rotation_window(api_token, now):
             # fast path
             return api_token.token
 
@@ -92,9 +93,9 @@ class ApiTokenManager(ApiTokenProvider):
             api_token = self._storage.load()
             now = utcnow()
 
-            self._raise_if_expired(api_token, now)
+            _raise_if_expired(api_token, now, self._expiration_margin)
 
-            if not self._in_rotation_window(api_token, now):
+            if not _in_rotation_window(api_token, now):
                 return api_token.token
 
             status = self._api.heartbeat(api_token.token)
@@ -103,7 +104,7 @@ class ApiTokenManager(ApiTokenProvider):
                 raise TokenExpiredException(EXPIRED_MSG)
 
             if not status.can_rotate:
-                if self._in_rotation_window(api_token, now):
+                if _in_rotation_window(api_token, now):
                     warnings.warn(
                         "Couldn't rotate API token and it may expire soon. "
                         "Please check whether it has already been rotated."
@@ -125,7 +126,7 @@ class ApiTokenManager(ApiTokenProvider):
             api_token = self._storage.load()
             now = utcnow()
 
-            self._raise_if_expired(api_token, now)
+            _raise_if_expired(api_token, now, self._expiration_margin)
 
             status = self._api.heartbeat(api_token.token)
 
@@ -133,7 +134,7 @@ class ApiTokenManager(ApiTokenProvider):
                 raise TokenExpiredException(EXPIRED_MSG)
 
             if not status.can_rotate:
-                if self._in_rotation_window(api_token, now):
+                if _in_rotation_window(api_token, now):
                     warnings.warn(
                         "Couldn't rotate API token and it may expire soon. "
                         "Please check whether it has already been rotated."
@@ -146,14 +147,6 @@ class ApiTokenManager(ApiTokenProvider):
                 expires_at=rotated.expires_at,
             )
             self._storage.save(new_api_token)
-
-    def _raise_if_expired(self, api_token: ApiToken, now: datetime) -> None:
-        if now >= api_token.expires_at - self._expiration_margin:
-            raise TokenExpiredException(EXPIRED_MSG)
-
-    @staticmethod
-    def _in_rotation_window(api_token: ApiToken, now: datetime) -> bool:
-        return now >= (api_token.expires_at - ROTATION_WINDOW)
 
 
 class AsyncApiTokenManager(AsyncApiTokenProvider):
@@ -179,18 +172,17 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
 
     async def configure_from_env(
         self,
-        env_var: str = "RTBH_API_TOKEN",
+        env_var: str = DEFAULT_TOKEN_CONFIGURE_ENV_VAR,
         overwrite: bool = False,
-    ) -> bool:
+    ) -> None:
         token = os.getenv(env_var)
         if token is None:
-            return False
+            raise ValueError(f"Environment variable '{env_var}' is not set")
 
         if not overwrite and await self.is_configured():
-            return False
+            return
 
         await self.configure(token)
-        return True
 
     async def is_configured(self) -> bool:
         try:
@@ -203,9 +195,9 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
         api_token = await self._storage.load()
         now = utcnow()
 
-        self._raise_if_expired(api_token, now)
+        _raise_if_expired(api_token, now, self._expiration_margin)
 
-        if not self._in_rotation_window(api_token, now):
+        if not _in_rotation_window(api_token, now):
             # fast path
             return api_token.token
 
@@ -214,9 +206,9 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
             api_token = await self._storage.load()
             now = utcnow()
 
-            self._raise_if_expired(api_token, now)
+            _raise_if_expired(api_token, now, self._expiration_margin)
 
-            if not self._in_rotation_window(api_token, now):
+            if not _in_rotation_window(api_token, now):
                 return api_token.token
 
             status = await self._api.heartbeat(api_token.token)
@@ -225,7 +217,7 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
                 raise TokenExpiredException(EXPIRED_MSG)
 
             if not status.can_rotate:
-                if self._in_rotation_window(api_token, now):
+                if _in_rotation_window(api_token, now):
                     warnings.warn(
                         "Couldn't rotate API token and it may expire soon. "
                         "Please check whether it has already been rotated."
@@ -247,7 +239,7 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
             api_token = await self._storage.load()
             now = utcnow()
 
-            self._raise_if_expired(api_token, now)
+            _raise_if_expired(api_token, now, self._expiration_margin)
 
             status = await self._api.heartbeat(api_token.token)
 
@@ -255,7 +247,7 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
                 raise TokenExpiredException(EXPIRED_MSG)
 
             if not status.can_rotate:
-                if self._in_rotation_window(api_token, now):
+                if _in_rotation_window(api_token, now):
                     warnings.warn(
                         "Couldn't rotate API token and it may expire soon. "
                         "Please check whether it has already been rotated."
@@ -269,10 +261,11 @@ class AsyncApiTokenManager(AsyncApiTokenProvider):
             )
             await self._storage.save(new_api_token)
 
-    def _raise_if_expired(self, api_token: ApiToken, now: datetime) -> None:
-        if now >= api_token.expires_at - self._expiration_margin:
-            raise TokenExpiredException(EXPIRED_MSG)
 
-    @staticmethod
-    def _in_rotation_window(api_token: ApiToken, now: datetime) -> bool:
-        return now >= (api_token.expires_at - ROTATION_WINDOW)
+def _raise_if_expired(api_token: ApiToken, now: datetime, expiration_margin: timedelta) -> None:
+    if now >= api_token.expires_at - expiration_margin:
+        raise TokenExpiredException(EXPIRED_MSG)
+
+
+def _in_rotation_window(api_token: ApiToken, now: datetime) -> bool:
+    return now >= (api_token.expires_at - ROTATION_WINDOW)

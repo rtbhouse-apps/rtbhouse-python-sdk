@@ -32,7 +32,7 @@ pydantic = ">=1.9, <3.0"
 [tool.poetry.group.dev.dependencies]
 pydantic = "^2.0.0" # required for tests
 
-black = "^25.0.0"
+black = "^26.0.0"
 flake8 = "^7.0.0"
 isort = "^7.0.0"
 mypy = "^1.0"

@@ -37,7 +37,7 @@ jobs:
           echo "$HOME/.poetry/bin" >> $GITHUB_PATH
 
       - name: Set up poetry cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /home/runner/.cache/pypoetry/virtualenvs
           key: venv-${{ matrix.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}

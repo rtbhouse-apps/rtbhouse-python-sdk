@@ -108,6 +108,17 @@ jupyter = ["ipython (>=7.8.0)", "tokenize-rt (>=3.2.0)"]
 uvloop = ["uvloop (>=0.15.2)", "winloop (>=0.5.0)"]
 
 [[package]]
+name = "cachetools"
+version = "7.0.3"
+description = "Extensible memoizing collections and decorators"
+optional = false
+python-versions = ">=3.10"
+files = [
+    {file = "cachetools-7.0.3-py3-none-any.whl", hash = "sha256:c128ffca156eef344c25fcd08a96a5952803786fa33097f5f2d49edf76f79d53"},
+    {file = "cachetools-7.0.3.tar.gz", hash = "sha256:8c246313b95849964e54a909c03b327a87ab0428b068fac10da7b105ca275ef6"},
+]
+
+[[package]]
 name = "certifi"
 version = "2026.2.25"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -1061,6 +1072,17 @@ files = [
 ]
 
 [[package]]
+name = "types-cachetools"
+version = "6.2.0.20251022"
+description = "Typing stubs for cachetools"
+optional = false
+python-versions = ">=3.9"
+files = [
+    {file = "types_cachetools-6.2.0.20251022-py3-none-any.whl", hash = "sha256:698eb17b8f16b661b90624708b6915f33dbac2d185db499ed57e4997e7962cad"},
+    {file = "types_cachetools-6.2.0.20251022.tar.gz", hash = "sha256:f1d3c736f0f741e89ec10f0e1b0138625023e21eb33603a930c149e0318c0cef"},
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 description = "Backported and Experimental Type Hints for Python 3.9+"
@@ -1088,4 +1110,4 @@ typing-extensions = ">=4.12.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10, <4.0"
-content-hash = "2c7885949989e7000dc6b6e8b1fa66011922cfb14a8c3dfa202944c924ca07f6"
+content-hash = "47bde6471b3e891131d30fc8fe8ba73dc4c1dd37f9f1b14f6e1a32219ebb1ebe"

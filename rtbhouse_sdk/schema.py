@@ -272,3 +272,13 @@ class Stats(CamelizedBaseModel):
     cpvisit: float | None = None
     user_frequency: float | None = None
     user_reach: float | None = None
+
+
+class RotatedApiToken(CamelizedBaseModel):
+    token: str
+    expires_at: datetime
+
+
+class ApiToken(CamelizedBaseModel):
+    expires_at: datetime
+    can_rotate: bool

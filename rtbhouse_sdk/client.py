@@ -34,9 +34,10 @@ class ApiTokenAuth:
     token: str
 
 
-@dataclasses.dataclass
-class DynamicApiTokenAuth:
-    manager: "ApiTokenProvider"
+class DynamicApiTokenAuth(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    def get_token(self) -> str:
+        pass
 
 
 @dataclasses.dataclass
@@ -264,10 +265,19 @@ class Client:
         data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
 
+    def get_current_api_token(self) -> schema.ApiToken:
+        data = self._get_dict("/tokens/current")
+        return schema.ApiToken(**data)
 
-@dataclasses.dataclass
-class AsyncDynamicApiTokenAuth:
-    manager: "AsyncApiTokenProvider"
+    def rotate_current_api_token(self) -> schema.RotatedApiToken:
+        data = self._post_dict("/tokens/current/rotate")
+        return schema.RotatedApiToken(**data)
+
+
+class AsyncDynamicApiTokenAuth(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    async def get_token(self) -> str:
+        pass
 
 
 class AsyncClient:
@@ -318,8 +328,12 @@ class AsyncClient:
         except (ValueError, KeyError) as exc:
             raise ApiException("Invalid response format") from exc
 
-    async def _post(self, path: str, data: dict[str, Any], params: dict[str, Any] | None = None) -> Any:
-        response = await self._httpx_client.post(path, json=data, params=params)
+    async def _post(self, path: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None) -> Any:
+        response = await self._httpx_client.post(
+            path,
+            json=data,
+            params=params,
+        )
         _validate_response(response)
         try:
             resp_json = response.json()
@@ -329,6 +343,14 @@ class AsyncClient:
 
     async def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         data = await self._get(path, params)
+        if not isinstance(data, dict):
+            raise ValueError("Result is not a dict")
+        return data
+
+    async def _post_dict(
+        self, path: str, data: dict[str, Any] | None = None, params: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
+        data = await self._post(path, data, params)
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
@@ -467,6 +489,14 @@ class AsyncClient:
         data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
         return [schema.Stats(**st) for st in data]
 
+    async def get_current_api_token(self) -> schema.ApiToken:
+        data = await self._get_dict("/tokens/current")
+        return schema.ApiToken(**data)
+
+    async def rotate_current_api_token(self) -> schema.RotatedApiToken:
+        data = await self._post_dict("/tokens/current/rotate")
+        return schema.RotatedApiToken(**data)
+
 
 class _HttpxApiTokenAuth(httpx.Auth):
     """API token auth backend."""
@@ -479,7 +509,7 @@ class _HttpxApiTokenAuth(httpx.Auth):
         yield request
 
 
-class _HttpxProviderApiTokenAuth(httpx.Auth):
+class _HttpxDynamicApiTokenAuth(httpx.Auth):
     """API token auth backend."""
 
     def __init__(self, token_provider: Callable[[], str]) -> None:
@@ -490,8 +520,14 @@ class _HttpxProviderApiTokenAuth(httpx.Auth):
         request.headers["Authorization"] = f"Bearer {token}"
         yield request
 
+    async def async_auth_flow(self, _: httpx.Request) -> AsyncGenerator[  # type: ignore[override]
+        httpx.Request,
+        httpx.Response,
+    ]:
+        raise RuntimeError("This auth backend does not support async mode")
 
-class _AsyncHttpxProviderApiTokenAuth(httpx.Auth):
+
+class _AsyncHttpxDynamicApiTokenAuth(httpx.Auth):
     """API token auth backend."""
 
     def __init__(self, token_provider: Callable[[], Awaitable[str]]) -> None:
@@ -501,6 +537,9 @@ class _AsyncHttpxProviderApiTokenAuth(httpx.Auth):
         token = await self._token_provider()
         request.headers["Authorization"] = f"Bearer {token}"
         yield request
+
+    def sync_auth_flow(self, _: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        raise RuntimeError("This auth backend does not support sync mode")
 
 
 class _HttpxBasicTokenAuth(httpx.Auth):
@@ -512,18 +551,6 @@ class _HttpxBasicTokenAuth(httpx.Auth):
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
         request.headers["Authorization"] = f"Token {self._token}"
         yield request
-
-
-class ApiTokenProvider(ABC):  # pylint: disable=too-few-public-methods
-    @abstractmethod
-    def get_token(self) -> str:
-        pass
-
-
-class AsyncApiTokenProvider(ABC):  # pylint: disable=too-few-public-methods
-    @abstractmethod
-    async def get_token(self) -> str:
-        pass
 
 
 def build_base_url() -> str:
@@ -542,10 +569,10 @@ def _choose_auth_backend(
     match auth:
         case ApiTokenAuth(token=token):
             return _HttpxApiTokenAuth(token)
-        case DynamicApiTokenAuth(manager=manager):
-            return _HttpxProviderApiTokenAuth(manager.get_token)
-        case AsyncDynamicApiTokenAuth(manager=manager):
-            return _AsyncHttpxProviderApiTokenAuth(manager.get_token)
+        case DynamicApiTokenAuth():
+            return _HttpxDynamicApiTokenAuth(auth.get_token)
+        case AsyncDynamicApiTokenAuth():
+            return _AsyncHttpxDynamicApiTokenAuth(auth.get_token)
         case BasicAuth(username=username, password=password):
             return httpx.BasicAuth(username, password)
         case BasicTokenAuth(token=token):

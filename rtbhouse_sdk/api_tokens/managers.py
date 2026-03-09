@@ -98,6 +98,9 @@ class ApiTokenManager(DynamicApiTokenAuth):
                 if not auto_rotate:
                     return
 
+                if not _in_rotation_window(api_token, now):
+                    return
+
                 rotated = client.rotate_current_api_token()
 
             api_token = ApiToken(
@@ -178,6 +181,9 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
                 await client.get_current_api_token()
 
                 if not auto_rotate:
+                    return
+
+                if not _in_rotation_window(api_token, now):
                     return
 
                 rotated = await client.rotate_current_api_token()

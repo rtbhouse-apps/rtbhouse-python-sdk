@@ -8,8 +8,7 @@ from pathlib import Path
 from cachetools import TTLCache, cachedmethod
 from cachetools.keys import hashkey
 
-from rtbhouse_sdk.api_tokens.models import ApiToken
-
+from ..models import ApiToken
 from .base import ApiTokenStorage, ApiTokenStorageException, AsyncApiTokenStorage
 
 DEFAULT_JSON_FILE_PATH = "~/.rtbhouse/api_token.json"

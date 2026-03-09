@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from rtbhouse_sdk.api_tokens.models import ApiToken
+from ..models import ApiToken
 
 
 class ApiTokenStorageException(Exception):

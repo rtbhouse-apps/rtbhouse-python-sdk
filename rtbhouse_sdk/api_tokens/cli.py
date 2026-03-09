@@ -7,13 +7,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from rtbhouse_sdk import schema
-from rtbhouse_sdk.api_tokens.managers import ApiTokenExpiredException, ApiTokenManager
-from rtbhouse_sdk.api_tokens.models import ApiToken
-from rtbhouse_sdk.api_tokens.storages.base import ApiTokenStorageException
-from rtbhouse_sdk.api_tokens.storages.json_file import DEFAULT_JSON_FILE_PATH, JsonFileApiTokenStorage
-from rtbhouse_sdk.client import ApiTokenAuth, Client
-from rtbhouse_sdk.exceptions import ApiRequestException
+from ..client import ApiTokenAuth, Client
+from ..exceptions import ApiRequestException
+from ..schema import ApiToken as ApiTokenResponse
+from .managers import ApiTokenExpiredException, ApiTokenManager
+from .models import ApiToken
+from .storages.base import ApiTokenStorageException
+from .storages.json_file import DEFAULT_JSON_FILE_PATH, JsonFileApiTokenStorage
 
 
 def _read_token_from_stdin() -> str:
@@ -42,7 +42,7 @@ def _resolve_token(
     return _read_token_from_stdin()
 
 
-def _get_token(token: str) -> schema.ApiToken:
+def _get_token(token: str) -> ApiTokenResponse:
     with Client(auth=ApiTokenAuth(token=token)) as client:
         return client.get_current_api_token()
 

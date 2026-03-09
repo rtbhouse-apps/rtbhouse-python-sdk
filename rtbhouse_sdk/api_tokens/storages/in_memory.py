@@ -1,7 +1,6 @@
 """In-memory storage for API tokens."""
 
-from rtbhouse_sdk.api_tokens.models import ApiToken
-
+from ..models import ApiToken
 from .base import ApiTokenStorage, ApiTokenStorageException, AsyncApiTokenStorage
 
 

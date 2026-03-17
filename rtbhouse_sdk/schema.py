@@ -274,11 +274,11 @@ class Stats(CamelizedBaseModel):
     user_reach: float | None = None
 
 
-class RotatedApiToken(CamelizedBaseModel):
+class ApiTokenRotateResult(CamelizedBaseModel):
     token: str
     expires_at: datetime
 
 
-class ApiToken(CamelizedBaseModel):
+class ApiTokenDetails(CamelizedBaseModel):
     expires_at: datetime
     can_rotate: bool

@@ -22,7 +22,7 @@ def test_basic_token_auth_flow(api_mock: respx.MockRouter) -> None:
 
     auth = BasicTokenAuth("abc")
     with Client(auth=auth) as cli:
-        cli._get("/example-endpoint")  # pylint: disable=protected-access
+        cli._request("GET", "/example-endpoint")  # pylint: disable=protected-access
 
     (call,) = api_mock.calls
     assert call.request.headers["authorization"] == "Token abc"

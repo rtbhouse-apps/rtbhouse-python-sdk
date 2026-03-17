@@ -1,4 +1,4 @@
-"""Contains classes for managing API tokens"""
+"""Contains classes for managing API tokens."""
 
 import asyncio
 import threading
@@ -39,8 +39,10 @@ class ApiTokenManager(DynamicApiTokenAuth):
         self._expiration_margin = timedelta(minutes=1)
 
     @contextmanager
-    def with_client(self, token: str) -> Iterator[Client]:
-        client = Client(auth=ApiTokenAuth(token=token))
+    def _with_client(self, token: str) -> Iterator[Client]:
+        auth = ApiTokenAuth(token)
+        client = Client(auth)
+
         try:
             yield client
         finally:
@@ -66,7 +68,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
             if not _in_rotation_window(api_token, now):
                 return api_token.token
 
-            with self.with_client(api_token.token) as client:
+            with self._with_client(api_token.token) as client:
                 try:
                     rotated = client.rotate_current_api_token()
 
@@ -77,25 +79,29 @@ class ApiTokenManager(DynamicApiTokenAuth):
                     self._storage.save(api_token)
                 except ApiRequestException as e:
                     warnings.warn(
-                        f"Attempted to rotate API token but failed. "
+                        "Attempted to rotate API token but failed. "
                         "Please check whether the token has already been rotated. "
                         f"Original error: {e}"
                     )
 
             return api_token.token
 
-    def keep_alive(self, auto_rotate: bool = False) -> None:
+    def keep_alive(
+        self,
+        *,
+        skip_auto_rotate: bool = False,
+    ) -> None:
         with self._lock:
             api_token = self._storage.load()
             now = utcnow()
 
             _raise_if_expired(api_token, now, self._expiration_margin)
 
-            with self.with_client(api_token.token) as client:
+            with self._with_client(api_token.token) as client:
                 # bump used at to now to keep the token alive
                 client.get_current_api_token()
 
-                if not auto_rotate:
+                if skip_auto_rotate:
                     return
 
                 if not _in_rotation_window(api_token, now):
@@ -124,8 +130,10 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         self._expiration_margin = timedelta(minutes=1)
 
     @asynccontextmanager
-    async def with_client(self, token: str) -> AsyncIterator[AsyncClient]:
-        client = AsyncClient(auth=ApiTokenAuth(token=token))
+    async def _with_client(self, token: str) -> AsyncIterator[AsyncClient]:
+        auth = ApiTokenAuth(token)
+        client = AsyncClient(auth)
+
         try:
             yield client
         finally:
@@ -151,7 +159,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             if not _in_rotation_window(api_token, now):
                 return api_token.token
 
-            async with self.with_client(api_token.token) as client:
+            async with self._with_client(api_token.token) as client:
                 try:
                     rotated = await client.rotate_current_api_token()
 
@@ -162,25 +170,29 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
                     await self._storage.save(api_token)
                 except ApiRequestException as e:
                     warnings.warn(
-                        f"Attempted to rotate API token but failed. "
+                        "Attempted to rotate API token but failed. "
                         "Please check whether the token has already been rotated. "
                         f"Original error: {e}"
                     )
 
             return api_token.token
 
-    async def keep_alive(self, auto_rotate: bool) -> None:
+    async def keep_alive(
+        self,
+        *,
+        skip_auto_rotate: bool = False,
+    ) -> None:
         async with self._lock:
             api_token = await self._storage.load()
             now = utcnow()
 
             _raise_if_expired(api_token, now, self._expiration_margin)
 
-            async with self.with_client(api_token.token) as client:
+            async with self._with_client(api_token.token) as client:
                 # bump used at to now to keep the token alive
                 await client.get_current_api_token()
 
-                if not auto_rotate:
+                if skip_auto_rotate:
                     return
 
                 if not _in_rotation_window(api_token, now):

@@ -698,16 +698,17 @@ def _choose_auth_backend(
 def _validate_response(response: httpx.Response) -> Any:
     try:
         response_data = response.json()
-        data = response_data["data"]
     except JSONDecodeError:
         error_details = None
-    except (ValueError, KeyError) as exc:
-        raise ApiException("Invalid response format") from exc
+        response_data = {}
     else:
+        if not isinstance(response_data, dict):
+            raise ApiException("Invalid response format")
+
         error_details = ErrorDetails(
-            app_code=response_data.get("appCode"),
+            app_code=response_data.get("appCode", ""),
+            message=response_data.get("message", ""),
             errors=response_data.get("errors"),
-            message=response_data.get("message"),
         )
 
     if response.status_code == 410:
@@ -736,6 +737,11 @@ def _validate_response(response: httpx.Response) -> Any:
             f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
             f"by updating rtbhouse_sdk package."
         )
+
+    try:
+        data = response_data["data"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ApiException("Invalid response format") from exc
 
     return data
 

@@ -1,6 +1,7 @@
 """CLI for managing API tokens."""
 
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -60,7 +61,7 @@ def _keep_alive() -> None:
     click.echo("Token valid.")
 
 
-def build_cli() -> click.Group:
+def build_cli() -> Any:
     @click.group(help="API token utilities.")
     def cli() -> None:
         pass
@@ -116,7 +117,7 @@ def build_cli() -> click.Group:
     def keep_alive() -> None:
         _keep_alive()
 
-    return cli
+    return cli()
 
 
 def _read_token_from_stdin_or_prompt() -> str:

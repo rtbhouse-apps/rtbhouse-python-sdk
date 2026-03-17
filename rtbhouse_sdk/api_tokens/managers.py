@@ -13,10 +13,8 @@ from ..exceptions import ApiRequestException
 from .models import ApiToken
 from .storages.base import ApiTokenStorage, AsyncApiTokenStorage
 
-ROTATION_WINDOW = timedelta(days=4)
-
-
-EXPIRED_MSG = "API token expired. Please manually create a new one and configure it in storage."
+_ROTATION_WINDOW = timedelta(days=4)
+_EXPIRATION_MARGIN = timedelta(minutes=1)
 
 
 class ApiTokenExpiredException(Exception):
@@ -30,13 +28,11 @@ class ApiTokenManager(DynamicApiTokenAuth):
 
     _storage: ApiTokenStorage
     _lock: threading.Lock
-    _expiration_margin: timedelta
 
     def __init__(self, storage: ApiTokenStorage) -> None:
         super().__init__()
         self._storage = storage
         self._lock = threading.Lock()
-        self._expiration_margin = timedelta(minutes=1)
 
     @contextmanager
     def _with_client(self, token: str) -> Iterator[Client]:
@@ -52,7 +48,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
         api_token = self._storage.load()
         now = utcnow()
 
-        _raise_if_expired(api_token, now, self._expiration_margin)
+        _raise_if_expired(api_token, now)
 
         if not _in_rotation_window(api_token, now):
             # fast path
@@ -63,7 +59,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
             api_token = self._storage.load()
             now = utcnow()
 
-            _raise_if_expired(api_token, now, self._expiration_margin)
+            _raise_if_expired(api_token, now)
 
             if not _in_rotation_window(api_token, now):
                 return api_token.token
@@ -95,16 +91,13 @@ class ApiTokenManager(DynamicApiTokenAuth):
             api_token = self._storage.load()
             now = utcnow()
 
-            _raise_if_expired(api_token, now, self._expiration_margin)
+            _raise_if_expired(api_token, now)
 
             with self._with_client(api_token.token) as client:
                 # bump used at to now to keep the token alive
                 client.get_current_api_token()
 
-                if skip_auto_rotate:
-                    return
-
-                if not _in_rotation_window(api_token, now):
+                if skip_auto_rotate or not _in_rotation_window(api_token, now):
                     return
 
                 rotated = client.rotate_current_api_token()
@@ -121,13 +114,11 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
 
     _storage: AsyncApiTokenStorage
     _lock: asyncio.Lock
-    _expiration_margin: timedelta
 
     def __init__(self, storage: AsyncApiTokenStorage) -> None:
         super().__init__()
         self._storage = storage
         self._lock = asyncio.Lock()
-        self._expiration_margin = timedelta(minutes=1)
 
     @asynccontextmanager
     async def _with_client(self, token: str) -> AsyncIterator[AsyncClient]:
@@ -143,7 +134,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         api_token = await self._storage.load()
         now = utcnow()
 
-        _raise_if_expired(api_token, now, self._expiration_margin)
+        _raise_if_expired(api_token, now)
 
         if not _in_rotation_window(api_token, now):
             # fast path
@@ -154,7 +145,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             api_token = await self._storage.load()
             now = utcnow()
 
-            _raise_if_expired(api_token, now, self._expiration_margin)
+            _raise_if_expired(api_token, now)
 
             if not _in_rotation_window(api_token, now):
                 return api_token.token
@@ -186,16 +177,13 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             api_token = await self._storage.load()
             now = utcnow()
 
-            _raise_if_expired(api_token, now, self._expiration_margin)
+            _raise_if_expired(api_token, now)
 
             async with self._with_client(api_token.token) as client:
                 # bump used at to now to keep the token alive
                 await client.get_current_api_token()
 
-                if skip_auto_rotate:
-                    return
-
-                if not _in_rotation_window(api_token, now):
+                if skip_auto_rotate or not _in_rotation_window(api_token, now):
                     return
 
                 rotated = await client.rotate_current_api_token()
@@ -207,10 +195,12 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             await self._storage.save(api_token)
 
 
-def _raise_if_expired(api_token: ApiToken, now: datetime, expiration_margin: timedelta) -> None:
-    if now >= api_token.expires_at - expiration_margin:
-        raise ApiTokenExpiredException(EXPIRED_MSG)
+def _raise_if_expired(api_token: ApiToken, now: datetime) -> None:
+    if now >= api_token.expires_at - _EXPIRATION_MARGIN:
+        raise ApiTokenExpiredException(
+            "API token expired. Please manually create a new one and configure it in storage."
+        )
 
 
 def _in_rotation_window(api_token: ApiToken, now: datetime) -> bool:
-    return now >= (api_token.expires_at - ROTATION_WINDOW)
+    return now >= (api_token.expires_at - _ROTATION_WINDOW)

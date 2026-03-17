@@ -1,192 +1,147 @@
-"""CLI for API token management."""
+"""CLI for managing API tokens."""
 
-import argparse
-import getpass
-import os
-import sys
 from pathlib import Path
-from typing import Any
+
+import click
 
 from ..client import ApiTokenAuth, Client
 from ..exceptions import ApiRequestException
-from ..schema import ApiToken as ApiTokenResponse
+from ..schema import ApiTokenDetails
 from .managers import ApiTokenExpiredException, ApiTokenManager
 from .models import ApiToken
 from .storages.base import ApiTokenStorageException
 from .storages.json_file import DEFAULT_JSON_FILE_PATH, JsonFileApiTokenStorage
 
-
-def _read_token_from_stdin() -> str:
-    if sys.stdin.isatty():
-        token = getpass.getpass("Paste API token: ").strip()
-        return token
-
-    token = sys.stdin.read().strip()
-
-    return token
+_TOKEN_LENGTH = 43
 
 
-def _resolve_token(
-    *,
-    token_arg: str | None = None,
-    env_var: str | None = None,
-) -> str:
-    print(token_arg, env_var)
-    if token_arg:
-        return token_arg.strip()
+def _init_json(path: Path) -> None:
+    path = path.expanduser()
+    token = _read_token_from_stdin_or_prompt()
+    _validate_token(token)
 
-    if env_var:
-        env_val = os.getenv(env_var)
-        return env_val.strip() if env_val else ""
-
-    return _read_token_from_stdin()
-
-
-def _get_token(token: str) -> ApiTokenResponse:
-    with Client(auth=ApiTokenAuth(token=token)) as client:
-        return client.get_current_api_token()
-
-
-def cmd_init_json(args: argparse.Namespace) -> int:
-    path = Path(args.path).expanduser()
-
-    token = _resolve_token(token_arg=args.token, env_var=args.env_var)
-    if not token:
-        print("ERROR: Empty token. Aborting.", file=sys.stderr)
-        return 1
-
-    try:
-        api_token_response = _get_token(token)
-    except ApiRequestException as e:
-        print(f"ERROR: Could not verify token via API or token is invalid. Original error: {e}.", file=sys.stderr)
-        return 1
+    api_token_details = _get_api_token_details(token)
 
     storage = JsonFileApiTokenStorage(path)
     api_token = ApiToken(
         token=token,
-        expires_at=api_token_response.expires_at,
+        expires_at=api_token_details.expires_at,
     )
-    storage.save(api_token)
 
-    print(f"OK: Token successfully initialized in {path}", file=sys.stdout)
-    return 0
+    try:
+        storage.save(api_token)
+    except ApiTokenStorageException as e:
+        raise click.ClickException(f"Could not save token. Original error: {e}.") from e
+
+    click.echo(f"Token successfully initialized in {path}.")
 
 
-def cmd_keep_alive_json(args: argparse.Namespace) -> int:
-    path = Path(args.path).expanduser()
+def _keep_alive_json(path: Path, skip_auto_rotate: bool) -> None:
+    path = path.expanduser()
     storage = JsonFileApiTokenStorage(path)
-    manager = ApiTokenManager(storage=storage)
+    manager = ApiTokenManager(storage)
 
     try:
-        manager.keep_alive(args.auto_rotate)
+        manager.keep_alive(
+            skip_auto_rotate=skip_auto_rotate,
+        )
     except (ApiTokenStorageException, ApiRequestException, ApiTokenExpiredException) as e:
-        print(f"ERROR: Keep-alive failed. Original error: {e}", file=sys.stderr)
-        return 1
+        raise click.ClickException(f"Keep-alive failed. Original error: {e}.") from e
 
-    print("OK: Token keep-alive successful", file=sys.stdout)
-    return 0
+    click.echo("Token valid.")
 
 
-def cmd_keep_alive(args: argparse.Namespace) -> int:
-    token = _resolve_token(token_arg=args.token, env_var=args.env_var)
-    if not token:
-        print("ERROR: Empty token. Aborting.", file=sys.stderr)
-        return 1
+def _keep_alive() -> None:
+    token = _read_token_from_stdin_or_prompt()
+    _validate_token(token)
 
-    try:
-        api_token_response = _get_token(token)
-    except ApiRequestException as e:
-        print(f"ERROR: Could not verify token via API or token is invalid. Original error: {e}.", file=sys.stderr)
-        return 1
+    _get_api_token_details(token)
 
-    if api_token_response.can_rotate:
-        print("WARNING: token can be rotated. Consider rotating it before it expires.", file=sys.stderr)
-
-    print("OK: Token keep-alive successful", file=sys.stdout)
-    return 0
+    click.echo("Token valid.")
 
 
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        prog="rtbhouse_sdk",
-        description="RTB House Python SDK CLI",
+def build_cli() -> click.Group:
+    @click.group(help="API token utilities.")
+    def cli() -> None:
+        pass
+
+    @cli.command(
+        help=(
+            "Initialize API token in JSON file storage. "
+            "Reads the token from stdin if input is piped, otherwise prompts interactively."
+        )
     )
-    sub = parser.add_subparsers(dest="command", required=True)
-
-    api_token = sub.add_parser(
-        "api-token",
-        help="API token utilities",
-    )
-    api_token_sub = api_token.add_subparsers(
-        dest="api_token_cmd",
-        required=True,
-    )
-    build_cmd_init_json(api_token_sub)
-    build_cmd_keep_alive_json(api_token_sub)
-    build_cmd_keep_alive(api_token_sub)
-
-    return parser
-
-
-def build_cmd_init_json(parser: Any) -> None:
-    init_json = parser.add_parser(
-        "init-json",
-        help="Initialize API token JSON file storage",
-    )
-    init_json.add_argument(
-        "--token",
-        default=None,
-        help="Token value (discouraged). Prefer stdin/env/pipe.",
-    )
-    init_json.add_argument(
+    @click.option(
         "--path",
         default=DEFAULT_JSON_FILE_PATH,
-        help=f"Path to token JSON file (default: {DEFAULT_JSON_FILE_PATH})",
+        show_default=True,
+        type=click.Path(path_type=Path),
+        help="Path to token JSON file.",
     )
-    init_json.add_argument(
-        "--env-var",
-        help="Environment variable to read token from.",
-    )
-    init_json.set_defaults(func=cmd_init_json)
+    def init_json(path: Path) -> None:
+        _init_json(path)
 
-
-def build_cmd_keep_alive_json(parser: Any) -> None:
-    keep_alive_json = parser.add_parser(
-        "keep-alive-json",
-        help="Keep alive API token stored in JSON file storage by bumping its usage. Allows automatic rotation.",
+    @cli.command(
+        help=(
+            "Refresh the used_at timestamp of the API token stored in the JSON file. "
+            "If the token is in the rotation window, it will be rotated and preserved "
+            "unless --skip-auto-rotate is set. "
+            "Can also be used to verify that the token is valid. "
+        )
     )
-    keep_alive_json.add_argument(
+    @click.option(
         "--path",
         default=DEFAULT_JSON_FILE_PATH,
-        help=f"Path to token JSON file (default: {DEFAULT_JSON_FILE_PATH})",
+        show_default=True,
+        type=click.Path(path_type=Path),
+        help="Path to token JSON file",
     )
-    keep_alive_json.add_argument(
-        "--auto-rotate",
-        action="store_true",
-        help="Enable automatic rotation if token is in rotation window",
+    @click.option(
+        "--skip-auto-rotate",
+        is_flag=True,
+        default=False,
+        help="Skip automatic rotation when the token is in the rotation window.",
     )
-    keep_alive_json.set_defaults(func=cmd_keep_alive_json)
+    def keep_alive_json(path: Path, skip_auto_rotate: bool) -> None:
+        _keep_alive_json(path, skip_auto_rotate)
+
+    @cli.command(
+        help=(
+            "Refresh the used_at timestamp of the provided API token. "
+            "Reads the token from stdin if input is piped; otherwise prompts interactively. "
+            "Use this command when not operating on JSON file storage. "
+            "Can also be used to verify that the token is valid. "
+        )
+    )
+    def keep_alive() -> None:
+        _keep_alive()
+
+    return cli
 
 
-def build_cmd_keep_alive(parser: Any) -> None:
-    keep_alive = parser.add_parser(
-        "keep-alive",
-        help="Keep alive API token by bumping its usage.",
+def _read_token_from_stdin_or_prompt() -> str:
+    stdin = click.get_text_stream("stdin")
+    if not stdin.isatty():
+        return stdin.read().strip()
+
+    token: str = click.prompt(
+        "Paste your token",
+        hide_input=True,
+        type=str,
     )
-    keep_alive.add_argument(
-        "--token",
-        default=None,
-        help="Token value (discouraged). Prefer stdin/env/pipe.",
-    )
-    keep_alive.add_argument(
-        "--env-var",
-        default=None,
-        help="Environment variable to read token from.",
-    )
-    keep_alive.set_defaults(func=cmd_keep_alive)
+    return token.strip()
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+def _validate_token(token: str) -> None:
+    if len(token) != _TOKEN_LENGTH:
+        raise click.ClickException("Invalid token format.")
+
+
+def _get_api_token_details(token: str) -> ApiTokenDetails:
+    auth = ApiTokenAuth(token)
+
+    with Client(auth) as client:
+        try:
+            return client.get_current_api_token()
+        except ApiRequestException as e:
+            raise click.ClickException(f"Could not verify token. Original error: {e}.") from e

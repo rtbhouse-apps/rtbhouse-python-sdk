@@ -43,7 +43,7 @@ def test_validate_response_raises_error_on_too_old_api_version(api: Client, api_
     api_mock.get("/example-endpoint").respond(410, headers={"X-Current-Api-Version": f"v{newest_version}"})
 
     with pytest.raises(ApiVersionMismatchException) as cm:
-        api._get("/example-endpoint")  # pylint: disable=protected-access
+        api._request("GET", "/example-endpoint")  # pylint: disable=protected-access
 
     assert cm.value.message.startswith("Unsupported api version")
 
@@ -53,7 +53,7 @@ def test_validate_response_warns_on_not_the_newest_api_version(api: Client, api_
     api_mock.get("/example-endpoint").respond(200, json={"data": {}}, headers={"X-Current-Api-Version": newest_version})
 
     with pytest.warns(Warning) as cm:
-        api._get("/example-endpoint")  # pylint: disable=protected-access
+        api._request("GET", "/example-endpoint")  # pylint: disable=protected-access
 
     msg = (
         f"Used api version ({API_VERSION}) is outdated, use newest version ({newest_version}) "
@@ -75,7 +75,7 @@ def test_validate_response_raises_error_on_resource_usage_limit_reached(
     api_mock.get("/example-endpoint").respond(429, headers={"X-Resource-Usage": header})
 
     with pytest.raises(ApiRateLimitException) as cm:
-        api._get("/example-endpoint")  # pylint: disable=protected-access
+        api._request("GET", "/example-endpoint")  # pylint: disable=protected-access
 
     data = cm.value.limits
     assert data["WORKER_TIME"]["3600"]["10000000"] == 11.78

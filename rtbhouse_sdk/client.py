@@ -3,7 +3,8 @@
 # pylint: disable=too-many-arguments
 import dataclasses
 import warnings
-from collections.abc import AsyncIterable, Generator, Iterable
+from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator, AsyncIterable, Awaitable, Callable, Generator, Iterable
 from datetime import date, timedelta
 from json import JSONDecodeError
 from types import TracebackType
@@ -26,6 +27,17 @@ API_VERSION = "v5"
 
 DEFAULT_TIMEOUT = timedelta(seconds=60.0)
 MAX_CURSOR_ROWS = 10000
+
+
+@dataclasses.dataclass
+class ApiTokenAuth:
+    token: str
+
+
+class DynamicApiTokenAuth(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    def get_token(self) -> str:
+        pass
 
 
 @dataclasses.dataclass
@@ -59,11 +71,14 @@ class Client:
     ```
     """
 
+    _httpx_client: httpx.Client
+
     def __init__(
         self,
-        auth: BasicAuth | BasicTokenAuth,
+        auth: ApiTokenAuth | DynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ):
+        super().__init__()
         self._httpx_client = httpx.Client(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
@@ -86,35 +101,85 @@ class Client:
     ) -> None:
         self._httpx_client.__exit__(exc_type, exc_value, traceback)
 
-    def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        response = self._httpx_client.get(path, params=params)
-        _validate_response(response)
-        try:
-            resp_json = response.json()
-            return resp_json["data"]
-        except (ValueError, KeyError) as exc:
-            raise ApiException("Invalid response format") from exc
+    def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> Any:
+        response = self._httpx_client.request(
+            method,
+            path,
+            json=data,
+            params=params,
+        )
+        return _validate_response(response)
 
-    def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        data = self._get(path, params)
+    def _get_dict(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        data = self._request(
+            "GET",
+            path,
+            params=params,
+        )
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
 
-    def _get_list_of_dicts(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-        data = self._get(path, params)
+    def _post_dict(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        data = self._request(
+            "POST",
+            path,
+            params=params,
+            data=data,
+        )
+        if not isinstance(data, dict):
+            raise ValueError("Result is not a dict")
+        return data
+
+    def _get_list_of_dicts(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        data = self._request(
+            "GET",
+            path,
+            params=params,
+        )
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
             raise ValueError("Result is not a list of dicts")
         return data
 
-    def _get_list_of_dicts_from_cursor(self, path: str, params: dict[str, Any]) -> Iterable[dict[str, Any]]:
+    def _get_list_of_dicts_from_cursor(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> Iterable[dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
         request_params.update(params or {})
 
         while True:
-            resp_data = self._get_dict(path, params=request_params)
+            resp_data = self._get_dict(
+                path,
+                params=request_params,
+            )
             yield from resp_data["rows"]
             next_cursor = resp_data["nextCursor"]
             if next_cursor is None:
@@ -146,7 +211,12 @@ class Client:
         return [schema.Offer(**offer) for offer in data]
 
     def get_advertiser_campaigns(self, adv_hash: str, exclude_archived: bool = False) -> list[schema.Campaign]:
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/campaigns", {"excludeArchived": exclude_archived})
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/campaigns",
+            params={
+                "excludeArchived": exclude_archived,
+            },
+        )
         return [schema.Campaign(**camp) for camp in data]
 
     def get_billing(
@@ -155,7 +225,13 @@ class Client:
         day_from: date,
         day_to: date,
     ) -> schema.Billing:
-        data = self._get_dict(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
+        data = self._get_dict(
+            f"/advertisers/{adv_hash}/billing",
+            params={
+                "dayFrom": day_from,
+                "dayTo": day_to,
+            },
+        )
         return schema.Billing(**data)
 
     def get_rtb_creatives(
@@ -165,7 +241,10 @@ class Client:
         active_only: bool | None = None,
     ) -> list[schema.Creative]:
         params = _build_rtb_creatives_params(subcampaigns, active_only)
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/rtb-creatives",
+            params=params,
+        )
         return [schema.Creative(**cr) for cr in data]
 
     def get_rtb_conversions(
@@ -211,7 +290,10 @@ class Client:
             device_types,
         )
 
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/rtb-stats",
+            params=params,
+        )
         return [schema.Stats(**st) for st in data]
 
     def get_summary_stats(
@@ -229,8 +311,25 @@ class Client:
             day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
         )
 
-        data = self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
+        data = self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/summary-stats",
+            params=params,
+        )
         return [schema.Stats(**st) for st in data]
+
+    def get_current_api_token(self) -> schema.ApiTokenDetails:
+        data = self._get_dict("/tokens/current")
+        return schema.ApiTokenDetails(**data)
+
+    def rotate_current_api_token(self) -> schema.ApiTokenRotateResult:
+        data = self._post_dict("/tokens/current/rotate")
+        return schema.ApiTokenRotateResult(**data)
+
+
+class AsyncDynamicApiTokenAuth(ABC):  # pylint: disable=too-few-public-methods
+    @abstractmethod
+    async def get_token(self) -> str:
+        pass
 
 
 class AsyncClient:
@@ -245,11 +344,14 @@ class AsyncClient:
     ```
     """
 
+    _httpx_client: httpx.AsyncClient
+
     def __init__(
         self,
-        auth: BasicAuth | BasicTokenAuth,
+        auth: ApiTokenAuth | AsyncDynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
+        super().__init__()
         self._httpx_client = httpx.AsyncClient(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
@@ -272,35 +374,85 @@ class AsyncClient:
     ) -> None:
         await self._httpx_client.__aexit__(exc_type, exc_value, traceback)
 
-    async def _get(self, path: str, params: dict[str, Any] | None = None) -> Any:
-        response = await self._httpx_client.get(path, params=params)
-        _validate_response(response)
-        try:
-            resp_json = response.json()
-            return resp_json["data"]
-        except (ValueError, KeyError) as exc:
-            raise ApiException("Invalid response format") from exc
+    async def _request(
+        self,
+        method: str,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> Any:
+        response = await self._httpx_client.request(
+            method,
+            path,
+            json=data,
+            params=params,
+        )
+        return _validate_response(response)
 
-    async def _get_dict(self, path: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
-        data = await self._get(path, params)
+    async def _get_dict(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        data = await self._request(
+            "GET",
+            path,
+            params=params,
+        )
         if not isinstance(data, dict):
             raise ValueError("Result is not a dict")
         return data
 
-    async def _get_list_of_dicts(self, path: str, params: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-        data = await self._get(path, params)
+    async def _post_dict(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+        data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        data = await self._request(
+            "POST",
+            path,
+            params=params,
+            data=data,
+        )
+        if not isinstance(data, dict):
+            raise ValueError("Result is not a dict")
+        return data
+
+    async def _get_list_of_dicts(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
+        data = await self._request(
+            "GET",
+            path,
+            params=params,
+        )
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
             raise ValueError("Result is not of a list of dicts")
         return data
 
-    async def _get_list_of_dicts_from_cursor(self, path: str, params: dict[str, Any]) -> AsyncIterable[dict[str, Any]]:
+    async def _get_list_of_dicts_from_cursor(
+        self,
+        path: str,
+        *,
+        params: dict[str, Any] | None = None,
+    ) -> AsyncIterable[dict[str, Any]]:
         request_params = {
             "limit": MAX_CURSOR_ROWS,
         }
         request_params.update(params or {})
 
         while True:
-            resp_data = await self._get_dict(path, params=request_params)
+            resp_data = await self._get_dict(
+                path,
+                params=request_params,
+            )
             for row in resp_data["rows"]:
                 yield row
             next_cursor = resp_data["nextCursor"]
@@ -334,7 +486,10 @@ class AsyncClient:
 
     async def get_advertiser_campaigns(self, adv_hash: str, exclude_archived: bool = False) -> list[schema.Campaign]:
         data = await self._get_list_of_dicts(
-            f"/advertisers/{adv_hash}/campaigns", {"excludeArchived": exclude_archived}
+            f"/advertisers/{adv_hash}/campaigns",
+            params={
+                "excludeArchived": exclude_archived,
+            },
         )
         return [schema.Campaign(**camp) for camp in data]
 
@@ -344,7 +499,13 @@ class AsyncClient:
         day_from: date,
         day_to: date,
     ) -> schema.Billing:
-        data = await self._get_dict(f"/advertisers/{adv_hash}/billing", {"dayFrom": day_from, "dayTo": day_to})
+        data = await self._get_dict(
+            f"/advertisers/{adv_hash}/billing",
+            params={
+                "dayFrom": day_from,
+                "dayTo": day_to,
+            },
+        )
         return schema.Billing(**data)
 
     async def get_rtb_creatives(
@@ -354,7 +515,10 @@ class AsyncClient:
         active_only: bool | None = None,
     ) -> list[schema.Creative]:
         params = _build_rtb_creatives_params(subcampaigns, active_only)
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-creatives", params=params)
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/rtb-creatives",
+            params=params,
+        )
         return [schema.Creative(**cr) for cr in data]
 
     async def get_rtb_conversions(
@@ -400,7 +564,10 @@ class AsyncClient:
             device_types,
         )
 
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/rtb-stats", params)
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/rtb-stats",
+            params=params,
+        )
         return [schema.Stats(**st) for st in data]
 
     async def get_summary_stats(
@@ -418,14 +585,81 @@ class AsyncClient:
             day_from, day_to, group_by, metrics, count_convention, utc_offset_hours, subcampaigns
         )
 
-        data = await self._get_list_of_dicts(f"/advertisers/{adv_hash}/summary-stats", params)
+        data = await self._get_list_of_dicts(
+            f"/advertisers/{adv_hash}/summary-stats",
+            params=params,
+        )
         return [schema.Stats(**st) for st in data]
+
+    async def get_current_api_token(self) -> schema.ApiTokenDetails:
+        data = await self._get_dict("/tokens/current")
+        return schema.ApiTokenDetails(**data)
+
+    async def rotate_current_api_token(self) -> schema.ApiTokenRotateResult:
+        data = await self._post_dict("/tokens/current/rotate")
+        return schema.ApiTokenRotateResult(**data)
+
+
+class _HttpxApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    _token: str
+
+    def __init__(self, token: str) -> None:
+        super().__init__()
+        self._token = token
+
+    def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        request.headers["Authorization"] = f"Bearer {self._token}"
+        yield request
+
+
+class _HttpxDynamicApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    _token_provider: Callable[[], str]
+
+    def __init__(self, token_provider: Callable[[], str]) -> None:
+        super().__init__()
+        self._token_provider = token_provider
+
+    def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        token = self._token_provider()
+        request.headers["Authorization"] = f"Bearer {token}"
+        yield request
+
+    async def async_auth_flow(self, _: httpx.Request) -> AsyncGenerator[  # type: ignore[override]
+        httpx.Request,
+        httpx.Response,
+    ]:
+        raise RuntimeError("This auth backend does not support async mode")
+
+
+class _AsyncHttpxDynamicApiTokenAuth(httpx.Auth):
+    """API token auth backend."""
+
+    _token_provider: Callable[[], Awaitable[str]]
+
+    def __init__(self, token_provider: Callable[[], Awaitable[str]]) -> None:
+        super().__init__()
+        self._token_provider = token_provider
+
+    async def async_auth_flow(self, request: httpx.Request) -> AsyncGenerator[httpx.Request, httpx.Response]:
+        token = await self._token_provider()
+        request.headers["Authorization"] = f"Bearer {token}"
+        yield request
+
+    def sync_auth_flow(self, _: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
+        raise RuntimeError("This auth backend does not support sync mode")
 
 
 class _HttpxBasicTokenAuth(httpx.Auth):
     """Basic token auth backend."""
 
+    _token: str
+
     def __init__(self, token: str):
+        super().__init__()
         self._token = token
 
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
@@ -443,24 +677,38 @@ def _build_headers() -> dict[str, str]:
     }
 
 
-def _choose_auth_backend(auth: BasicAuth | BasicTokenAuth) -> httpx.Auth:
-    if isinstance(auth, BasicAuth):
-        return httpx.BasicAuth(auth.username, auth.password)
-    if isinstance(auth, BasicTokenAuth):
-        return _HttpxBasicTokenAuth(auth.token)
-    raise ValueError("Unknown auth method")
+def _choose_auth_backend(
+    auth: ApiTokenAuth | DynamicApiTokenAuth | AsyncDynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
+) -> httpx.Auth:
+    match auth:
+        case ApiTokenAuth(token=token):
+            return _HttpxApiTokenAuth(token)
+        case DynamicApiTokenAuth():
+            return _HttpxDynamicApiTokenAuth(auth.get_token)
+        case AsyncDynamicApiTokenAuth():
+            return _AsyncHttpxDynamicApiTokenAuth(auth.get_token)
+        case BasicAuth(username=username, password=password):
+            return httpx.BasicAuth(username, password)
+        case BasicTokenAuth(token=token):
+            return _HttpxBasicTokenAuth(token)
+        case _:
+            raise ValueError("Unknown auth method")
 
 
-def _validate_response(response: httpx.Response) -> None:
+def _validate_response(response: httpx.Response) -> Any:
     try:
         response_data = response.json()
     except JSONDecodeError:
         error_details = None
+        response_data = {}
     else:
+        if not isinstance(response_data, dict):
+            raise ApiException("Invalid response format")
+
         error_details = ErrorDetails(
-            app_code=response_data.get("appCode"),
+            app_code=response_data.get("appCode", ""),
+            message=response_data.get("message", ""),
             errors=response_data.get("errors"),
-            message=response_data.get("message"),
         )
 
     if response.status_code == 410:
@@ -489,6 +737,13 @@ def _validate_response(response: httpx.Response) -> None:
             f"Used api version ({API_VERSION}) is outdated, use newest version ({current_version}) "
             f"by updating rtbhouse_sdk package."
         )
+
+    try:
+        data = response_data["data"]
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ApiException("Invalid response format") from exc
+
+    return data
 
 
 def _build_rtb_creatives_params(

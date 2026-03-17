@@ -1,3 +1,143 @@
+# v15.1.0
+
+## API Token Authentication
+
+Added support for **API token authentication** in the client (`ApiTokenAuth` / `AsyncApiTokenAuth`) for both sync and async clients.
+
+### Example (sync):
+```python
+from rtbhouse_sdk.client import ApiTokenAuth, Client
+
+auth = ApiTokenAuth(token="your_api_token")
+api = Client(auth=auth)
+
+info = api.get_user_info()
+api.close()
+```
+
+### Example (async)
+
+```python
+from rtbhouse_sdk.client import ApiTokenAuth, AsyncClient
+
+auth = ApiTokenAuth(token="your_api_token")
+api = AsyncClient(auth=auth)
+
+info = await api.get_user_info()
+await api.close()
+```
+
+## Dynamic API Token Authentication
+
+Added support for API token authentication classes with per-request token resolution (`DynamicApiTokenAuth` / `AsyncDynamicApiTokenAuth`).  
+
+These classes support **per-request token resolution** and allow the token to be stored in a **persistent storage backend**.
+
+When used with a storage backend, the SDK can:
+- **rotate the token** when it enters the rotation window
+- keep the token valid without manual maintenance
+
+Rotation eligibility is checked **on every request**, which means that for typical integrations with regular traffic, you can **configure the token once and let the SDK manage it automatically**.
+
+For integrations that run infrequently and might miss the rotation window, the same mechanism can be triggered via **CLI commands**, allowing token refresh or rotation to be scheduled using tools like `cron`.
+
+## Token Storage Backends
+
+### JSON File Storage (recommended)
+
+Persist tokens on disk using a JSON file. Can be initialized by `init-json` CLI command. 
+
+Classes:
+- `JsonFileApiTokenStorage`
+- `AsyncJsonFileApiTokenStorage`
+
+### Example (sync)
+
+```python
+from rtbhouse_sdk.api_tokens import ApiTokenManager, JsonFileApiTokenStorage
+from rtbhouse_sdk.client import Client
+
+storage = JsonFileApiTokenStorage()
+auth = ApiTokenManager(storage)
+api = Client(auth=auth)
+
+info = api.get_user_info()
+api.close()
+```
+
+### Example (async)
+
+```python
+from rtbhouse_sdk.api_tokens import AsyncApiTokenManager, AsyncJsonFileApiTokenStorage
+from rtbhouse_sdk.client import AsyncClient
+
+storage = AsyncJsonFileApiTokenStorage()
+auth = AsyncApiTokenManager(storage)
+api = AsyncClient(auth=auth)
+
+info = await api.get_user_info()
+await api.close()
+```
+
+### In-Memory Storage
+
+For simple scenarios where true persistence is not required.
+
+Classes:
+
+- `InMemoryApiTokenStorage`
+- `AsyncInMemoryApiTokenStorage`
+
+
+## CLI Utilities for API Tokens
+
+A CLI interface was added to manage API tokens from the command line.
+
+Usage:
+
+```bash
+python -m rtbhouse_sdk.api_tokens <command> [options]
+```
+
+### `init-json`
+
+Initialize JSON token storage.
+
+The token can be provided via **stdin**, **pipe**, or **interactive prompt**.
+
+Examples:
+
+```bash
+python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
+python -m rtbhouse_sdk.api_tokens init-json < token.txt
+python -m rtbhouse_sdk.api_tokens init-json
+```
+
+### `keep-alive-json`
+
+Keep alive a token stored in JSON file storage.
+
+This command:
+
+- refreshes the token `used_at` timestamp
+- optionally rotates the token if it is in the rotation window
+
+Example:
+
+```bash
+python -m rtbhouse_sdk.api_tokens keep-alive-json
+```
+
+### `keep-alive`
+
+Keep alive a token provided via **stdin**, **pipe**, or **interactive prompt**.
+
+Examples:
+
+```bash
+python -m rtbhouse_sdk.api_tokens keep-alive < token.txt
+```
+
 # v15.0.0
 - [breaking change] dropped support for python 3.9 (which is end-of-life), please use python 3.10+
 

@@ -79,6 +79,7 @@ class Client:
         timeout: timedelta = DEFAULT_TIMEOUT,
     ):
         super().__init__()
+
         self._httpx_client = httpx.Client(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
@@ -352,6 +353,7 @@ class AsyncClient:
         timeout: timedelta = DEFAULT_TIMEOUT,
     ) -> None:
         super().__init__()
+
         self._httpx_client = httpx.AsyncClient(
             base_url=build_base_url(),
             auth=_choose_auth_backend(auth),
@@ -434,7 +436,7 @@ class AsyncClient:
             params=params,
         )
         if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
-            raise ValueError("Result is not of a list of dicts")
+            raise ValueError("Result is not a list of dicts")
         return data
 
     async def _get_list_of_dicts_from_cursor(
@@ -607,6 +609,7 @@ class _HttpxApiTokenAuth(httpx.Auth):
 
     def __init__(self, token: str) -> None:
         super().__init__()
+
         self._token = token
 
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
@@ -615,12 +618,13 @@ class _HttpxApiTokenAuth(httpx.Auth):
 
 
 class _HttpxDynamicApiTokenAuth(httpx.Auth):
-    """API token auth backend."""
+    """API token auth backend which resolves the token based on provider method."""
 
     _token_provider: Callable[[], str]
 
     def __init__(self, token_provider: Callable[[], str]) -> None:
         super().__init__()
+
         self._token_provider = token_provider
 
     def sync_auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
@@ -636,12 +640,13 @@ class _HttpxDynamicApiTokenAuth(httpx.Auth):
 
 
 class _AsyncHttpxDynamicApiTokenAuth(httpx.Auth):
-    """API token auth backend."""
+    """Async API token auth backend which resolves the token based on async provider method."""
 
     _token_provider: Callable[[], Awaitable[str]]
 
     def __init__(self, token_provider: Callable[[], Awaitable[str]]) -> None:
         super().__init__()
+
         self._token_provider = token_provider
 
     async def async_auth_flow(self, request: httpx.Request) -> AsyncGenerator[httpx.Request, httpx.Response]:
@@ -658,8 +663,9 @@ class _HttpxBasicTokenAuth(httpx.Auth):
 
     _token: str
 
-    def __init__(self, token: str):
+    def __init__(self, token: str) -> None:
         super().__init__()
+
         self._token = token
 
     def auth_flow(self, request: httpx.Request) -> Generator[httpx.Request, httpx.Response, None]:
@@ -699,11 +705,18 @@ def _validate_response(response: httpx.Response) -> Any:
     try:
         response_data = response.json()
     except JSONDecodeError:
-        error_details = None
         response_data = {}
-    else:
-        if not isinstance(response_data, dict):
-            raise ApiException("Invalid response format")
+
+    if not isinstance(response_data, dict):
+        raise ApiException("Invalid response format")
+
+    if response.is_error:
+        if response.status_code == 410:
+            newest_version = response.headers.get("X-Current-Api-Version")
+            raise ApiVersionMismatchException(
+                f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
+                f"by updating rtbhouse_sdk package."
+            )
 
         error_details = ErrorDetails(
             app_code=response_data.get("appCode", ""),
@@ -711,23 +724,15 @@ def _validate_response(response: httpx.Response) -> Any:
             errors=response_data.get("errors"),
         )
 
-    if response.status_code == 410:
-        newest_version = response.headers.get("X-Current-Api-Version")
-        raise ApiVersionMismatchException(
-            f"Unsupported api version ({API_VERSION}), use newest version ({newest_version}) "
-            f"by updating rtbhouse_sdk package."
-        )
+        if response.status_code == 429:
+            raise ApiRateLimitException(
+                message="Resource usage limits reached",
+                details=error_details,
+                usage_header=response.headers.get("X-Resource-Usage"),
+            )
 
-    if response.status_code == 429:
-        raise ApiRateLimitException(
-            "Resource usage limits reached",
-            details=error_details,
-            usage_header=response.headers.get("X-Resource-Usage"),
-        )
-
-    if response.is_error:
         raise ApiRequestException(
-            error_details.message if error_details else "Unexpected error",
+            message=error_details.message,
             details=error_details,
         )
 
@@ -740,7 +745,7 @@ def _validate_response(response: httpx.Response) -> Any:
 
     try:
         data = response_data["data"]
-    except (KeyError, TypeError, ValueError) as exc:
+    except KeyError as exc:
         raise ApiException("Invalid response format") from exc
 
     return data

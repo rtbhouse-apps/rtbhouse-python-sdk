@@ -281,4 +281,3 @@ class ApiTokenRotateResult(CamelizedBaseModel):
 
 class ApiTokenDetails(CamelizedBaseModel):
     expires_at: datetime
-    can_rotate: bool

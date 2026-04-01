@@ -247,16 +247,6 @@ last activity timestamp and optionally rotates the token if it is in the rotatio
 
     $ python -m rtbhouse_sdk.api_tokens keep-alive-json
 
-``keep-alive``
-""""""""""""""
-
-Keep alive a token provided via **stdin**. Can also be used to verify if token is valid: ::
-
-    $ python -m rtbhouse_sdk.api_tokens keep-alive <<< "$API_TOKEN"
-
-.. note::
-    The ``keep-alive`` command does not rotate the token, as it does not have access to the storage backend.
-
 License
 -------
 

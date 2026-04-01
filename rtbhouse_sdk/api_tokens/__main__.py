@@ -7,7 +7,6 @@ Commands:
     init-json         Initialize API token in JSON file storage.
     keep-alive-json   Refresh token's last activity timestamp from JSON file storage,
                       optionally rotating it if in the rotation window.
-    keep-alive        Refresh token's last activity timestamp for a manually provided token.
 
 Examples:
     # Initialize token interactively (prompts for token):
@@ -19,14 +18,12 @@ Examples:
     # Initialize token with custom path:
     $ python -m rtbhouse_sdk.api_tokens init-json < token.txt
 
-    # Keep alive token from JSON file storage:
+    # Keep alive:
     $ python -m rtbhouse_sdk.api_tokens keep-alive-json
 
     # Keep alive without auto-rotation:
     $ python -m rtbhouse_sdk.api_tokens keep-alive-json --skip-auto-rotate
 
-    # Keep alive a manually provided token:
-    $ python -m rtbhouse_sdk.api_tokens keep-alive
 """
 
 from pathlib import Path
@@ -112,22 +109,6 @@ def keep_alive_json(path: Path, skip_auto_rotate: bool) -> None:
         )
     except (ApiTokenStorageException, ApiRequestException, ApiTokenExpiredException) as e:
         raise click.ClickException(f"Keep-alive failed. Original error: {e}.") from e
-
-    click.echo("Token valid.")
-
-
-@cli.command(
-    help=(
-        "Refresh the last activity timestamp of the provided API token. "
-        "Reads the token from stdin if input is piped; otherwise prompts interactively. "
-        "Use this command when not operating on JSON file storage. "
-        "Can also be used to verify that the token is valid. "
-    )
-)
-def keep_alive() -> None:
-    token = _read_token_from_stdin_or_prompt()
-
-    _get_api_token_details(token)
 
     click.echo("Token valid.")
 

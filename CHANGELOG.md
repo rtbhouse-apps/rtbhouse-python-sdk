@@ -36,7 +36,7 @@ await api.close()
 - Added `ApiTokenStorage` / `AsyncApiTokenStorage` abstract base classes for pluggable token storage backends.
 - Added `JsonFileApiTokenStorage` / `AsyncJsonFileApiTokenStorage` — a JSON file-based storage implementation.
 - Added `InMemoryApiTokenStorage` / `AsyncInMemoryApiTokenStorage` — a simple in-memory storage implementation.
-- Added CLI (`python -m rtbhouse_sdk.api_tokens`) with commands for token initialization (`init-json`) and token lifecycle maintenance (`keep-alive-json`, `keep-alive`).
+- Added CLI (`python -m rtbhouse_sdk.api_tokens`) with commands for JSON file storage (`init-json`, `keep-alive-json`).
 
 
 # v15.0.0

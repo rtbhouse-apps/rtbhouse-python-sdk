@@ -6,16 +6,16 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 
 from ..models import ApiToken
-from ._base import ApiTokenStorage, AsyncApiTokenStorage
+from ._base import ApiTokenStorage, ApiTokenStorageException, AsyncApiTokenStorage
 
 
 class InMemoryApiTokenStorage(ApiTokenStorage):
     """In-memory storage for API tokens."""
 
-    _api_token: ApiToken
+    _api_token: ApiToken | None
     _lock: threading.Lock
 
-    def __init__(self, api_token: ApiToken) -> None:
+    def __init__(self, api_token: ApiToken | None = None) -> None:
         super().__init__()
 
         self._api_token = api_token
@@ -27,6 +27,8 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
             yield
 
     def load(self) -> ApiToken:
+        if self._api_token is None:
+            raise ApiTokenStorageException("No API token configured. Please configure token first.")
         return self._api_token
 
     def save(self, api_token: ApiToken) -> None:
@@ -36,10 +38,10 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
 class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
     """Asynchronous in-memory storage for API tokens."""
 
-    _api_token: ApiToken
+    _api_token: ApiToken | None
     _lock: asyncio.Lock
 
-    def __init__(self, api_token: ApiToken) -> None:
+    def __init__(self, api_token: ApiToken | None = None) -> None:
         super().__init__()
 
         self._api_token = api_token
@@ -51,6 +53,8 @@ class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
             yield
 
     async def load(self) -> ApiToken:
+        if self._api_token is None:
+            raise ApiTokenStorageException("No API token configured. Please configure token first.")
         return self._api_token
 
     async def save(self, api_token: ApiToken) -> None:

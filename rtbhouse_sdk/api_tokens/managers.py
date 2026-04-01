@@ -11,6 +11,7 @@ from ..exceptions import ApiRequestException
 from .models import ApiToken
 from .storages._base import ApiTokenStorage, AsyncApiTokenStorage
 
+_TOKEN_LENGTH = 43
 _ROTATION_WINDOW = timedelta(days=4)
 _EXPIRATION_MARGIN = timedelta(minutes=1)
 
@@ -21,7 +22,7 @@ class ApiTokenExpiredException(Exception):
 
 class ApiTokenManager(DynamicApiTokenAuth):
     """
-    Manages the lifecycle of an API token, including token retrieval, rotation and expiration handling.
+    Manages the lifecycle of an API token, including token initialization, retrieval, rotation and expiration handling.
     """
 
     _storage: ApiTokenStorage
@@ -40,6 +41,21 @@ class ApiTokenManager(DynamicApiTokenAuth):
             yield client
         finally:
             client.close()
+
+    def configure(self, token: str) -> None:
+        if len(token) != _TOKEN_LENGTH:
+            raise ValueError("Invalid token format.")
+
+        with self._storage.lock():
+
+            with self._with_client(token) as client:
+                api_token_details = client.get_current_api_token()
+
+            api_token = ApiToken(
+                token=token,
+                expires_at=api_token_details.expires_at,
+            )
+            self._storage.save(api_token)
 
     def get_token(self) -> str:
         token, in_rotation_window = self._get_validated_token()
@@ -140,6 +156,18 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             yield client
         finally:
             await client.close()
+
+    async def configure(self, token: str) -> None:
+        async with self._storage.lock():
+
+            async with self._with_client(token) as client:
+                api_token_details = await client.get_current_api_token()
+
+            api_token = ApiToken(
+                token=token,
+                expires_at=api_token_details.expires_at,
+            )
+            await self._storage.save(api_token)
 
     async def get_token(self) -> str:
         token, in_rotation_window = await self._get_validated_token()

@@ -32,7 +32,7 @@ await api.close()
 
 ## API Token Management
 
-- Added `ApiTokenManager` / `AsyncApiTokenManager` for automatic token lifecycle management, including token retrieval, rotation and expiration handling.
+- Added `ApiTokenManager` / `AsyncApiTokenManager` for automatic token lifecycle management, including token initialization, retrieval, rotation and expiration handling.
 - Added `ApiTokenStorage` / `AsyncApiTokenStorage` abstract base classes for pluggable token storage backends.
 - Added `JsonFileApiTokenStorage` / `AsyncJsonFileApiTokenStorage` — a JSON file-based storage implementation.
 - Added `InMemoryApiTokenStorage` / `AsyncInMemoryApiTokenStorage` — a simple in-memory storage implementation.

@@ -160,7 +160,8 @@ API Token Storage Backends
 JSON File Storage (recommended)
 """""""""""""""""""""""""""""""
 
-Persist tokens on disk using a JSON file. Can be initialized by the ``init-json`` CLI command.
+Persist tokens on disk using a JSON file. Can be initialized programmatically
+via ``ApiTokenManager.configure()`` or by using the ``init-json`` CLI command.
 
 Classes: ``JsonFileApiTokenStorage``, ``AsyncJsonFileApiTokenStorage``
 
@@ -199,18 +200,14 @@ Classes: ``InMemoryApiTokenStorage``, ``AsyncInMemoryApiTokenStorage``
 
 .. code-block:: python
 
-    from datetime import datetime, timezone
-    from rtbhouse_sdk.api_tokens import ApiToken, ApiTokenManager, InMemoryApiTokenStorage
+    from rtbhouse_sdk.api_tokens import ApiTokenManager, InMemoryApiTokenStorage
     from rtbhouse_sdk.client import Client
 
-    api_token = ApiToken(
-        token="your_api_token",
-        expires_at=datetime(2026, 12, 31, tzinfo=timezone.utc)
-    )
-    storage = InMemoryApiTokenStorage(api_token)
-    auth = ApiTokenManager(storage)
+    storage = InMemoryApiTokenStorage()
+    manager = ApiTokenManager(storage)
+    manager.configure("your_api_token")  # fetches token details and saves to storage
 
-    with Client(auth=auth) as api:
+    with Client(auth=manager) as api:
         info = api.get_user_info()
 
 Custom Storage Backend

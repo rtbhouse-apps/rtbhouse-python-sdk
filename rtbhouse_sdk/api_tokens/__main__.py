@@ -30,15 +30,10 @@ from pathlib import Path
 
 import click
 
-from ..client import ApiTokenAuth, Client
 from ..exceptions import ApiRequestException
-from ..schema import ApiTokenDetails
 from .managers import ApiTokenExpiredException, ApiTokenManager
-from .models import ApiToken
 from .storages._base import ApiTokenStorageException
 from .storages.json_file import DEFAULT_JSON_FILE_PATH, JsonFileApiTokenStorage
-
-_TOKEN_LENGTH = 43
 
 
 @click.group(help="API token utilities.")
@@ -62,18 +57,13 @@ def cli() -> None:
 def init_json(path: Path) -> None:
     token = _read_token_from_stdin_or_prompt()
 
-    api_token_details = _get_api_token_details(token)
-
     storage = JsonFileApiTokenStorage(path)
-    api_token = ApiToken(
-        token=token,
-        expires_at=api_token_details.expires_at,
-    )
+    manager = ApiTokenManager(storage)
 
     try:
-        storage.save(api_token)
-    except ApiTokenStorageException as e:
-        raise click.ClickException(f"Could not save token. Original error: {e}.") from e
+        manager.configure(token)
+    except (ValueError, ApiRequestException, ApiTokenStorageException) as e:
+        raise click.ClickException(f"Token initialization failed. Original error: {e}.") from e
 
     click.echo(f"Token successfully initialized in {path}.")
 
@@ -127,22 +117,7 @@ def _read_token_from_stdin_or_prompt() -> str:
 
     token = token.strip()
 
-    if len(token) != _TOKEN_LENGTH:
-        raise click.ClickException("Invalid token format.")
-
     return token
-
-
-def _get_api_token_details(token: str) -> ApiTokenDetails:
-    auth = ApiTokenAuth(token)
-
-    with Client(auth) as client:
-        try:
-            api_token_details = client.get_current_api_token()
-        except ApiRequestException as e:
-            raise click.ClickException(f"Could not verify token. Original error: {e}.") from e
-
-    return api_token_details
 
 
 if __name__ == "__main__":

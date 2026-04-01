@@ -116,7 +116,10 @@ def _save_api_token_to_file(path: Path, api_token: ApiToken) -> None:
         exist_ok=True,
     )
     text = api_token.model_dump_json()
-    path.write_text(text, encoding="utf-8")
+    path.write_text(
+        text,
+        encoding="utf-8",
+    )
 
 
 def _get_cached_api_token(cache: tuple[ApiToken, datetime] | None) -> ApiToken | None:

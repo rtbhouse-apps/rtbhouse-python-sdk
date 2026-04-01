@@ -21,10 +21,9 @@ Usage example
 
 Let's write a script which fetches campaign stats (imps, clicks, postclicks) and shows the result as a table (using ``tabulate`` library).
 
-First, create ``config.py`` file with your credentials: ::
+First, create ``config.py`` file with your api token: ::
 
-    USERNAME = 'jdoe'
-    PASSWORD = 'abcd1234'
+    API_TOKEN = "your_api_token_here"
 
 
 Set up virtualenv and install requirements: ::
@@ -37,14 +36,14 @@ Set up virtualenv and install requirements: ::
     from datetime import date, timedelta
     from operator import attrgetter
 
-    from rtbhouse_sdk.client import BasicAuth, Client
+    from rtbhouse_sdk.client import ApiTokenAuth, Client
     from rtbhouse_sdk.schema import CountConvention, StatsGroupBy, StatsMetric
     from tabulate import tabulate
 
-    from config import PASSWORD, USERNAME
+    from config import API_TOKEN
 
     if __name__ == "__main__":
-        with Client(auth=BasicAuth(USERNAME, PASSWORD)) as api:
+        with Client(auth=ApiTokenAuth(API_TOKEN)) as api:
             advertisers = api.get_advertisers()
             day_to = date.today()
             day_from = day_to - timedelta(days=30)
@@ -77,34 +76,6 @@ Authentication methods
 
 The SDK supports several authentication methods.
 
-Basic Auth
-^^^^^^^^^^
-
-Username and password authentication using ``BasicAuth``.
-
-.. code-block:: python
-
-    from rtbhouse_sdk.client import BasicAuth, Client
-
-    auth = BasicAuth(username="jdoe", password="abcd1234")
-
-    with Client(auth=auth) as api:
-        info = api.get_user_info()
-
-Basic Token Auth
-^^^^^^^^^^^^^^^^
-
-Token-based authentication using ``BasicTokenAuth``.
-
-.. code-block:: python
-
-    from rtbhouse_sdk.client import BasicTokenAuth, Client
-
-    auth = BasicTokenAuth("your_basic_token")
-
-    with Client(auth=auth) as api:
-        info = api.get_user_info()
-
 API Token Auth (recommended)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -131,11 +102,11 @@ API token authentication using ``ApiTokenAuth``.
 .. note::
 
     API tokens have a limited lifetime and must be periodically rotated and actively used
-    to prevent expiration. To handle this automatically, use the
-    managed API token authentication described below.
+    to prevent expiration. To handle this automatically, use the utilities provided in the
+    `Managed API Token Authentication`_ section.
 
-Managed API Token Auth
-^^^^^^^^^^^^^^^^^^^^^^
+Managed API Token Authentication
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 For automatic token lifecycle management, use ``ApiTokenManager`` / ``AsyncApiTokenManager`` as authentication classes.
 
@@ -243,6 +214,34 @@ Keep alive a token stored in JSON file storage. This command refreshes the token
 last activity timestamp and optionally rotates the token if it is in the rotation window: ::
 
     $ python -m rtbhouse_sdk.api_tokens keep-alive-json
+
+Basic Auth
+^^^^^^^^^^
+
+Username and password authentication using ``BasicAuth``.
+
+.. code-block:: python
+
+    from rtbhouse_sdk.client import BasicAuth, Client
+
+    auth = BasicAuth(username="jdoe", password="abcd1234")
+
+    with Client(auth=auth) as api:
+        info = api.get_user_info()
+
+Basic Token Auth
+^^^^^^^^^^^^^^^^
+
+Token-based authentication using ``BasicTokenAuth``.
+
+.. code-block:: python
+
+    from rtbhouse_sdk.client import BasicTokenAuth, Client
+
+    auth = BasicTokenAuth("your_basic_token")
+
+    with Client(auth=auth) as api:
+        info = api.get_user_info()
 
 License
 -------

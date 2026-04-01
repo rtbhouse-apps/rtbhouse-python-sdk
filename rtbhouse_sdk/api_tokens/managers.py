@@ -47,7 +47,6 @@ class ApiTokenManager(DynamicApiTokenAuth):
             raise ValueError("Invalid token format.")
 
         with self._storage.lock():
-
             with self._with_client(token) as client:
                 api_token_details = client.get_current_api_token()
 
@@ -158,8 +157,10 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             await client.close()
 
     async def configure(self, token: str) -> None:
-        async with self._storage.lock():
+        if len(token) != _TOKEN_LENGTH:
+            raise ValueError("Invalid token format.")
 
+        async with self._storage.lock():
             async with self._with_client(token) as client:
                 api_token_details = await client.get_current_api_token()
 

@@ -77,7 +77,7 @@ class Client:
         self,
         auth: ApiTokenAuth | DynamicApiTokenAuth | BasicAuth | BasicTokenAuth,
         timeout: timedelta = DEFAULT_TIMEOUT,
-    ):
+    ) -> None:
         super().__init__()
 
         self._httpx_client = httpx.Client(
@@ -124,14 +124,14 @@ class Client:
         *,
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        data = self._request(
+        response_data = self._request(
             "GET",
             path,
             params=params,
         )
-        if not isinstance(data, dict):
+        if not isinstance(response_data, dict):
             raise ValueError("Result is not a dict")
-        return data
+        return response_data
 
     def _post_dict(
         self,
@@ -140,15 +140,15 @@ class Client:
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        data = self._request(
+        response_data = self._request(
             "POST",
             path,
             params=params,
             data=data,
         )
-        if not isinstance(data, dict):
+        if not isinstance(response_data, dict):
             raise ValueError("Result is not a dict")
-        return data
+        return response_data
 
     def _get_list_of_dicts(
         self,
@@ -156,14 +156,14 @@ class Client:
         *,
         params: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        data = self._request(
+        response_data = self._request(
             "GET",
             path,
             params=params,
         )
-        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+        if not isinstance(response_data, list) or not all(isinstance(item, dict) for item in response_data):
             raise ValueError("Result is not a list of dicts")
-        return data
+        return response_data
 
     def _get_list_of_dicts_from_cursor(
         self,
@@ -398,14 +398,14 @@ class AsyncClient:
         *,
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        data = await self._request(
+        response_data = await self._request(
             "GET",
             path,
             params=params,
         )
-        if not isinstance(data, dict):
+        if not isinstance(response_data, dict):
             raise ValueError("Result is not a dict")
-        return data
+        return response_data
 
     async def _post_dict(
         self,
@@ -414,15 +414,15 @@ class AsyncClient:
         params: dict[str, Any] | None = None,
         data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        data = await self._request(
+        response_data = await self._request(
             "POST",
             path,
             params=params,
             data=data,
         )
-        if not isinstance(data, dict):
+        if not isinstance(response_data, dict):
             raise ValueError("Result is not a dict")
-        return data
+        return response_data
 
     async def _get_list_of_dicts(
         self,
@@ -430,14 +430,14 @@ class AsyncClient:
         *,
         params: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
-        data = await self._request(
+        response_data = await self._request(
             "GET",
             path,
             params=params,
         )
-        if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
+        if not isinstance(response_data, list) or not all(isinstance(item, dict) for item in response_data):
             raise ValueError("Result is not a list of dicts")
-        return data
+        return response_data
 
     async def _get_list_of_dicts_from_cursor(
         self,

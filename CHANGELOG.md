@@ -3,7 +3,6 @@
 ## API Token Authentication
 
 - Added `ApiTokenAuth` for static API token authentication in both sync and async clients.
-- Added `DynamicApiTokenAuth` / `AsyncDynamicApiTokenAuth` for per-request token resolution, enabling integration with token management systems.
 
 ### Example (sync):
 ```python

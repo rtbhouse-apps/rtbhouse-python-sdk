@@ -115,9 +115,9 @@ def _save_api_token_to_file(path: Path, api_token: ApiToken) -> None:
         parents=True,
         exist_ok=True,
     )
-    text = api_token.model_dump_json()
+    api_token_json = api_token.model_dump_json()
     path.write_text(
-        text,
+        api_token_json,
         encoding="utf-8",
     )
 

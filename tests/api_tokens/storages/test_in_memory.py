@@ -24,7 +24,7 @@ def test_load_returns_initial_token() -> None:
 
     result = storage.load()
 
-    assert result.token == "original_token"
+    assert result.token == _API_TOKEN.token
     assert result.expires_at == _EXPIRES_AT
 
 
@@ -35,7 +35,7 @@ def test_save_updates_token() -> None:
 
     result = storage.load()
 
-    assert result.token == "updated_token"
+    assert result.token == _UPDATED_API_TOKEN.token
     assert result.expires_at == _EXPIRES_AT
 
 
@@ -47,7 +47,7 @@ async def test_async_load_returns_initial_token() -> None:
 
     result = await storage.load()
 
-    assert result.token == "original_token"
+    assert result.token == _API_TOKEN.token
     assert result.expires_at == _EXPIRES_AT
 
 
@@ -58,5 +58,5 @@ async def test_async_save_updates_token() -> None:
 
     result = await storage.load()
 
-    assert result.token == "updated_token"
+    assert result.token == _UPDATED_API_TOKEN.token
     assert result.expires_at == _EXPIRES_AT

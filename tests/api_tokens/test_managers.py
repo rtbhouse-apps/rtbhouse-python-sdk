@@ -278,6 +278,25 @@ async def test_async_get_token_rotates_when_in_rotation_window(
     assert saved.token == _ROTATED_TOKEN
 
 
+async def test_async_get_token_returns_original_when_rotation_fails(api_mock: respx.MockRouter) -> None:
+    api_token = _create_api_token(
+        expires_at=_EXPIRES_IN_ROTATION_WINDOW,
+    )
+    storage = AsyncInMemoryApiTokenStorage(api_token)
+    manager = AsyncApiTokenManager(storage)
+    api_mock.post("/tokens/current/rotate").respond(
+        400,
+        json={},
+    )
+
+    with warnings.catch_warnings(record=True) as caught_warnings:
+        result = await manager.get_token()
+
+    assert result == _TOKEN
+    assert len(caught_warnings) == 1
+    assert "Attempted to rotate API token but failed" in str(caught_warnings[0].message)
+
+
 async def test_async_get_token_raises_when_expired() -> None:
     api_token = _create_api_token(
         expires_at=_EXPIRES_SOON,

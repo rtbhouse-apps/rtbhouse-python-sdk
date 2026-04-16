@@ -342,7 +342,6 @@ async def test_async_keep_alive_rotates_when_in_rotation_window(
     await manager.keep_alive(
         auto_rotate=True,
     )
-
     saved = await storage.load()
 
     assert saved.token == _ROTATED_TOKEN

@@ -29,6 +29,7 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
     def load(self) -> ApiToken:
         if self._api_token is None:
             raise ApiTokenStorageException("No API token configured. Please configure token first.")
+
         return self._api_token
 
     def save(self, api_token: ApiToken) -> None:
@@ -55,6 +56,7 @@ class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
     async def load(self) -> ApiToken:
         if self._api_token is None:
             raise ApiTokenStorageException("No API token configured. Please configure token first.")
+
         return self._api_token
 
     async def save(self, api_token: ApiToken) -> None:

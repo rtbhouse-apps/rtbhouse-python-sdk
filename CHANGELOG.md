@@ -1,42 +1,61 @@
 # v15.1.0
 
-## API Token Authentication
+## API Token Support
 
-- Added `ApiTokenAuth` for static API token authentication in both sync and async clients.
+Added support for API token authentication with automatic lifecycle management.
 
-### Example (sync):
-```python
-from rtbhouse_sdk.client import ApiTokenAuth, Client
+### Initialize the API token in JSON file storage:
 
-auth = ApiTokenAuth(token="your_api_token")
-api = Client(auth=auth)
+First, create an API token in the Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens), then initialize it in storage:
 
-info = api.get_user_info()
-api.close()
+```sh
+$ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
 ```
 
-### Example (async):
+### Use the token manager as the auth backend in your Client:
+
+Sync:
 
 ```python
-from rtbhouse_sdk.client import ApiTokenAuth, AsyncClient
+from rtbhouse_sdk.api_tokens import ApiTokenManager, JsonFileApiTokenStorage
+from rtbhouse_sdk.client import Client
 
-auth = ApiTokenAuth(token="your_api_token")
-api = AsyncClient(auth=auth)
+storage = JsonFileApiTokenStorage()
+auth = ApiTokenManager(storage)
 
-info = await api.get_user_info()
-await api.close()
+with Client(auth=auth) as api:
+    info = api.get_user_info()
 ```
 
-> **Note:** API tokens have a limited lifetime and must be periodically rotated and actively used to prevent expiration. To handle this automatically, use the API Token Management utilities described below.
+Async:
 
-## API Token Management
+```python
+from rtbhouse_sdk.api_tokens import AsyncApiTokenManager, AsyncJsonFileApiTokenStorage
+from rtbhouse_sdk.client import AsyncClient
 
+storage = AsyncJsonFileApiTokenStorage()
+auth = AsyncApiTokenManager(storage)
+
+async with AsyncClient(auth=auth) as api:
+    info = await api.get_user_info()
+```
+
+### Schedule `keep-alive-json` command to run at least once a day to keep the token alive and rotate it automatically:
+
+```sh
+$ python -m rtbhouse_sdk.api_tokens keep-alive-json
+```
+
+See `README.rst` for more details and examples.
+
+## What's new
+
+- Added `ApiTokenAuth` for static API token authentication in clients.
 - Added `ApiTokenManager` / `AsyncApiTokenManager` for automatic token lifecycle management, including token initialization, retrieval, rotation and expiration handling.
 - Added `ApiTokenStorage` / `AsyncApiTokenStorage` abstract base classes for pluggable token storage backends.
 - Added `JsonFileApiTokenStorage` / `AsyncJsonFileApiTokenStorage` — a JSON file-based storage implementation.
 - Added `InMemoryApiTokenStorage` / `AsyncInMemoryApiTokenStorage` — a simple in-memory storage implementation.
-- Added CLI (`python -m rtbhouse_sdk.api_tokens`) with commands for JSON file storage (`init-json`, `keep-alive-json`).
-
+- Added CLI (`python -m rtbhouse_sdk.api_tokens`) with commands for token management stored in JSON file (`init-json`, `keep-alive-json`).
 
 # v15.0.0
 - [breaking change] dropped support for python 3.9 (which is end-of-life), please use python 3.10+

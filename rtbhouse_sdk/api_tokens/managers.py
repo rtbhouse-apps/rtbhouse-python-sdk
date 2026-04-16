@@ -32,8 +32,8 @@ class ApiTokenManager(DynamicApiTokenAuth):
 
         self._storage = storage
 
-    @classmethod
-    def _rotate(cls, client: Client) -> ApiToken:
+    @staticmethod
+    def _rotate(client: Client) -> ApiToken:
         rotated = client.rotate_current_api_token()
 
         api_token = ApiToken(
@@ -90,7 +90,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
                         f"Original error: {e}"
                     )
                 else:
-                    self._save(api_token)
+                    self._storage.save(api_token)
 
                     token = api_token.token
 
@@ -113,7 +113,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
 
                 api_token = self._rotate(client)
 
-                self._save(api_token)
+                self._storage.save(api_token)
 
     def _load_and_validate(self) -> tuple[str, bool]:  # (token, in_rotation_window)
         now = utcnow()
@@ -124,9 +124,6 @@ class ApiTokenManager(DynamicApiTokenAuth):
         in_rotation_window = _in_rotation_window(now, api_token.expires_at)
 
         return api_token.token, in_rotation_window
-
-    def _save(self, api_token: ApiToken) -> None:
-        self._storage.save(api_token)
 
 
 class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
@@ -139,8 +136,8 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
 
         self._storage = storage
 
-    @classmethod
-    async def _rotate(cls, client: AsyncClient) -> ApiToken:
+    @staticmethod
+    async def _rotate(client: AsyncClient) -> ApiToken:
         rotated = await client.rotate_current_api_token()
 
         api_token = ApiToken(
@@ -197,7 +194,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
                         f"Original error: {e}"
                     )
                 else:
-                    await self._save(api_token)
+                    await self._storage.save(api_token)
 
                     token = api_token.token
 
@@ -220,7 +217,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
 
                 api_token = await self._rotate(client)
 
-                await self._save(api_token)
+                await self._storage.save(api_token)
 
     async def _load_and_validate(self) -> tuple[str, bool]:  # (token, in_rotation_window)
         now = utcnow()
@@ -231,9 +228,6 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         in_rotation_window = _in_rotation_window(now, api_token.expires_at)
 
         return api_token.token, in_rotation_window
-
-    async def _save(self, api_token: ApiToken) -> None:
-        await self._storage.save(api_token)
 
 
 def _raise_if_expired(now: datetime, expires_at: datetime) -> None:

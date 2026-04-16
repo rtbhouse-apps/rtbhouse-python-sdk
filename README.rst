@@ -4,7 +4,7 @@ RTB House SDK
 Overview
 --------
 
-This library provides an easy-to-use Python interface to RTB House API. It allows you to read and manage you campaigns settings, browse offers, download statistics etc.
+This library provides an easy-to-use Python interface to RTB House API. It allows you to read and manage your campaigns settings, browse offers, download statistics etc.
 
 API docs: https://api.panel.rtbhouse.com/api/docs
 
@@ -21,29 +21,33 @@ Usage example
 
 Let's write a script which fetches campaign stats (imps, clicks, postclicks) and shows the result as a table (using ``tabulate`` library).
 
-First, create ``config.py`` file with your api token: ::
-
-    API_TOKEN = "your_api_token_here"
-
-
 Set up virtualenv and install requirements: ::
 
     $ pip install rtbhouse_sdk tabulate
 
+Create an API token in the RTB House Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens) and copy it to a safe place.
+
+Now you can initialize the API token in local file storage. Paste your API token in prompt after running the command below: ::
+
+    $ python -m rtbhouse_sdk.api_tokens init-json
+
+Then run the script:
 
 .. code-block:: python
 
     from datetime import date, timedelta
     from operator import attrgetter
 
-    from rtbhouse_sdk.client import ApiTokenAuth, Client
+    from rtbhouse_sdk.api_tokens import ApiTokenManager, JsonFileApiTokenStorage
+    from rtbhouse_sdk.client import Client
     from rtbhouse_sdk.schema import CountConvention, StatsGroupBy, StatsMetric
     from tabulate import tabulate
 
-    from config import API_TOKEN
-
     if __name__ == "__main__":
-        with Client(auth=ApiTokenAuth(API_TOKEN)) as api:
+        storage = JsonFileApiTokenStorage()
+        auth = ApiTokenManager(storage)
+
+        with Client(auth=auth) as api:
             advertisers = api.get_advertisers()
             day_to = date.today()
             day_from = day_to - timedelta(days=30)
@@ -76,65 +80,74 @@ Authentication methods
 
 The SDK supports several authentication methods.
 
-API Token Auth (recommended)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+API Token Authentication
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-API token authentication using ``ApiTokenAuth``.
+API Tokens provide a secure and manageable way to grant programmatic access without using a login and password. This allows you to connect your integrations to the API, without specific user credentials.
 
-.. code-block:: python
-
-    from rtbhouse_sdk.client import ApiTokenAuth, Client
-
-    auth = ApiTokenAuth("your_api_token")
-
-    with Client(auth=auth) as api:
-        info = api.get_user_info()
-
-.. code-block:: python
-
-    from rtbhouse_sdk.client import ApiTokenAuth, AsyncClient
-
-    auth = ApiTokenAuth("your_api_token")
-
-    async with AsyncClient(auth=auth) as api:
-        info = await api.get_user_info()
-
-.. note::
-
-    API tokens have a limited lifetime and must be periodically rotated and actively used
-    to prevent expiration. To handle this automatically, use the utilities provided in the
-    `Managed API Token Authentication`_ section.
-
-Managed API Token Authentication
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+API tokens have a limited lifetime and must be periodically rotated and actively used to prevent expiration.
 
 For automatic token lifecycle management, use ``ApiTokenManager`` / ``AsyncApiTokenManager`` as authentication classes.
 
-These classes support **per-request token resolution** and allow the token to be stored
-in a **persistent storage backend**.
+These classes support per-request token resolution and allow the token to be stored/retrieved with a storage backend. Currently, for production use, SDK provides a JSON file storage backend.
 
 When used with a storage backend, the SDK can:
 
-- **rotate the token** automatically when it enters the rotation window and overwrite the stored token with the new one
+- rotate the token automatically when it enters the rotation window and overwrite the stored token with the new one
 - keep the token valid without manual maintenance
 
-Rotation eligibility is checked **on every request**, which means that for typical integrations
-with regular traffic, you can configure the token once and let the SDK manage it automatically.
+Rotation eligibility is checked on every request, which means that for typical integrations with regular traffic, you can configure the token once and let the SDK manage it automatically.
 
-For integrations that run infrequently and might miss the rotation window, the same mechanism
-can be triggered via **CLI commands** ( check the CLI section below ), allowing token refresh or rotation to be scheduled
-using tools like ``cron``.
+For integrations that do not make requests frequently enough to trigger automatic rotation during the rotation window, use the ``keep-alive-json`` CLI command (see `CLI for API Tokens` below) scheduled with ``cron`` or a similar tool.
+
+CLI for API Tokens
+^^^^^^^^^^^^^^^^^^
+
+A CLI interface is available to manage API tokens from the command line: ::
+
+    $ python -m rtbhouse_sdk.api_tokens <command> [options]
+
+``init-json``
+"""""""""""""
+
+Initialize JSON file storage with API Token.
+
+First create your API token in the Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens).
+
+Then provide the token via stdin or interactively when prompted: ::
+
+    $ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
+    $ python -m rtbhouse_sdk.api_tokens init-json < token.txt
+    $ python -m rtbhouse_sdk.api_tokens init-json
+    $ python -m rtbhouse_sdk.api_tokens init-json --path /custom/path/to/token.json
+    
+
+``keep-alive-json``
+"""""""""""""""""""
+
+Keep alive a token stored in JSON file storage.
+
+This command refreshes the token's last activity timestamp and optionally rotates the token, if it is in the rotation window.
+
+While you can run this command manually whenever needed, it is recommended to schedule it to run periodically at least once a day, to ensure the token remains active and does not expire: ::
+    
+    $ python -m rtbhouse_sdk.api_tokens keep-alive-json
+    $ python -m rtbhouse_sdk.api_tokens keep-alive-json --skip-auto-rotate
+    $ python -m rtbhouse_sdk.api_tokens keep-alive-json --path /custom/path/to/token.json
 
 API Token Storage Backends
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-JSON File Storage (recommended)
-"""""""""""""""""""""""""""""""
+Storage backends are responsible for persisting API tokens.
 
-Persist tokens on disk using a JSON file. Can be initialized programmatically
-via ``ApiTokenManager.configure()`` or by using the ``init-json`` CLI command.
+Storage backends must be initialized before use. API token manager classes provide a ``configure(token)`` method to initialize the token programmatically. This method will fetch the token details and save them to storage.
 
-Classes: ``JsonFileApiTokenStorage``, ``AsyncJsonFileApiTokenStorage``
+JSON File Storage
+"""""""""""""""""
+
+Persist tokens on disk using a JSON file. Use sync ``JsonFileApiTokenStorage`` or async ``AsyncJsonFileApiTokenStorage`` classes.
+
+Storage can be initialized by ``manager.configure(token)`` method call or by using the ``init-json`` CLI command.
 
 Sync example:
 
@@ -167,7 +180,7 @@ In-Memory Storage
 
 For simple scenarios where true persistence is not required.
 
-Classes: ``InMemoryApiTokenStorage``, ``AsyncInMemoryApiTokenStorage``
+Use sync ``InMemoryApiTokenStorage`` or async ``AsyncInMemoryApiTokenStorage`` classes.
 
 .. code-block:: python
 
@@ -191,29 +204,30 @@ or ``AsyncApiTokenStorage`` (async). Each backend must implement three methods:
 - ``load()`` — load and return the current ``ApiToken``
 - ``save(api_token)`` — persist the given ``ApiToken``
 
-CLI for API Tokens
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A CLI interface is available to manage API tokens from the command line: ::
+API Token Auth (without automatic rotation and storage management)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-    $ python -m rtbhouse_sdk.api_tokens <command> [options]
+Use ``ApiTokenAuth`` if you want to authenticate with a fixed API token without automatic rotation or storage management.
 
-``init-json``
-"""""""""""""
+.. code-block:: python
 
-Initialize JSON token storage. The token can be provided via **stdin**: ::
+    from rtbhouse_sdk.client import ApiTokenAuth, Client
 
-    $ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
-    $ python -m rtbhouse_sdk.api_tokens init-json < token.txt
-    $ python -m rtbhouse_sdk.api_tokens init-json
+    auth = ApiTokenAuth("your_api_token")
 
-``keep-alive-json``
-"""""""""""""""""""
+    with Client(auth=auth) as api:
+        info = api.get_user_info()
 
-Keep alive a token stored in JSON file storage. This command refreshes the token's
-last activity timestamp and optionally rotates the token if it is in the rotation window: ::
+.. code-block:: python
 
-    $ python -m rtbhouse_sdk.api_tokens keep-alive-json
+    from rtbhouse_sdk.client import ApiTokenAuth, AsyncClient
+
+    auth = ApiTokenAuth("your_api_token")
+
+    async with AsyncClient(auth=auth) as api:
+        info = await api.get_user_info()
+
 
 Basic Auth
 ^^^^^^^^^^

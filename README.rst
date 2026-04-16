@@ -21,7 +21,7 @@ Usage example
 
 Let's write a script which fetches campaign stats (imps, clicks, postclicks) and shows the result as a table (using ``tabulate`` library).
 
-Set up virtualenv and install requirements: ::
+First set up virtualenv and install requirements: ::
 
     $ pip install rtbhouse_sdk tabulate
 
@@ -85,7 +85,7 @@ API Token Authentication
 
 API Tokens provide a secure and manageable way to grant programmatic access without using a login and password. This allows you to connect your integrations to the API, without specific user credentials.
 
-API tokens have a limited lifetime and must be periodically rotated and actively used to prevent expiration.
+API tokens have a limited lifetime and must be periodically rotated and actively used to prevent expiration. For more details on the API token lifecycle, see the ``LEARN MORE`` link in the Clients Panel API Tokens section.
 
 For automatic token lifecycle management, use ``ApiTokenManager`` / ``AsyncApiTokenManager`` as authentication classes.
 
@@ -197,8 +197,7 @@ Use sync ``InMemoryApiTokenStorage`` or async ``AsyncInMemoryApiTokenStorage`` c
 Custom Storage Backend
 """"""""""""""""""""""
 
-You can implement your own storage backend by subclassing ``ApiTokenStorage`` (sync)
-or ``AsyncApiTokenStorage`` (async). Each backend must implement three methods:
+You can implement your own storage backend by subclassing ``ApiTokenStorage`` (sync) or ``AsyncApiTokenStorage`` (async). Each backend must implement three methods:
 
 - ``lock()`` — a context manager ensuring exclusive access to the storage
 - ``load()`` — load and return the current ``ApiToken``

@@ -32,6 +32,17 @@ class ApiTokenManager(DynamicApiTokenAuth):
 
         self._storage = storage
 
+    @classmethod
+    def _rotate(cls, client: Client) -> ApiToken:
+        rotated = client.rotate_current_api_token()
+
+        api_token = ApiToken(
+            token=rotated.token,
+            expires_at=rotated.expires_at,
+        )
+
+        return api_token
+
     @contextmanager
     def _with_client(self, token: str) -> Iterator[Client]:
         auth = ApiTokenAuth(token)
@@ -57,26 +68,31 @@ class ApiTokenManager(DynamicApiTokenAuth):
             self._storage.save(api_token)
 
     def get_token(self) -> str:
-        token, in_rotation_window = self._get_validated_token()
+        token, in_rotation_window = self._load_and_validate()
 
         if not in_rotation_window:
             return token
 
         with self._storage.lock():
             # reload inside lock
-            token, in_rotation_window = self._get_validated_token()
+            token, in_rotation_window = self._load_and_validate()
 
             if not in_rotation_window:
                 return token
 
             with self._with_client(token) as client:
-                rotated_api_token = self._rotate_and_save(
-                    client,
-                    raise_on_failure=False,
-                )
+                try:
+                    api_token = self._rotate(client)
+                except ApiRequestException as e:
+                    warnings.warn(
+                        "Attempted to rotate API token but failed. "
+                        "Please check whether the token has already been rotated. "
+                        f"Original error: {e}"
+                    )
+                else:
+                    self._save(api_token)
 
-            if rotated_api_token is not None:
-                token = rotated_api_token
+                    token = api_token.token
 
             return token
 
@@ -86,7 +102,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
         auto_rotate: bool = True,
     ) -> None:
         with self._storage.lock():
-            token, in_rotation_window = self._get_validated_token()
+            token, in_rotation_window = self._load_and_validate()
 
             with self._with_client(token) as client:
                 # bump last activity timestamp to keep the token alive
@@ -95,9 +111,11 @@ class ApiTokenManager(DynamicApiTokenAuth):
                 if not auto_rotate or not in_rotation_window:
                     return
 
-                self._rotate_and_save(client)
+                api_token = self._rotate(client)
 
-    def _get_validated_token(self) -> tuple[str, bool]:  # (token, in_rotation_window)
+                self._save(api_token)
+
+    def _load_and_validate(self) -> tuple[str, bool]:  # (token, in_rotation_window)
         now = utcnow()
 
         api_token = self._storage.load()
@@ -107,33 +125,8 @@ class ApiTokenManager(DynamicApiTokenAuth):
 
         return api_token.token, in_rotation_window
 
-    def _rotate_and_save(
-        self,
-        client: Client,
-        *,
-        raise_on_failure: bool = True,
-    ) -> str | None:
-        try:
-            rotated = client.rotate_current_api_token()
-        except ApiRequestException as e:
-            if raise_on_failure:
-                raise
-
-            warnings.warn(
-                "Attempted to rotate API token but failed. "
-                "Please check whether the token has already been rotated. "
-                f"Original error: {e}"
-            )
-
-            return None
-
-        api_token = ApiToken(
-            token=rotated.token,
-            expires_at=rotated.expires_at,
-        )
+    def _save(self, api_token: ApiToken) -> None:
         self._storage.save(api_token)
-
-        return api_token.token
 
 
 class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
@@ -145,6 +138,17 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         super().__init__()
 
         self._storage = storage
+
+    @classmethod
+    async def _rotate(cls, client: AsyncClient) -> ApiToken:
+        rotated = await client.rotate_current_api_token()
+
+        api_token = ApiToken(
+            token=rotated.token,
+            expires_at=rotated.expires_at,
+        )
+
+        return api_token
 
     @asynccontextmanager
     async def _with_client(self, token: str) -> AsyncIterator[AsyncClient]:
@@ -171,26 +175,31 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
             await self._storage.save(api_token)
 
     async def get_token(self) -> str:
-        token, in_rotation_window = await self._get_validated_token()
+        token, in_rotation_window = await self._load_and_validate()
 
         if not in_rotation_window:
             return token
 
         async with self._storage.lock():
             # reload inside lock
-            token, in_rotation_window = await self._get_validated_token()
+            token, in_rotation_window = await self._load_and_validate()
 
             if not in_rotation_window:
                 return token
 
             async with self._with_client(token) as client:
-                rotated_api_token = await self._rotate_and_save(
-                    client,
-                    raise_on_failure=False,
-                )
+                try:
+                    api_token = await self._rotate(client)
+                except ApiRequestException as e:
+                    warnings.warn(
+                        "Attempted to rotate API token but failed. "
+                        "Please check whether the token has already been rotated. "
+                        f"Original error: {e}"
+                    )
+                else:
+                    await self._save(api_token)
 
-            if rotated_api_token is not None:
-                token = rotated_api_token
+                    token = api_token.token
 
             return token
 
@@ -200,7 +209,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         auto_rotate: bool = True,
     ) -> None:
         async with self._storage.lock():
-            token, in_rotation_window = await self._get_validated_token()
+            token, in_rotation_window = await self._load_and_validate()
 
             async with self._with_client(token) as client:
                 # bump last activity timestamp to keep the token alive
@@ -209,9 +218,11 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
                 if not auto_rotate or not in_rotation_window:
                     return
 
-                await self._rotate_and_save(client)
+                api_token = await self._rotate(client)
 
-    async def _get_validated_token(self) -> tuple[str, bool]:  # (token, in_rotation_window)
+                await self._save(api_token)
+
+    async def _load_and_validate(self) -> tuple[str, bool]:  # (token, in_rotation_window)
         now = utcnow()
 
         api_token = await self._storage.load()
@@ -221,33 +232,8 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
 
         return api_token.token, in_rotation_window
 
-    async def _rotate_and_save(
-        self,
-        client: AsyncClient,
-        *,
-        raise_on_failure: bool = True,
-    ) -> str | None:
-        try:
-            rotated = await client.rotate_current_api_token()
-        except ApiRequestException as e:
-            if raise_on_failure:
-                raise
-
-            warnings.warn(
-                "Attempted to rotate API token but failed. "
-                "Please check whether the token has already been rotated. "
-                f"Original error: {e}"
-            )
-
-            return None
-
-        api_token = ApiToken(
-            token=rotated.token,
-            expires_at=rotated.expires_at,
-        )
+    async def _save(self, api_token: ApiToken) -> None:
         await self._storage.save(api_token)
-
-        return api_token.token
 
 
 def _raise_if_expired(now: datetime, expires_at: datetime) -> None:

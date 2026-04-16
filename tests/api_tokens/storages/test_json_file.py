@@ -32,7 +32,9 @@ def token_path_fixture(tmp_path: Path) -> Path:
 def test_load_returns_initial_token(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
 
-    storage.save(_API_TOKEN)
+    with storage.lock():
+        storage.save(_API_TOKEN)
+
     result = storage.load()
 
     assert result.token == _API_TOKEN.token
@@ -42,8 +44,10 @@ def test_load_returns_initial_token(token_path: Path) -> None:
 def test_save_updates_token(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
 
-    storage.save(_API_TOKEN)
-    storage.save(_UPDATED_API_TOKEN)
+    with storage.lock():
+        storage.save(_API_TOKEN)
+        storage.save(_UPDATED_API_TOKEN)
+
     result = storage.load()
 
     assert result.token == _UPDATED_API_TOKEN.token
@@ -74,7 +78,8 @@ def test_load_raises_on_invalid_json(token_path: Path) -> None:
 
 def test_load_uses_cache_on_second_call(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    storage.save(_API_TOKEN)
+    with storage.lock():
+        storage.save(_API_TOKEN)
 
     first_load = storage.load()
     # Overwrite file directly, cache should return old value
@@ -90,7 +95,9 @@ def test_load_uses_cache_on_second_call(token_path: Path) -> None:
 
 def test_load_bypasses_cache_after_expiry(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    storage.save(_API_TOKEN)
+    with storage.lock():
+        storage.save(_API_TOKEN)
+
     storage.load()  # populate cache
 
     # Overwrite file directly
@@ -112,7 +119,9 @@ def test_load_bypasses_cache_after_expiry(token_path: Path) -> None:
 
 def test_lock_invalidates_cache(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    storage.save(_API_TOKEN)
+    with storage.lock():
+        storage.save(_API_TOKEN)
+
     storage.load()  # populate cache
 
     # Overwrite file directly
@@ -133,7 +142,9 @@ def test_lock_invalidates_cache(token_path: Path) -> None:
 async def test_async_load_returns_initial_token(token_path: Path) -> None:
     storage = AsyncJsonFileApiTokenStorage(token_path)
 
-    await storage.save(_API_TOKEN)
+    async with storage.lock():
+        await storage.save(_API_TOKEN)
+
     result = await storage.load()
 
     assert result.token == _API_TOKEN.token
@@ -143,8 +154,10 @@ async def test_async_load_returns_initial_token(token_path: Path) -> None:
 async def test_async_save_updates_token(token_path: Path) -> None:
     storage = AsyncJsonFileApiTokenStorage(token_path)
 
-    await storage.save(_API_TOKEN)
-    await storage.save(_UPDATED_API_TOKEN)
+    async with storage.lock():
+        await storage.save(_API_TOKEN)
+        await storage.save(_UPDATED_API_TOKEN)
+
     result = await storage.load()
 
     assert result.token == _UPDATED_API_TOKEN.token

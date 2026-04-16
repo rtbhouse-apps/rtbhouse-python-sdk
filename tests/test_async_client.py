@@ -1,7 +1,7 @@
 """Tests for async client."""
 
 # pylint: disable=too-many-arguments
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from datetime import date
 from typing import Any
 
@@ -14,7 +14,7 @@ from rtbhouse_sdk.schema import StatsGroupBy, StatsMetric
 
 
 @pytest.fixture(name="api")
-async def api_client() -> AsyncIterator[AsyncClient]:
+async def api_client() -> AsyncGenerator[AsyncClient]:
     async with AsyncClient(auth=BasicAuth("test", "test")) as cli:
         yield cli
 

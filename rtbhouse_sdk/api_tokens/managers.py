@@ -1,7 +1,7 @@
 """Contains classes for managing API tokens."""
 
 import warnings
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timedelta
 
@@ -44,7 +44,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
         return api_token
 
     @contextmanager
-    def _with_client(self, token: str) -> Iterator[Client]:
+    def _with_client(self, token: str) -> Generator[Client]:
         auth = ApiTokenAuth(token)
         client = Client(auth)
 
@@ -148,7 +148,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         return api_token
 
     @asynccontextmanager
-    async def _with_client(self, token: str) -> AsyncIterator[AsyncClient]:
+    async def _with_client(self, token: str) -> AsyncGenerator[AsyncClient]:
         auth = ApiTokenAuth(token)
         client = AsyncClient(auth)
 

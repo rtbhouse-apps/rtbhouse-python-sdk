@@ -2,7 +2,7 @@
 
 import os
 import tempfile
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -109,7 +109,7 @@ class JsonFileApiTokenStorage(JsonFileApiTokenStorageMixin, ApiTokenStorage):
         )
 
     @contextmanager
-    def lock(self) -> Iterator[None]:
+    def lock(self) -> Generator[None]:
         with self._file_lock:
             self._set_api_token_cache(None)
 
@@ -148,7 +148,7 @@ class AsyncJsonFileApiTokenStorage(JsonFileApiTokenStorageMixin, AsyncApiTokenSt
         )
 
     @asynccontextmanager
-    async def lock(self) -> AsyncIterator[None]:
+    async def lock(self) -> AsyncGenerator[None]:
         async with self._file_lock:
             self._set_api_token_cache(None)
 

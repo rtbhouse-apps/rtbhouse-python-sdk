@@ -1,7 +1,7 @@
 """Base classes for API token storage implementations."""
 
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 
 from ..models import ApiToken
@@ -16,7 +16,7 @@ class ApiTokenStorage(ABC):
 
     @contextmanager
     @abstractmethod
-    def lock(self) -> Iterator[None]:
+    def lock(self) -> Generator[None]:
         yield
 
     @abstractmethod
@@ -33,7 +33,7 @@ class AsyncApiTokenStorage(ABC):
 
     @asynccontextmanager
     @abstractmethod
-    async def lock(self) -> AsyncIterator[None]:
+    async def lock(self) -> AsyncGenerator[None]:
         yield
 
     @abstractmethod

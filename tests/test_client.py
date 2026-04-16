@@ -1,7 +1,7 @@
 """Tests for client."""
 
 # pylint: disable=too-many-arguments
-from collections.abc import Iterator
+from collections.abc import Generator
 from datetime import date
 from typing import Any
 
@@ -23,7 +23,7 @@ from rtbhouse_sdk.schema import (
 
 
 @pytest.fixture(name="api")
-def api_client() -> Iterator[Client]:
+def api_client() -> Generator[Client]:
     with Client(auth=BasicAuth("test", "test")) as api:
         yield api
 

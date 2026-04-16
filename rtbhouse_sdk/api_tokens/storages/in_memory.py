@@ -2,7 +2,7 @@
 
 import asyncio
 import threading
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import asynccontextmanager, contextmanager
 
 from ..models import ApiToken
@@ -22,7 +22,7 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
         self._lock = threading.Lock()
 
     @contextmanager
-    def lock(self) -> Iterator[None]:
+    def lock(self) -> Generator[None]:
         with self._lock:
             yield
 
@@ -49,7 +49,7 @@ class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
         self._lock = asyncio.Lock()
 
     @asynccontextmanager
-    async def lock(self) -> AsyncIterator[None]:
+    async def lock(self) -> AsyncGenerator[None]:
         async with self._lock:
             yield
 

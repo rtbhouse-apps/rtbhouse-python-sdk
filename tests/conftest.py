@@ -1,7 +1,7 @@
 """Common fixtures."""
 
 import copy
-from collections.abc import Iterator
+from collections.abc import Generator
 from datetime import date
 from typing import Any
 
@@ -27,7 +27,7 @@ def day_to() -> date:
 
 
 @pytest.fixture(autouse=True)
-def api_mock() -> Iterator[respx.MockRouter]:
+def api_mock() -> Generator[respx.MockRouter]:
     """Keep all httpx calls in a sandbox even when respx was not specifically requested."""
     with respx.mock(base_url=build_base_url()) as mock:
         yield mock

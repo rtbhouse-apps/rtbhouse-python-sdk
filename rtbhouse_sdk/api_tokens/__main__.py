@@ -9,11 +9,12 @@ Commands:
                       optionally rotating it if in the rotation window.
 
 Note:
-    Your API tokens can be created in the Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens).
+    Your API tokens can be created in the Clients Panel (https://panel.rtbhouse.com/user/api-tokens).
 
 Examples:
     # Initialize token interactively (prompts for token):
     $ python -m rtbhouse_sdk.api_tokens init-json
+    Paste your token: PASTE_YOUR_TOKEN_HERE
 
     # Initialize token via environment variable:
     $ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"

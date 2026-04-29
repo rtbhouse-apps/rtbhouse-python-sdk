@@ -32,6 +32,7 @@ httpx = "^0.28.0"
 pydantic = ">=1.9, <3.0"
 
 [tool.poetry.group.dev.dependencies]
+freezegun = "^1.5.5"
 pydantic = "^2.0.0" # required for tests
 
 black = "^26.0.0"

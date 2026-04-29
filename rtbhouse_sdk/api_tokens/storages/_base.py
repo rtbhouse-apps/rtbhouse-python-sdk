@@ -14,9 +14,16 @@ class ApiTokenStorageException(Exception):
 class ApiTokenStorage(ABC):
     """Abstract base class for API token storage implementations."""
 
+    _is_exclusive_lock_held: bool
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._is_exclusive_lock_held = False
+
     @contextmanager
     @abstractmethod
-    def lock(self) -> Generator[None]:
+    def acquire_exclusive_for_update(self) -> Generator[None]:
         yield
 
     @abstractmethod
@@ -27,13 +34,23 @@ class ApiTokenStorage(ABC):
     def save(self, api_token: ApiToken) -> None:
         pass
 
+    def _ensure_exclusive_lock_held(self) -> None:
+        assert self._is_exclusive_lock_held
+
 
 class AsyncApiTokenStorage(ABC):
     """Abstract base class for asynchronous API token storage implementations."""
 
+    _is_exclusive_lock_held: bool
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self._is_exclusive_lock_held = False
+
     @asynccontextmanager
     @abstractmethod
-    async def lock(self) -> AsyncGenerator[None]:
+    async def acquire_exclusive_for_update(self) -> AsyncGenerator[None]:
         yield
 
     @abstractmethod
@@ -43,3 +60,6 @@ class AsyncApiTokenStorage(ABC):
     @abstractmethod
     async def save(self, api_token: ApiToken) -> None:
         pass
+
+    def _ensure_exclusive_lock_held(self) -> None:
+        assert self._is_exclusive_lock_held

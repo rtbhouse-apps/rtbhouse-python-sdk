@@ -25,13 +25,14 @@ First set up virtualenv and install requirements: ::
 
     $ pip install rtbhouse_sdk tabulate
 
-Create an API token in the RTB House Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens) and copy it to a safe place.
+Create an API token in the RTB House Clients Panel (https://panel.rtbhouse.com/user/api-tokens) and copy it to a safe place.
 
 Now you can initialize the API token in local file storage. Paste your API token in prompt after running the command below: ::
 
     $ python -m rtbhouse_sdk.api_tokens init-json
+    Paste your token: PASTE_YOUR_TOKEN_HERE
 
-Then run the script:
+The authentication token is now ready to use. As long as you use it with the client frequently enough, the SDK will keep the token valid and rotate it automatically (for details see API Token Authentication below):
 
 .. code-block:: python
 
@@ -98,7 +99,7 @@ When used with a storage backend, the SDK can:
 
 Rotation eligibility is checked on every request, which means that for typical integrations with regular traffic, you can configure the token once and let the SDK manage it automatically.
 
-For integrations that do not make requests frequently enough to trigger automatic rotation during the rotation window, use the ``keep-alive-json`` CLI command (see `CLI for API Tokens` below) scheduled with ``cron`` or a similar tool.
+For integrations that do not make requests frequently enough to trigger automatic rotation during the rotation window (e.g. at least once a day), use the ``keep-alive-json`` CLI command (see `CLI for API Tokens` below) scheduled with ``cron`` or a similar tool.
 
 CLI for API Tokens
 ^^^^^^^^^^^^^^^^^^
@@ -112,13 +113,14 @@ A CLI interface is available to manage API tokens from the command line: ::
 
 Initialize JSON file storage with API Token.
 
-First create your API token in the Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens).
+First create your API token in the Clients Panel (https://panel.rtbhouse.com/user/api-tokens).
 
 Then provide the token via stdin or interactively when prompted: ::
 
+    $ python -m rtbhouse_sdk.api_tokens init-json
+    Paste your token: PASTE_YOUR_TOKEN_HERE
     $ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
     $ python -m rtbhouse_sdk.api_tokens init-json < token.txt
-    $ python -m rtbhouse_sdk.api_tokens init-json
     $ python -m rtbhouse_sdk.api_tokens init-json --path /custom/path/to/token.json
     
 
@@ -187,7 +189,7 @@ Use sync ``InMemoryApiTokenStorage`` or async ``AsyncInMemoryApiTokenStorage`` c
     from rtbhouse_sdk.api_tokens import ApiTokenManager, InMemoryApiTokenStorage
     from rtbhouse_sdk.client import Client
 
-    storage = InMemoryApiTokenStorage()
+    storage = InMemoryApiTokenStorage(None)
     manager = ApiTokenManager(storage)
     manager.configure("your_api_token")  # fetches token details and saves to storage
 
@@ -199,7 +201,7 @@ Custom Storage Backend
 
 You can implement your own storage backend by subclassing ``ApiTokenStorage`` (sync) or ``AsyncApiTokenStorage`` (async). Each backend must implement three methods:
 
-- ``lock()`` — a context manager ensuring exclusive access to the storage
+- ``acquire_exclusive_for_update()`` — a context manager ensuring exclusive access to the storage
 - ``load()`` — load and return the current ``ApiToken``
 - ``save(api_token)`` — persist the given ``ApiToken``
 

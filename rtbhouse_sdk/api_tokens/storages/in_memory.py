@@ -15,16 +15,20 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
     _api_token: ApiToken | None
     _lock: threading.Lock
 
-    def __init__(self, api_token: ApiToken | None = None) -> None:
+    def __init__(self, api_token: ApiToken | None) -> None:
         super().__init__()
 
         self._api_token = api_token
         self._lock = threading.Lock()
 
     @contextmanager
-    def lock(self) -> Generator[None]:
+    def acquire_exclusive_for_update(self) -> Generator[None]:
         with self._lock:
-            yield
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
 
     def load(self) -> ApiToken:
         if self._api_token is None:
@@ -33,6 +37,7 @@ class InMemoryApiTokenStorage(ApiTokenStorage):
         return self._api_token
 
     def save(self, api_token: ApiToken) -> None:
+        self._ensure_exclusive_lock_held()
         self._api_token = api_token
 
 
@@ -42,16 +47,20 @@ class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
     _api_token: ApiToken | None
     _lock: asyncio.Lock
 
-    def __init__(self, api_token: ApiToken | None = None) -> None:
+    def __init__(self, api_token: ApiToken | None) -> None:
         super().__init__()
 
         self._api_token = api_token
         self._lock = asyncio.Lock()
 
     @asynccontextmanager
-    async def lock(self) -> AsyncGenerator[None]:
+    async def acquire_exclusive_for_update(self) -> AsyncGenerator[None]:
         async with self._lock:
-            yield
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
 
     async def load(self) -> ApiToken:
         if self._api_token is None:
@@ -60,4 +69,5 @@ class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
         return self._api_token
 
     async def save(self, api_token: ApiToken) -> None:
+        self._ensure_exclusive_lock_held()
         self._api_token = api_token

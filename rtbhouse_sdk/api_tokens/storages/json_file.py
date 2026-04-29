@@ -32,6 +32,22 @@ class JsonFileApiTokenStorageMixin:  # pylint: disable=too-few-public-methods
 
         self._api_token_cache = None
 
+    def _load(self) -> ApiToken:
+        api_token = self._get_api_token_cache()
+        if api_token is not None:
+            return api_token
+
+        api_token = self._load_api_token_from_file()
+
+        self._set_api_token_cache(api_token)
+
+        return api_token
+
+    def _save(self, api_token: ApiToken) -> None:
+        self._save_api_token_to_file(api_token)
+
+        self._set_api_token_cache(api_token)
+
     def _load_api_token_from_file(self) -> ApiToken:
         try:
             api_token_json = self._path.read_text(encoding="utf-8")
@@ -109,29 +125,21 @@ class JsonFileApiTokenStorage(JsonFileApiTokenStorageMixin, ApiTokenStorage):
         )
 
     @contextmanager
-    def lock(self) -> Generator[None]:
+    def acquire_exclusive_for_update(self) -> Generator[None]:
         with self._file_lock:
             self._set_api_token_cache(None)
-
-            yield
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
 
     def load(self) -> ApiToken:
-        api_token = self._get_api_token_cache()
-        if api_token is not None:
-            return api_token
-
-        api_token = self._load_api_token_from_file()
-
-        self._set_api_token_cache(api_token)
-
-        return api_token
+        return self._load()
 
     def save(self, api_token: ApiToken) -> None:
-        assert self._file_lock.lock_counter > 0  # ensure that lock is held
-
-        self._save_api_token_to_file(api_token)
-
-        self._set_api_token_cache(api_token)
+        self._ensure_exclusive_lock_held()
+        return self._save(api_token)
 
 
 class AsyncJsonFileApiTokenStorage(JsonFileApiTokenStorageMixin, AsyncApiTokenStorage):
@@ -148,26 +156,18 @@ class AsyncJsonFileApiTokenStorage(JsonFileApiTokenStorageMixin, AsyncApiTokenSt
         )
 
     @asynccontextmanager
-    async def lock(self) -> AsyncGenerator[None]:
+    async def acquire_exclusive_for_update(self) -> AsyncGenerator[None]:
         async with self._file_lock:
             self._set_api_token_cache(None)
-
-            yield
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
 
     async def load(self) -> ApiToken:
-        api_token = self._get_api_token_cache()
-        if api_token is not None:
-            return api_token
-
-        api_token = self._load_api_token_from_file()
-
-        self._set_api_token_cache(api_token)
-
-        return api_token
+        return self._load()
 
     async def save(self, api_token: ApiToken) -> None:
-        assert self._file_lock.lock_counter > 0  # ensure that lock is held
-
-        self._save_api_token_to_file(api_token)
-
-        self._set_api_token_cache(api_token)
+        self._ensure_exclusive_lock_held()
+        return self._save(api_token)

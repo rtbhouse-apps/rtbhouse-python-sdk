@@ -14,7 +14,7 @@ from rtbhouse_sdk.client import ApiTokenAuth, BasicAuth, BasicTokenAuth, Client
         BasicTokenAuth("token"),
     ),
 )
-def test_auth_backend_is_supported(auth_backend: BasicAuth | BasicTokenAuth | ApiTokenAuth) -> None:
+def test_auth_backend_is_supported(auth_backend: ApiTokenAuth | BasicAuth | BasicTokenAuth) -> None:
     Client(auth=auth_backend)
 
 

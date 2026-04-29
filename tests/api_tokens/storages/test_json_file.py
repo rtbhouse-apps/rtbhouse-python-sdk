@@ -32,7 +32,7 @@ def token_path_fixture(tmp_path: Path) -> Path:
 def test_load_returns_initial_token(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
 
-    with storage.lock():
+    with storage.acquire_exclusive_for_update():
         storage.save(_API_TOKEN)
 
     result = storage.load()
@@ -44,7 +44,7 @@ def test_load_returns_initial_token(token_path: Path) -> None:
 def test_save_updates_token(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
 
-    with storage.lock():
+    with storage.acquire_exclusive_for_update():
         storage.save(_API_TOKEN)
         storage.save(_UPDATED_API_TOKEN)
 
@@ -78,62 +78,50 @@ def test_load_raises_on_invalid_json(token_path: Path) -> None:
 
 def test_load_uses_cache_on_second_call(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    with storage.lock():
+    with storage.acquire_exclusive_for_update():
         storage.save(_API_TOKEN)
 
-    first_load = storage.load()
-    # Overwrite file directly, cache should return old value
-    token_path.write_text(
-        _UPDATED_API_TOKEN.model_dump_json(),
-        encoding="utf-8",
-    )
-    second_load = storage.load()
+    with patch.object(storage, "_load_api_token_from_file") as load_from_file_mock:
+        storage.load()
 
-    assert first_load.token == _API_TOKEN.token
-    assert second_load.token == _API_TOKEN.token
+    load_from_file_mock.assert_not_called()
 
 
 def test_load_bypasses_cache_after_expiry(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    with storage.lock():
+    with storage.acquire_exclusive_for_update():
         storage.save(_API_TOKEN)
 
     storage.load()  # populate cache
-
-    # Overwrite file directly
-    token_path.write_text(
-        _UPDATED_API_TOKEN.model_dump_json(),
-        encoding="utf-8",
-    )
 
     # Update time so cache expires (>5 minutes)
     future_time = utcnow() + timedelta(minutes=6)
-    with patch(
-        "rtbhouse_sdk.api_tokens.storages.json_file.utcnow",
-        return_value=future_time,
+    with (
+        patch(
+            "rtbhouse_sdk.api_tokens.storages.json_file.utcnow",
+            return_value=future_time,
+        ),
+        patch.object(storage, "_load_api_token_from_file") as load_from_file_mock,
     ):
-        result = storage.load()
+        storage.load()
 
-    assert result.token == _UPDATED_API_TOKEN.token
+    load_from_file_mock.assert_called()
 
 
-def test_lock_invalidates_cache(token_path: Path) -> None:
+def test_acquire_exclusive_for_update_invalidates_cache(token_path: Path) -> None:
     storage = JsonFileApiTokenStorage(token_path)
-    with storage.lock():
+    with storage.acquire_exclusive_for_update():
         storage.save(_API_TOKEN)
 
     storage.load()  # populate cache
 
-    # Overwrite file directly
-    token_path.write_text(
-        _UPDATED_API_TOKEN.model_dump_json(),
-        encoding="utf-8",
-    )
+    with (
+        patch.object(storage, "_load_api_token_from_file") as load_from_file_mock,
+        storage.acquire_exclusive_for_update(),
+    ):
+        storage.load()
 
-    with storage.lock():
-        result = storage.load()
-
-    assert result.token == _UPDATED_API_TOKEN.token
+    load_from_file_mock.assert_called()
 
 
 # async
@@ -142,7 +130,7 @@ def test_lock_invalidates_cache(token_path: Path) -> None:
 async def test_async_load_returns_initial_token(token_path: Path) -> None:
     storage = AsyncJsonFileApiTokenStorage(token_path)
 
-    async with storage.lock():
+    async with storage.acquire_exclusive_for_update():
         await storage.save(_API_TOKEN)
 
     result = await storage.load()
@@ -154,7 +142,7 @@ async def test_async_load_returns_initial_token(token_path: Path) -> None:
 async def test_async_save_updates_token(token_path: Path) -> None:
     storage = AsyncJsonFileApiTokenStorage(token_path)
 
-    async with storage.lock():
+    async with storage.acquire_exclusive_for_update():
         await storage.save(_API_TOKEN)
         await storage.save(_UPDATED_API_TOKEN)
 

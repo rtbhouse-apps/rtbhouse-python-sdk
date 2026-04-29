@@ -1,10 +1,12 @@
 """Tests for API token managers."""
 
 import warnings
+from collections.abc import Generator
 from datetime import datetime, timedelta
 
 import pytest
 import respx
+from freezegun import freeze_time
 
 from rtbhouse_sdk._utils import utcnow
 from rtbhouse_sdk.api_tokens.managers import (
@@ -26,6 +28,13 @@ _TOKEN = "a" * 43
 _ROTATED_TOKEN = "b" * 43
 
 _ROTATED_EXPIRES_AT = _NOW + timedelta(days=60)
+
+
+@pytest.fixture(autouse=True)
+def _freeze_time() -> Generator[None]:
+    with freeze_time(_NOW):
+        yield
+
 
 _API_TOKEN_DETAILS_RESPONSE = {
     "status": "ok",
@@ -59,7 +68,7 @@ def test_configure_saves_token_to_storage(api_mock: respx.MockRouter) -> None:
         json=_API_TOKEN_DETAILS_RESPONSE,
     )
 
-    storage = InMemoryApiTokenStorage()
+    storage = InMemoryApiTokenStorage(None)
     manager = ApiTokenManager(storage)
 
     manager.configure(_TOKEN)
@@ -71,7 +80,7 @@ def test_configure_saves_token_to_storage(api_mock: respx.MockRouter) -> None:
 
 
 def test_configure_raises_on_invalid_token_length() -> None:
-    storage = InMemoryApiTokenStorage()
+    storage = InMemoryApiTokenStorage(None)
     manager = ApiTokenManager(storage)
 
     with pytest.raises(ValueError):
@@ -89,15 +98,16 @@ def test_get_token_returns_token_when_not_in_rotation_window() -> None:
 
 
 def test_get_token_rotates_when_in_rotation_window(api_mock: respx.MockRouter) -> None:
+    api_mock.post("/tokens/current/rotate").respond(
+        200,
+        json=_ROTATE_RESPONSE,
+    )
+
     api_token = _create_api_token(
         expires_at=_EXPIRES_IN_ROTATION_WINDOW,
     )
     storage = InMemoryApiTokenStorage(api_token)
     manager = ApiTokenManager(storage)
-    api_mock.post("/tokens/current/rotate").respond(
-        200,
-        json=_ROTATE_RESPONSE,
-    )
 
     result = manager.get_token()
     saved = storage.load()
@@ -108,15 +118,16 @@ def test_get_token_rotates_when_in_rotation_window(api_mock: respx.MockRouter) -
 
 
 def test_get_token_returns_original_when_rotation_fails(api_mock: respx.MockRouter) -> None:
+    api_mock.post("/tokens/current/rotate").respond(
+        400,
+        json={},
+    )
+
     api_token = _create_api_token(
         expires_at=_EXPIRES_IN_ROTATION_WINDOW,
     )
     storage = InMemoryApiTokenStorage(api_token)
     manager = ApiTokenManager(storage)
-    api_mock.post("/tokens/current/rotate").respond(
-        400,
-        json={},
-    )
 
     with warnings.catch_warnings(record=True) as caught_warnings:
         result = manager.get_token()
@@ -138,13 +149,14 @@ def test_get_token_raises_when_expired() -> None:
 
 
 def test_keep_alive_sends_request(api_mock: respx.MockRouter) -> None:
-    api_token = _create_api_token()
-    storage = InMemoryApiTokenStorage(api_token)
-    manager = ApiTokenManager(storage)
     api_mock.get("/tokens/current").respond(
         200,
         json=_API_TOKEN_DETAILS_RESPONSE,
     )
+
+    api_token = _create_api_token()
+    storage = InMemoryApiTokenStorage(api_token)
+    manager = ApiTokenManager(storage)
 
     manager.keep_alive()
 
@@ -152,11 +164,6 @@ def test_keep_alive_sends_request(api_mock: respx.MockRouter) -> None:
 
 
 def test_keep_alive_rotates_when_in_rotation_window(api_mock: respx.MockRouter) -> None:
-    api_token = _create_api_token(
-        expires_at=_EXPIRES_IN_ROTATION_WINDOW,
-    )
-    storage = InMemoryApiTokenStorage(api_token)
-    manager = ApiTokenManager(storage)
     api_mock.get("/tokens/current").respond(
         200,
         json=_API_TOKEN_DETAILS_RESPONSE,
@@ -165,6 +172,12 @@ def test_keep_alive_rotates_when_in_rotation_window(api_mock: respx.MockRouter) 
         200,
         json=_ROTATE_RESPONSE,
     )
+
+    api_token = _create_api_token(
+        expires_at=_EXPIRES_IN_ROTATION_WINDOW,
+    )
+    storage = InMemoryApiTokenStorage(api_token)
+    manager = ApiTokenManager(storage)
 
     manager.keep_alive(
         auto_rotate=True,
@@ -199,18 +212,18 @@ def test_rotation_window_boundary(
     expected_in_rotation_window: bool,
     api_mock: respx.MockRouter,
 ) -> None:
+    if expected_in_rotation_window:
+        api_mock.post("/tokens/current/rotate").respond(
+            200,
+            json=_ROTATE_RESPONSE,
+        )
+
     expires_at = _NOW + time_until_expiry
     api_token = _create_api_token(
         expires_at=expires_at,
     )
     storage = InMemoryApiTokenStorage(api_token)
     manager = ApiTokenManager(storage)
-
-    if expected_in_rotation_window:
-        api_mock.post("/tokens/current/rotate").respond(
-            200,
-            json=_ROTATE_RESPONSE,
-        )
 
     result = manager.get_token()
 
@@ -229,7 +242,7 @@ async def test_async_configure_saves_token_to_storage(api_mock: respx.MockRouter
         json=_API_TOKEN_DETAILS_RESPONSE,
     )
 
-    storage = AsyncInMemoryApiTokenStorage()
+    storage = AsyncInMemoryApiTokenStorage(None)
     manager = AsyncApiTokenManager(storage)
 
     await manager.configure(_TOKEN)
@@ -241,7 +254,7 @@ async def test_async_configure_saves_token_to_storage(api_mock: respx.MockRouter
 
 
 async def test_async_configure_raises_on_invalid_token_length() -> None:
-    storage = AsyncInMemoryApiTokenStorage()
+    storage = AsyncInMemoryApiTokenStorage(None)
     manager = AsyncApiTokenManager(storage)
 
     with pytest.raises(ValueError):
@@ -261,15 +274,16 @@ async def test_async_get_token_returns_token_when_not_in_rotation_window() -> No
 async def test_async_get_token_rotates_when_in_rotation_window(
     api_mock: respx.MockRouter,
 ) -> None:
+    api_mock.post("/tokens/current/rotate").respond(
+        200,
+        json=_ROTATE_RESPONSE,
+    )
+
     api_token = _create_api_token(
         expires_at=_EXPIRES_IN_ROTATION_WINDOW,
     )
     storage = AsyncInMemoryApiTokenStorage(api_token)
     manager = AsyncApiTokenManager(storage)
-    api_mock.post("/tokens/current/rotate").respond(
-        200,
-        json=_ROTATE_RESPONSE,
-    )
 
     result = await manager.get_token()
     saved = await storage.load()
@@ -279,15 +293,16 @@ async def test_async_get_token_rotates_when_in_rotation_window(
 
 
 async def test_async_get_token_returns_original_when_rotation_fails(api_mock: respx.MockRouter) -> None:
+    api_mock.post("/tokens/current/rotate").respond(
+        400,
+        json={},
+    )
+
     api_token = _create_api_token(
         expires_at=_EXPIRES_IN_ROTATION_WINDOW,
     )
     storage = AsyncInMemoryApiTokenStorage(api_token)
     manager = AsyncApiTokenManager(storage)
-    api_mock.post("/tokens/current/rotate").respond(
-        400,
-        json={},
-    )
 
     with warnings.catch_warnings(record=True) as caught_warnings:
         result = await manager.get_token()
@@ -309,13 +324,14 @@ async def test_async_get_token_raises_when_expired() -> None:
 
 
 async def test_async_keep_alive_sends_request(api_mock: respx.MockRouter) -> None:
-    api_token = _create_api_token()
-    storage = AsyncInMemoryApiTokenStorage(api_token)
-    manager = AsyncApiTokenManager(storage)
     api_mock.get("/tokens/current").respond(
         200,
         json=_API_TOKEN_DETAILS_RESPONSE,
     )
+
+    api_token = _create_api_token()
+    storage = AsyncInMemoryApiTokenStorage(api_token)
+    manager = AsyncApiTokenManager(storage)
 
     await manager.keep_alive()
 
@@ -325,11 +341,6 @@ async def test_async_keep_alive_sends_request(api_mock: respx.MockRouter) -> Non
 async def test_async_keep_alive_rotates_when_in_rotation_window(
     api_mock: respx.MockRouter,
 ) -> None:
-    api_token = _create_api_token(
-        expires_at=_EXPIRES_IN_ROTATION_WINDOW,
-    )
-    storage = AsyncInMemoryApiTokenStorage(api_token)
-    manager = AsyncApiTokenManager(storage)
     api_mock.get("/tokens/current").respond(
         200,
         json=_API_TOKEN_DETAILS_RESPONSE,
@@ -338,6 +349,12 @@ async def test_async_keep_alive_rotates_when_in_rotation_window(
         200,
         json=_ROTATE_RESPONSE,
     )
+
+    api_token = _create_api_token(
+        expires_at=_EXPIRES_IN_ROTATION_WINDOW,
+    )
+    storage = AsyncInMemoryApiTokenStorage(api_token)
+    manager = AsyncApiTokenManager(storage)
 
     await manager.keep_alive(
         auto_rotate=True,

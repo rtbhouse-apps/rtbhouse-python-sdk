@@ -6,10 +6,11 @@ Added support for API token authentication with automatic lifecycle management.
 
 ### Initialize the API token in JSON file storage:
 
-First, create an API token in the Clients Panel (https://panel.rtbhouse.com/#/user/api-tokens), then initialize it in storage:
+First, create an API token in the Clients Panel (https://panel.rtbhouse.com/user/api-tokens), then initialize it in storage:
 
 ```sh
-$ python -m rtbhouse_sdk.api_tokens init-json <<< "$API_TOKEN"
+$ python -m rtbhouse_sdk.api_tokens init-json
+Paste your token: PASTE_YOUR_TOKEN_HERE
 ```
 
 ### Use the token manager as the auth backend in your Client:

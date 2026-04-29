@@ -31,7 +31,8 @@ def test_load_returns_initial_token() -> None:
 def test_save_updates_token() -> None:
     storage = InMemoryApiTokenStorage(_API_TOKEN)
 
-    storage.save(_UPDATED_API_TOKEN)
+    with storage.acquire_exclusive_for_update():
+        storage.save(_UPDATED_API_TOKEN)
 
     result = storage.load()
 
@@ -54,7 +55,8 @@ async def test_async_load_returns_initial_token() -> None:
 async def test_async_save_updates_token() -> None:
     storage = AsyncInMemoryApiTokenStorage(_API_TOKEN)
 
-    await storage.save(_UPDATED_API_TOKEN)
+    async with storage.acquire_exclusive_for_update():
+        await storage.save(_UPDATED_API_TOKEN)
 
     result = await storage.load()
 

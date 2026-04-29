@@ -57,7 +57,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
         if len(token) != _TOKEN_LENGTH:
             raise ValueError("Invalid token format.")
 
-        with self._storage.lock():
+        with self._storage.acquire_exclusive_for_update():
             with self._with_client(token) as client:
                 api_token_details = client.get_current_api_token()
 
@@ -73,8 +73,8 @@ class ApiTokenManager(DynamicApiTokenAuth):
         if not in_rotation_window:
             return token
 
-        with self._storage.lock():
-            # reload inside lock
+        with self._storage.acquire_exclusive_for_update():
+            # reload inside exclusive segment
             token, in_rotation_window = self._load_and_validate()
 
             if not in_rotation_window:
@@ -101,7 +101,7 @@ class ApiTokenManager(DynamicApiTokenAuth):
         *,
         auto_rotate: bool = True,
     ) -> None:
-        with self._storage.lock():
+        with self._storage.acquire_exclusive_for_update():
             token, in_rotation_window = self._load_and_validate()
 
             with self._with_client(token) as client:
@@ -161,7 +161,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         if len(token) != _TOKEN_LENGTH:
             raise ValueError("Invalid token format.")
 
-        async with self._storage.lock():
+        async with self._storage.acquire_exclusive_for_update():
             async with self._with_client(token) as client:
                 api_token_details = await client.get_current_api_token()
 
@@ -177,8 +177,8 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         if not in_rotation_window:
             return token
 
-        async with self._storage.lock():
-            # reload inside lock
+        async with self._storage.acquire_exclusive_for_update():
+            # reload inside exclusive segment
             token, in_rotation_window = await self._load_and_validate()
 
             if not in_rotation_window:
@@ -205,7 +205,7 @@ class AsyncApiTokenManager(AsyncDynamicApiTokenAuth):
         *,
         auto_rotate: bool = True,
     ) -> None:
-        async with self._storage.lock():
+        async with self._storage.acquire_exclusive_for_update():
             token, in_rotation_window = await self._load_and_validate()
 
             async with self._with_client(token) as client:

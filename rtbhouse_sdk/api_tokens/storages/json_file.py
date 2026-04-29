@@ -92,12 +92,12 @@ class JsonFileApiTokenStorageMixin:  # pylint: disable=too-few-public-methods
                 pass
 
             os.replace(temp_path, self._path)
-
-        finally:
+        except Exception:
             try:
                 os.remove(temp_path)
-            except OSError:
+            except FileNotFoundError:
                 pass
+            raise
 
     def _get_api_token_cache(self) -> ApiToken | None:
         if self._api_token_cache is not None:

@@ -1,0 +1,73 @@
+"""In-memory storage for API tokens."""
+
+import asyncio
+import threading
+from collections.abc import AsyncGenerator, Generator
+from contextlib import asynccontextmanager, contextmanager
+
+from ..models import ApiToken
+from ._base import ApiTokenStorage, ApiTokenStorageException, AsyncApiTokenStorage
+
+
+class InMemoryApiTokenStorage(ApiTokenStorage):
+    """In-memory storage for API tokens."""
+
+    _api_token: ApiToken | None
+    _lock: threading.Lock
+
+    def __init__(self, api_token: ApiToken | None) -> None:
+        super().__init__()
+
+        self._api_token = api_token
+        self._lock = threading.Lock()
+
+    @contextmanager
+    def acquire_exclusive_for_update(self) -> Generator[None]:
+        with self._lock:
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
+
+    def load(self) -> ApiToken:
+        if self._api_token is None:
+            raise ApiTokenStorageException("No API token configured. Please configure token first.")
+
+        return self._api_token
+
+    def save(self, api_token: ApiToken) -> None:
+        self._ensure_exclusive_lock_held()
+        self._api_token = api_token
+
+
+class AsyncInMemoryApiTokenStorage(AsyncApiTokenStorage):
+    """Asynchronous in-memory storage for API tokens."""
+
+    _api_token: ApiToken | None
+    _lock: asyncio.Lock
+
+    def __init__(self, api_token: ApiToken | None) -> None:
+        super().__init__()
+
+        self._api_token = api_token
+        self._lock = asyncio.Lock()
+
+    @asynccontextmanager
+    async def acquire_exclusive_for_update(self) -> AsyncGenerator[None]:
+        async with self._lock:
+            self._is_exclusive_lock_held = True
+            try:
+                yield
+            finally:
+                self._is_exclusive_lock_held = False
+
+    async def load(self) -> ApiToken:
+        if self._api_token is None:
+            raise ApiTokenStorageException("No API token configured. Please configure token first.")
+
+        return self._api_token
+
+    async def save(self, api_token: ApiToken) -> None:
+        self._ensure_exclusive_lock_held()
+        self._api_token = api_token

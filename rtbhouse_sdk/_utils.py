@@ -1,6 +1,7 @@
 """Utils used in SDK."""
 
 import re
+from datetime import datetime, timezone
 
 from pydantic.version import VERSION as PYDANTIC_VERSION
 
@@ -28,3 +29,7 @@ def underscore(word: str) -> str:
     word = re.sub(r"([a-z\d])([A-Z])", r"\1_\2", word)
     word = word.replace("-", "_")
     return word.lower()
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)

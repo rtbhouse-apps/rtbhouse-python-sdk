@@ -19,6 +19,7 @@ class ApiException(Exception):
 
     def __init__(self, message: str, details: ErrorDetails | None = None) -> None:
         super().__init__(message)
+
         self.message = message
         self.error_details = details
 
@@ -46,6 +47,7 @@ class ApiRateLimitException(ApiRequestException):
         usage_header: str | None,
     ) -> None:
         super().__init__(message, details)
+
         self.limits = _parse_resource_usage_header(usage_header)
 
 

@@ -43,7 +43,7 @@ pylint = "^4.0.0"
 pytest = "^9.0.0"
 pytest-asyncio = "^1.0.0"
 pytest-cov = "^7.0.0"
-respx = "^0.22.0"
+respx = "^0.23.0"
 
 [tool.black]
 line-length = 120

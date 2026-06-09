@@ -1,3 +1,6 @@
+# v16.0.0
+- [breaking change] removed `placement` dimension grouping that could be used with legacy DPA stats
+
 # v15.1.0
 
 ## API Token Support

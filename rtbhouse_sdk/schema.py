@@ -67,7 +67,6 @@ class StatsGroupBy(str, Enum):
     CREATIVE = "creative"
     CATEGORY = "category"
     COUNTRY = "country"
-    PLACEMENT = "placement"
 
 
 class StatsMetric(str, Enum):
@@ -244,7 +243,6 @@ class Stats(CamelizedBaseModel):
     category: str | None = None
     category_name: str | None = None
     country: str | None = None
-    placement: str | None = None
     # from Metric
     campaign_cost: float | None = None
     imps_count: float | None = None

@@ -20,6 +20,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     env:
       PYTHONDONTWRITEBYTECODE: 1
+    permissions:
+      contents: "read"
 
     steps:
       - name: Checkout

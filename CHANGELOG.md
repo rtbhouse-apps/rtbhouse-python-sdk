@@ -1,3 +1,6 @@
+# v16.1.0
+- added custom viewability stats metrics `viewabilityCustomViewability` and `evccpm`
+
 # v16.0.0
 - [breaking change] removed `placement` dimension grouping that could be used with legacy DPA stats
 

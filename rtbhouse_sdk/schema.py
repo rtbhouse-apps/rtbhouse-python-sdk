@@ -93,6 +93,8 @@ class StatsMetric(str, Enum):
     VIEWABILITY_MEASURABILITY = "viewabilityMeasurability"
     VIEWABILITY_VIEWABILITY = "viewabilityViewability"
     EVCPM = "evcpm"
+    VIEWABILITY_CUSTOM_VIEWABILITY = "viewabilityCustomViewability"
+    EVCCPM = "evccpm"
     SSP_VIEWABILITY = "sspViewability"
     VISITS_COUNT = "visitsCount"
     CPVISIT = "cpvisit"
@@ -265,6 +267,8 @@ class Stats(CamelizedBaseModel):
     viewability_measurability: float | None = None
     viewability_viewability: float | None = None
     evcpm: float | None = None
+    viewability_custom_viewability: float | None = None
+    evccpm: float | None = None
     ssp_viewability: float | None = None
     visits_count: float | None = None
     cpvisit: float | None = None

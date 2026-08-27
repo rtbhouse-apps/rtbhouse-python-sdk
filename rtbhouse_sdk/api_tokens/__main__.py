@@ -36,6 +36,7 @@ Examples:
 
 """
 
+import sys
 from pathlib import Path
 
 import click
@@ -113,7 +114,7 @@ def keep_alive_json(path: Path, skip_auto_rotate: bool) -> None:
 
 
 def _read_token_from_stdin_or_prompt() -> str:
-    stdin = click.get_text_stream("stdin")
+    stdin = sys.stdin
 
     if stdin.isatty():
         token: str = click.prompt(

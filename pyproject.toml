@@ -1,10 +1,11 @@
-[tool.poetry]
+[project]
 name = "rtbhouse-sdk"
 version = "16.1.0"
 description = "RTB House SDK"
-authors = ["RTB House Apps Team <apps@rtbhouse.com>"]
-license = "BSD License"
+authors = [{ name = "RTB House Apps Team", email = "apps@rtbhouse.com" }]
+requires-python = ">=3.10, <4.0"
 readme = "README.rst"
+license = "BSD License"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -16,34 +17,39 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
 ]
-repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
+dependencies = [
+    "click>=8.3.1,<9",
+    "filelock>=4.0.0,<5",
+    "httpx>=0.28.0,<0.29",
+    "pydantic>=1.9, <3.0",
+]
 
-[[tool.poetry.source]]
-name = "PyPI"
-priority = "primary"
+[project.urls]
+Repository = "https://github.com/rtbhouse-apps/rtbhouse-python-sdk"
 
-[tool.poetry.dependencies]
-python = ">=3.10, <4.0"
+[dependency-groups]
+dev = [
+    "freezegun>=1.5.5,<2",
+    "pydantic>=2.0.0,<3",
+    "black>=26.0.0,<27",
+    "flake8>=7.0.0,<8",
+    "isort>=9.0.0,<10",
+    "mypy>=2.0,<3",
+    "pylint>=4.0.0,<5",
+    "pytest>=9.0.0,<10",
+    "pytest-asyncio>=1.0.0,<2",
+    "pytest-cov>=7.0.0,<8",
+    "respx>=0.23.0,<0.24",
+]
 
-click = "^8.3.1"
-filelock = "^4.0.0"
-httpx = "^0.28.0"
-pydantic = ">=1.9, <3.0"
+[tool.uv]
+default-groups = "all"
 
-[tool.poetry.group.dev.dependencies]
-freezegun = "^1.5.5"
-pydantic = "^2.0.0" # required for tests
-
-black = "^26.0.0"
-flake8 = "^7.0.0"
-isort = "^9.0.0"
-mypy = "^2.0"
-pylint = "^4.0.0"
-pytest = "^9.0.0"
-pytest-asyncio = "^1.0.0"
-pytest-cov = "^7.0.0"
-respx = "^0.23.0"
+[build-system]
+requires = ["uv_build>=0.13.5,<0.14.0"]
+build-backend = "uv_build"
 
 [tool.black]
 line-length = 120
@@ -109,7 +115,3 @@ addopts = "--cov=rtbhouse_sdk/ --cov-report=term"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

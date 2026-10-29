@@ -10,4 +10,5 @@ if [[ -z $PYPI_TOKEN ]]; then
   exit 1
 fi
 
-poetry publish --build --no-interaction -u __token__ -p $PYPI_TOKEN
+uv build
+uv publish --token "$PYPI_TOKEN"

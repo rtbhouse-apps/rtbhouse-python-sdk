@@ -1019,7 +1019,6 @@ wheels = [
 name = "rtbhouse-sdk"
 version = "16.1.0"
 source = { editable = "." }
-default-groups = "all"
 dependencies = [
     { name = "click" },
     { name = "filelock" },

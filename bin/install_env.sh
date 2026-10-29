@@ -7,4 +7,4 @@ cd "`dirname $0`/.."
 
 rm -rf ./.venv
 
-poetry install
+uv sync

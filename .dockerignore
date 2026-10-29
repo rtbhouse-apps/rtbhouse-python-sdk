@@ -1,0 +1,26 @@
+# Git
+.git
+.gitignore
+
+# Python cache
+**/__pycache__
+**/*.py[cod]
+
+# Virtual environments
+.venv
+venv
+
+# Tool caches
+.mypy_cache
+.pytest_cache
+.coverage*
+
+# Build artifacts
+dist/
+
+# IDE
+.idea/
+.vscode/
+
+# AI tooling
+.claude/

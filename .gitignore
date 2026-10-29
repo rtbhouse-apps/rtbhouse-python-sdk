@@ -7,6 +7,7 @@ __pycache__/
 pip-log.txt
 virtualenv
 venv
+.venv
 config.py
 /dist
 /results

@@ -1017,7 +1017,7 @@ wheels = [
 
 [[package]]
 name = "rtbhouse-sdk"
-version = "16.1.0"
+version = "16.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "click" },

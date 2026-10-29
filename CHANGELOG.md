@@ -1,3 +1,6 @@
+# v16.1.1
+- migrated build tooling from Poetry to uv; package metadata now declares the MIT licence consistently
+
 # v16.1.0
 - added custom viewability stats metrics `viewabilityCustomViewability` and `evccpm`
 

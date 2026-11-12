@@ -69,6 +69,7 @@ jobs:
         with:
           version: "${{ env.UV_VERSION }}"
           python-version: "${{ env.PYTHON_VERSION }}"
+          enable-cache: false
 
       - name: Should publish package
         id: should-publish-package
